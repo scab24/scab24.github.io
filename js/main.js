@@ -225,4 +225,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    /* Handle hash on page load */
+    const hash = window.location.hash;
+    if (hash === '#articles-nav') {
+        setTimeout(() => {
+            const navHeight = document.querySelector('nav') ? document.querySelector('nav').offsetHeight : 70;
+            const researchSection = document.getElementById('research');
+            if (researchSection) {
+                const y = researchSection.getBoundingClientRect().top + window.pageYOffset - navHeight - 10;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+            }
+            const articlesTab = document.querySelector('.research-tab[data-rtab="articles-panel"]');
+            if (articlesTab) articlesTab.click();
+        }, 300);
+    }
 });
