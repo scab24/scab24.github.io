@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sergio Corrales - Security Researcher & Protocol Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        accent: '#60a5fa',
+                        light: '#93c5fd',
+                        surface: '#0f172a',
+                        card: '#1e293b',
+                        cardHover: '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+    <!-- Shared SVG defs for Solana gradient logo -->
+    <svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+        <defs>
+            <linearGradient id="sol-a" x1="360.879" x2="141.213" y1="351.455" y2="-69.294" gradientTransform="matrix(1 0 0 -1 0 314)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient>
+            <linearGradient id="sol-b" x1="264.829" x2="45.163" y1="401.601" y2="-19.148" gradientTransform="matrix(1 0 0 -1 0 314)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient>
+            <linearGradient id="sol-c" x1="312.548" x2="92.882" y1="376.688" y2="-44.061" gradientTransform="matrix(1 0 0 -1 0 314)" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#60a5fa"/><stop offset="1" stop-color="#a78bfa"/></linearGradient>
+        </defs>
+    </svg>
+    <div id="scroll-progress"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="#" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <div class="hidden md:flex items-center gap-8">
+                <a href="#about" class="nav-link text-sm text-gray-400 hover:text-white transition">About</a>
+                <a href="#development" class="nav-link text-sm text-gray-400 hover:text-white transition">Development</a>
+                <a href="#tools" class="nav-link text-sm text-gray-400 hover:text-white transition">Tools</a>
+                <div class="nav-dropdown relative">
+                    <a href="#security" class="nav-link text-sm text-gray-400 hover:text-white transition flex items-center gap-1">Security <svg class="w-3 h-3 nav-dropdown-arrow transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></a>
+                    <div class="nav-dropdown-menu absolute top-full left-1/2 -translate-x-1/2 pt-3 z-50">
+                        <div class="w-52 bg-card/95 backdrop-blur-xl border border-gray-800 rounded-xl overflow-hidden shadow-2xl shadow-black/50">
+                            <a href="#" data-jump="tab-audits" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-primary/10 hover:text-white transition">
+                                <span class="w-1.5 h-1.5 bg-primary rounded-full flex-shrink-0"></span>Audits
+                            </a>
+                            <a href="#" data-jump="tab-testing" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-primary/10 hover:text-white transition border-t border-gray-800/50">
+                                <span class="w-1.5 h-1.5 bg-green-400 rounded-full flex-shrink-0"></span>Testing Campaigns
+                            </a>
+                            <a href="#" data-jump="tab-contests" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-primary/10 hover:text-white transition border-t border-gray-800/50">
+                                <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full flex-shrink-0"></span>Public Contests
+                            </a>
+                            <a href="#" data-jump="tab-opensource" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-300 hover:bg-primary/10 hover:text-white transition border-t border-gray-800/50">
+                                <span class="w-1.5 h-1.5 bg-purple-400 rounded-full flex-shrink-0"></span>Contributions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <a href="#research" class="nav-link text-sm text-gray-400 hover:text-white transition">Research</a>
+                <a href="#articles-nav" class="nav-link text-sm text-gray-400 hover:text-white transition">Articles</a>
+                <a href="#contact" class="nav-link text-sm text-gray-400 hover:text-white transition">Contact</a>
+            </div>
+            <button id="mobile-toggle" class="md:hidden text-gray-400 hover:text-white">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+        </div>
+    </nav>
+    <div id="mobile-menu" class="mobile-menu fixed inset-y-0 right-0 w-64 bg-card/95 backdrop-blur-xl z-50 p-8 flex flex-col gap-6 md:hidden">
+        <button id="mobile-close" class="self-end text-gray-400 hover:text-white"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+        <a href="#about" class="text-gray-300 hover:text-white transition mobile-link">About</a>
+        <a href="#development" class="text-gray-300 hover:text-white transition mobile-link">Development</a>
+        <a href="#tools" class="text-gray-300 hover:text-white transition mobile-link">Tools</a>
+        <div>
+            <button class="mobile-security-toggle text-gray-300 hover:text-white transition flex items-center gap-2 w-full">
+                Security
+                <svg class="w-3.5 h-3.5 transition-transform mobile-sec-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="mobile-security-sub hidden pl-4 mt-3 flex flex-col gap-2 border-l border-gray-700">
+                <a href="#" data-jump="tab-audits" class="mobile-link text-gray-400 hover:text-white text-sm transition flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-primary rounded-full"></span>Audits
+                </a>
+                <a href="#" data-jump="tab-testing" class="mobile-link text-gray-400 hover:text-white text-sm transition flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-green-400 rounded-full"></span>Testing Campaigns
+                </a>
+                <a href="#" data-jump="tab-contests" class="mobile-link text-gray-400 hover:text-white text-sm transition flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-yellow-400 rounded-full"></span>Public Contests
+                </a>
+                <a href="#" data-jump="tab-opensource" class="mobile-link text-gray-400 hover:text-white text-sm transition flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-purple-400 rounded-full"></span>Contributions
+                </a>
+            </div>
+        </div>
+        <a href="#research" class="text-gray-300 hover:text-white transition mobile-link">Research</a>
+        <a href="#articles-nav" class="text-gray-300 hover:text-white transition mobile-link">Articles</a>
+        <a href="#contact" class="text-gray-300 hover:text-white transition mobile-link">Contact</a>
+    </div>
+
+    <!-- ===================== HERO ===================== -->
+    <section class="min-h-screen flex items-center justify-center px-6 pt-20">
+        <div class="max-w-4xl mx-auto text-center fade-up">
+            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight"><span class="gradient-text">secoalba</span></h1>
+            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-12 leading-relaxed">
+                I'm Sergio Corrales &mdash; security research, tooling development, and protocol development across EVM and Non-EVM ecosystems.
+            </p>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                <div class="fade-up"><p class="stat-number text-4xl font-bold font-mono" data-target="25">0</p><p class="text-gray-500 text-sm mt-1">Private Audits</p></div>
+                <div class="fade-up"><p class="stat-number text-4xl font-bold font-mono" data-target="170">0</p><p class="text-gray-500 text-sm mt-1">Vulnerabilities Found</p></div>
+                <div class="fade-up"><p class="stat-number text-4xl font-bold font-mono" data-target="3">0</p><p class="text-gray-500 text-sm mt-1">Security Tools Built</p></div>
+                <div class="fade-up"><p class="stat-number text-4xl font-bold font-mono" data-target="10">0</p><p class="text-gray-500 text-sm mt-1">Protocols Developed</p></div>
+            </div>
+            <div class="flex justify-center gap-6">
+                <a href="https://github.com/scab24" target="_blank" class="text-gray-500 hover:text-primary transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+                <a href="https://www.linkedin.com/in/sergio-corrales-alonso-barajas-52b6911a0/" target="_blank" class="text-gray-500 hover:text-primary transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+                <a href="https://x.com/Seecoalba" target="_blank" class="text-gray-500 hover:text-primary transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+                <a href="https://www.youtube.com/@secoalba" target="_blank" class="text-gray-500 hover:text-primary transition"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- ===================== ABOUT ===================== -->
+    <section id="about" class="py-24 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-bold text-white mb-16 fade-up">About</h2>
+
+            <div class="grid md:grid-cols-2 gap-12 fade-up">
+                <!-- Background (left) -->
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-4">Background</h3>
+                    <p class="text-gray-400 leading-relaxed mb-4">
+                        Security researcher and protocol developer specializing in smart contract security, tooling development, and blockchain protocol engineering across EVM and Non-EVM ecosystems. Conducted 25+ private security audits, discovering over 170 vulnerabilities across EVM and Non-EVM protocols.
+                    </p>
+                    <p class="text-gray-400 leading-relaxed">
+                        Built three security tools for Solana at Inversive Labs: <span class="text-white font-medium">Eloizer</span> (static analyzer), <span class="text-white font-medium">Solaris</span> (coverage-guided fuzzer) and <span class="text-white font-medium">Radiant</span> (concolic execution engine).
+                    </p>
+                </div>
+
+                <!-- Timeline (right) -->
+                <div>
+                    <h3 class="text-xl font-semibold text-white mb-6">Timeline</h3>
+                    <div class="space-y-8 border-l-2 border-gray-800 pl-8 relative">
+                        <div class="relative">
+                            <div class="timeline-dot absolute -left-[41px] top-1"></div>
+                            <p class="font-mono text-primary text-sm mb-1">Mar 2026 &mdash; Present</p>
+                            <p class="text-white font-semibold">Independent Security Researcher & Developer</p>
+                            <p class="text-gray-400 text-sm mt-1">Security research, protocol and tooling development across EVM and Non-EVM.</p>
+                        </div>
+                        <div class="relative">
+                            <div class="timeline-dot absolute -left-[41px] top-1"></div>
+                            <p class="font-mono text-primary text-sm mb-1">Aug 2025 &mdash; Mar 2026</p>
+                            <p class="text-white font-semibold">Co-founder &mdash; Inversive Labs</p>
+                            <p class="text-gray-400 text-sm mt-1">Boutique R&D security firm. Built Eloizer, Solaris, and Radiant. Security audits and protocol development for Solana.</p>
+                        </div>
+                        <div class="relative">
+                            <div class="timeline-dot absolute -left-[41px] top-1"></div>
+                            <p class="font-mono text-primary text-sm mb-1">Jan 2024 &mdash; Aug 2025</p>
+                            <p class="text-white font-semibold">Co-founder &mdash; Zealynx Security</p>
+                            <p class="text-gray-400 text-sm mt-1">Smart contract auditing firm. 20+ EVM and Non-EVM audits. Testing campaigns.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- ===================== PROJECTS BUILT ===================== -->
+    <section id="development" class="py-24 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-bold text-white mb-4 fade-up">Projects Built</h2>
+            <p class="text-gray-400 mb-8 fade-up">Protocol development, security tooling, and contributions.</p>
+
+            <!-- Filters -->
+            <div class="filter-wrap flex flex-wrap gap-3 mb-10 fade-up">
+                <button class="filter-btn active px-4 py-2 rounded-full text-sm border border-gray-700 text-gray-400 hover:border-primary hover:text-white transition" data-filter="all">All</button>
+                <button class="filter-btn px-4 py-2 rounded-full text-sm border border-gray-700 text-gray-400 hover:border-primary hover:text-white transition" data-filter="solana">Solana</button>
+                <button class="filter-btn px-4 py-2 rounded-full text-sm border border-gray-700 text-gray-400 hover:border-primary hover:text-white transition" data-filter="evm">EVM</button>
+            </div>
+
+            <!-- Project Grid -->
+            <div id="project-grid" class="project-grid grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+
+                <!-- SOLANA / TOOLING -->
+                <div class="project-card fade-up border border-gray-800 rounded-xl p-6 transition-all" data-category="solana-tooling" class="tooling-solana">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 397.7 311.7" fill="none"><path fill="url(#sol-a)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/><path fill="url(#sol-b)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/><path fill="url(#sol-c)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/></svg>
+                            <span class="tag tag-solana">Solana</span>
+                            <span class="tag tag-tooling">Tooling</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Own Project</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Eloizer</h3>
+                    <p class="text-gray-400 text-sm mb-3">Modular Static Analysis Framework for Solana Programs. Detect vulnerabilities, security issues, and code quality problems.</p>
+                    <div class="flex items-center gap-3">
+                        <a href="tools/eloizer.html" class="text-primary text-sm hover:text-accent transition">Details &rarr;</a>
+                        <a href="blog/eloizer.html" class="text-gray-500 text-sm hover:text-primary transition">Article</a>
+                        <a href="https://github.com/Inversive-Labs/eloizer" target="_blank" class="text-gray-500 text-sm hover:text-gray-300 transition">GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card fade-up border border-gray-800 rounded-xl p-6 transition-all" data-category="solana-tooling" class="tooling-solana">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 397.7 311.7" fill="none"><path fill="url(#sol-a)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/><path fill="url(#sol-b)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/><path fill="url(#sol-c)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/></svg>
+                            <span class="tag tag-solana">Solana</span>
+                            <span class="tag tag-tooling">Tooling</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Inversive Labs</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Solaris</h3>
+                    <p class="text-gray-400 text-sm mb-3">Bytecode-level coverage-guided, stateful, structure-aware fuzzer for Solana programs. Discover vulnerabilities through intelligent fuzzing.</p>
+                    <div class="flex items-center gap-3">
+                        <a href="tools/solaris.html" class="text-primary text-sm hover:text-accent transition">Details &rarr;</a>
+                        <a href="blog/solaris.html" class="text-gray-500 text-sm hover:text-primary transition">Article</a>
+                    </div>
+                </div>
+
+                <div class="project-card fade-up border border-gray-800 rounded-xl p-6 transition-all" data-category="solana-tooling" class="tooling-solana">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 397.7 311.7" fill="none"><path fill="url(#sol-a)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/><path fill="url(#sol-b)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/><path fill="url(#sol-c)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/></svg>
+                            <span class="tag tag-solana">Solana</span>
+                            <span class="tag tag-tooling">Tooling</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Inversive Labs</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Radiant</h3>
+                    <p class="text-gray-400 text-sm mb-3">Bytecode-level Concolic execution engine for Solana Programs. Explore execution paths for satisfiable program inputs, and discover edge cases to uncover vulnerabilities.</p>
+                    <div class="flex items-center gap-3">
+                        <a href="tools/radiant.html" class="text-primary text-sm hover:text-accent transition">Details &rarr;</a>
+                        <a href="blog/radiant.html" class="text-gray-500 text-sm hover:text-primary transition">Article</a>
+                    </div>
+                </div>
+
+                <!-- EVM / TOOLING -->
+                <div class="project-card fade-up border border-gray-800 rounded-xl p-6 transition-all" data-category="evm-tooling" class="tooling-evm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 784 784" fill="none"><path fill="#60a5fa" d="M392.07 0L383.5 29.11v536.52l8.57 8.55 247.9-146.72z"/><path fill="#93c5fd" d="M392.07 0L144.17 427.46l247.9 146.72V311.52z"/><path fill="#3b82f6" d="M392.07 618.46l-4.82 5.87v190.25l4.82 14.09 248.09-349.5z"/><path fill="#93c5fd" d="M392.07 828.67V618.46L144.17 479.17z"/><path fill="#2563eb" d="M392.07 574.18l247.9-146.72-247.9-112.66z"/><path fill="#60a5fa" d="M144.17 427.46l247.9 146.72V314.82z"/></svg>
+                            <span class="tag tag-evm">EVM</span>
+                            <span class="tag tag-tooling">Tooling</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Hackathon Winner</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Aderyn &mdash; Custom Detector</h3>
+                    <p class="text-gray-400 text-sm mb-3">Hackathon-winning contribution to Cyfrin's Aderyn static analyzer. Built a division-before-multiplication detector in Rust.</p>
+                    <a href="https://github.com/Cyfrin/aderyn/pull/388" target="_blank" class="text-primary text-sm hover:text-accent transition">Pull Request &rarr;</a>
+                </div>
+
+                <div class="project-card fade-up border border-gray-800 rounded-xl p-6 transition-all" data-category="evm-tooling" class="tooling-evm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 784 784" fill="none"><path fill="#60a5fa" d="M392.07 0L383.5 29.11v536.52l8.57 8.55 247.9-146.72z"/><path fill="#93c5fd" d="M392.07 0L144.17 427.46l247.9 146.72V311.52z"/><path fill="#3b82f6" d="M392.07 618.46l-4.82 5.87v190.25l4.82 14.09 248.09-349.5z"/><path fill="#93c5fd" d="M392.07 828.67V618.46L144.17 479.17z"/><path fill="#2563eb" d="M392.07 574.18l247.9-146.72-247.9-112.66z"/><path fill="#60a5fa" d="M144.17 427.46l247.9 146.72V314.82z"/></svg>
+                            <span class="tag tag-evm">EVM</span>
+                            <span class="tag tag-tooling">Tooling</span>
+                        </div>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">r55 Contribution</h3>
+                    <p class="text-gray-400 text-sm mb-3">Contribution to r55, an experimental RISC-V Ethereum Execution Environment integrating RISC-V smart contracts alongside EVM.</p>
+                    <a href="https://github.com/r55-eth/r55/pull/14" target="_blank" class="text-primary text-sm hover:text-accent transition">Pull Request &rarr;</a>
+                </div>
+
+                <!-- SOLANA -->
+                <div class="project-card fade-up bg-card border border-gray-800 rounded-xl p-6 transition-all" data-category="solana">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 397.7 311.7" fill="none"><path fill="url(#sol-a)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/><path fill="url(#sol-b)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/><path fill="url(#sol-c)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/></svg>
+                            <span class="tag tag-solana">Solana</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Jan&ndash;Jun 2025</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Paragon &mdash; Indexer & Bots</h3>
+                    <p class="text-gray-400 text-sm mb-3">Solana indexer, Telegram bot, DEX integration, and raiding bot for Paragon.</p>
+                    <span class="text-gray-600 text-xs">Private</span>
+                </div>
+
+                <div class="project-card fade-up bg-card border border-gray-800 rounded-xl p-6 transition-all" data-category="solana">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 397.7 311.7" fill="none"><path fill="url(#sol-a)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/><path fill="url(#sol-b)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/><path fill="url(#sol-c)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/></svg>
+                            <span class="tag tag-solana">Solana</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Jan&ndash;Jun 2025</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Paragon &mdash; DEX</h3>
+                    <p class="text-gray-400 text-sm mb-3">Decentralized exchange development on Solana for Paragon.</p>
+                    <span class="text-gray-600 text-xs">Private</span>
+                </div>
+
+                <div class="project-card fade-up bg-card border border-gray-800 rounded-xl p-6 transition-all" data-category="solana">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 397.7 311.7" fill="none"><path fill="url(#sol-a)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/><path fill="url(#sol-b)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/><path fill="url(#sol-c)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/></svg>
+                            <span class="tag tag-solana">Solana</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Feb&ndash;Mar 2026</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Neptun Finance &mdash; Protocol Dev</h3>
+                    <p class="text-gray-400 text-sm mb-3">Protocol development for Neptun Finance on Solana.</p>
+                    <span class="text-gray-600 text-xs">Private</span>
+                </div>
+
+                <div class="project-card fade-up bg-card border border-gray-800 rounded-xl p-6 transition-all" data-category="solana">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 397.7 311.7" fill="none"><path fill="url(#sol-a)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/><path fill="url(#sol-b)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/><path fill="url(#sol-c)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/></svg>
+                            <span class="tag tag-solana">Solana</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Sep 2024</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Solana ONFT</h3>
+                    <p class="text-gray-400 text-sm mb-3">LayerZero Omnichain NFT implementation on Solana.</p>
+                    <div class="flex items-center gap-3">
+                        <a href="reports/viewer.html#file=Solana-ONFT-README.md&repo=https://github.com/ZealynxSecurity/solana-LzApp-ONFT" class="text-primary text-sm hover:text-accent transition">View &rarr;</a>
+                        <a href="https://github.com/ZealynxSecurity/solana-LzApp-ONFT" target="_blank" class="text-gray-500 text-sm hover:text-gray-300 transition">GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card fade-up bg-card border border-gray-800 rounded-xl p-6 transition-all" data-category="solana">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 397.7 311.7" fill="none"><path fill="url(#sol-a)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/><path fill="url(#sol-b)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/><path fill="url(#sol-c)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/></svg>
+                            <span class="tag tag-solana">Solana</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Apr 2024</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Side.xyz &mdash; Rewards</h3>
+                    <p class="text-gray-400 text-sm mb-3">Staking reward pool implementation on Solana for Side.xyz.</p>
+                    <a href="https://github.com/ZealynxSecurity/staking_reward_pool" target="_blank" class="text-primary text-sm hover:text-accent transition">GitHub &rarr;</a>
+                </div>
+
+                <!-- EVM -->
+                <div class="project-card fade-up bg-card border border-gray-800 rounded-xl p-6 transition-all" data-category="evm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 784 784" fill="none"><path fill="#60a5fa" d="M392.07 0L383.5 29.11v536.52l8.57 8.55 247.9-146.72z"/><path fill="#93c5fd" d="M392.07 0L144.17 427.46l247.9 146.72V311.52z"/><path fill="#3b82f6" d="M392.07 618.46l-4.82 5.87v190.25l4.82 14.09 248.09-349.5z"/><path fill="#93c5fd" d="M392.07 828.67V618.46L144.17 479.17z"/><path fill="#2563eb" d="M392.07 574.18l247.9-146.72-247.9-112.66z"/><path fill="#60a5fa" d="M144.17 427.46l247.9 146.72V314.82z"/></svg>
+                            <span class="tag tag-evm">EVM</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Sep 2024</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Uniswap V4 &mdash; Risk Neutral Hook</h3>
+                    <p class="text-gray-400 text-sm mb-3">LVR & IL Hedging Hook for concentrated liquidity providers. Hookathon entry.</p>
+                    <div class="flex items-center gap-3">
+                        <a href="reports/viewer.html#file=UniswapV4-RiskNeutralHook-README.md&repo=https://github.com/scab24/univ4-risk-neutral-hook/tree/hookathon" class="text-primary text-sm hover:text-accent transition">View &rarr;</a>
+                        <a href="reports/pdf-viewer.html#file=UniswapV4_Hookathon_IL_Hedging_MathPrimer.pdf&title=Uniswap%20v4%20%E2%80%94%20A%20Mathematical%20Primer" class="text-gray-500 text-sm hover:text-gray-300 transition">Paper</a>
+                        <a href="https://github.com/scab24/univ4-risk-neutral-hook/tree/hookathon" target="_blank" class="text-gray-500 text-sm hover:text-gray-300 transition">GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card fade-up bg-card border border-gray-800 rounded-xl p-6 transition-all" data-category="evm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 784 784" fill="none"><path fill="#60a5fa" d="M392.07 0L383.5 29.11v536.52l8.57 8.55 247.9-146.72z"/><path fill="#93c5fd" d="M392.07 0L144.17 427.46l247.9 146.72V311.52z"/><path fill="#3b82f6" d="M392.07 618.46l-4.82 5.87v190.25l4.82 14.09 248.09-349.5z"/><path fill="#93c5fd" d="M392.07 828.67V618.46L144.17 479.17z"/><path fill="#2563eb" d="M392.07 574.18l247.9-146.72-247.9-112.66z"/><path fill="#60a5fa" d="M144.17 427.46l247.9 146.72V314.82z"/></svg>
+                            <span class="tag tag-evm">EVM</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Dec 2024</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Inverter Network</h3>
+                    <p class="text-gray-400 text-sm mb-3">Payment processor and price feed management for Inverter Network.</p>
+                    <div class="flex items-center gap-3">
+                        <a href="reports/viewer.html#file=InverterContracts-README.md&repo=https://github.com/ZealynxSecurity/InverterContracts" class="text-primary text-sm hover:text-accent transition">View &rarr;</a>
+                        <a href="https://github.com/ZealynxSecurity/InverterContracts" target="_blank" class="text-gray-500 text-sm hover:text-gray-300 transition">GitHub</a>
+                    </div>
+                </div>
+
+                <div class="project-card fade-up bg-card border border-gray-800 rounded-xl p-6 transition-all" data-category="evm">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 784 784" fill="none"><path fill="#60a5fa" d="M392.07 0L383.5 29.11v536.52l8.57 8.55 247.9-146.72z"/><path fill="#93c5fd" d="M392.07 0L144.17 427.46l247.9 146.72V311.52z"/><path fill="#3b82f6" d="M392.07 618.46l-4.82 5.87v190.25l4.82 14.09 248.09-349.5z"/><path fill="#93c5fd" d="M392.07 828.67V618.46L144.17 479.17z"/><path fill="#2563eb" d="M392.07 574.18l247.9-146.72-247.9-112.66z"/><path fill="#60a5fa" d="M144.17 427.46l247.9 146.72V314.82z"/></svg>
+                            <span class="tag tag-evm">EVM</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Mar 2024</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Side.xyz &mdash; Staking</h3>
+                    <p class="text-gray-400 text-sm mb-3">EVM staking contract development for Side.xyz.</p>
+                    <a href="https://github.com/ZealynxSecurity/Staking/tree/main" target="_blank" class="text-primary text-sm hover:text-accent transition">GitHub &rarr;</a>
+                </div>
+            </div>
+
+            <!-- View More (mobile only) -->
+            <button id="view-more-projects" class="view-more-btn fade-up">
+                <span>View more projects</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- ===================== TOOLS BUILT ===================== -->
+    <section id="tools" class="py-24 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-bold text-white mb-4 fade-up">Security Tools</h2>
+            <p class="text-gray-400 mb-10 fade-up">Tools developed at Inversive Labs for Solana smart contract security. Click to see full details.</p>
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Eloizer -->
+                <div class="tool-card fade-up bg-card border border-gray-800 rounded-xl overflow-hidden group relative hover:border-primary/50 transition-all">
+                    <a href="tools/eloizer.html" class="block">
+                        <div class="aspect-video overflow-hidden bg-gray-900 border-b border-gray-800">
+                            <img src="images/eloizer/gif_static_analyzer.gif" alt="Eloizer Demo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-6 pb-2">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-gray-500 text-xs font-mono">Open Source</span>
+                            </div>
+                            <h3 class="text-white text-lg font-semibold mb-1">Eloizer</h3>
+                            <p class="text-gray-500 text-xs font-mono mb-3">Static Analyzer</p>
+                            <p class="text-gray-400 text-sm mb-4">Modular Static Analysis Framework for Solana Programs. Detect vulnerabilities, security issues, and code quality problems.</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="tag tag-tooling">Rust</span>
+                                <span class="tag tag-solana">Solana</span>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="px-6 pb-6 pt-3 flex items-center justify-between">
+                        <a href="tools/eloizer.html" class="text-primary text-sm font-medium hover:text-accent transition">View details &rarr;</a>
+                        <a href="blog/eloizer.html" class="text-gray-500 text-xs hover:text-primary transition">Read Article</a>
+                    </div>
+                </div>
+
+                <!-- Solaris -->
+                <div class="tool-card fade-up bg-card border border-gray-800 rounded-xl overflow-hidden group relative hover:border-primary/50 transition-all">
+                    <a href="tools/solaris.html" class="block">
+                        <div class="aspect-video overflow-hidden bg-gray-900 border-b border-gray-800">
+                            <img src="images/solaris/13.gif" alt="Solaris Demo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-6 pb-2">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                                <span class="text-gray-500 text-xs font-mono">Private &mdash; Inversive Labs</span>
+                            </div>
+                            <h3 class="text-white text-lg font-semibold mb-1">Solaris</h3>
+                            <p class="text-gray-500 text-xs font-mono mb-3">Coverage-Guided Fuzzer</p>
+                            <p class="text-gray-400 text-sm mb-4">Bytecode-level coverage-guided, stateful, structure-aware fuzzer for Solana programs. Discover vulnerabilities through intelligent fuzzing.</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="tag tag-tooling">Rust</span>
+                                <span class="tag tag-solana">Solana</span>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="px-6 pb-6 pt-3 flex items-center justify-between">
+                        <a href="tools/solaris.html" class="text-primary text-sm font-medium hover:text-accent transition">View details &rarr;</a>
+                        <a href="blog/solaris.html" class="text-gray-500 text-xs hover:text-primary transition">Read Article</a>
+                    </div>
+                </div>
+
+                <!-- Radiant -->
+                <div class="tool-card fade-up bg-card border border-gray-800 rounded-xl overflow-hidden group relative hover:border-primary/50 transition-all">
+                    <a href="tools/radiant.html" class="block">
+                        <div class="aspect-video overflow-hidden bg-gray-900 border-b border-gray-800">
+                            <img src="images/radiant/gif_radiant_demo.gif" alt="Radiant Demo" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-6 pb-2">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                                <span class="text-gray-500 text-xs font-mono">Private &mdash; Inversive Labs</span>
+                            </div>
+                            <h3 class="text-white text-lg font-semibold mb-1">Radiant</h3>
+                            <p class="text-gray-500 text-xs font-mono mb-3">Concolic Execution Engine</p>
+                            <p class="text-gray-400 text-sm mb-4">Bytecode-level Concolic execution engine for Solana Programs. Explore execution paths for satisfiable program inputs, and discover edge cases to uncover vulnerabilities.</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="tag tag-tooling">Rust</span>
+                                <span class="tag tag-solana">Solana</span>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="px-6 pb-6 pt-3 flex items-center justify-between">
+                        <a href="tools/radiant.html" class="text-primary text-sm font-medium hover:text-accent transition">View details &rarr;</a>
+                        <a href="blog/radiant.html" class="text-gray-500 text-xs hover:text-primary transition">Read Article</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- ===================== SECURITY WORK ===================== -->
+    <section id="security" class="py-24 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-bold text-white mb-4 fade-up">Security Work</h2>
+            <p class="text-gray-400 mb-8 fade-up">Audits, testing campaigns, contests, and contributions.</p>
+
+            <!-- Sub-tabs -->
+            <div class="sub-tabs-wrap flex flex-wrap gap-3 mb-10 fade-up">
+                <button class="sub-tab active text-gray-400" data-tab="tab-audits">Audits</button>
+                <button class="sub-tab text-gray-400" data-tab="tab-testing">Testing Campaigns</button>
+                <button class="sub-tab text-gray-400" data-tab="tab-contests">Public Contests</button>
+                <button class="sub-tab text-gray-400" data-tab="tab-opensource">Contributions</button>
+            </div>
+
+            <!-- ===== AUDITS TAB ===== -->
+            <div id="tab-audits" class="audit-panel active fade-up">
+                <!-- Inversive Labs -->
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-primary rounded-full"></span> Inversive Labs
+                </h3>
+                <div class="overflow-x-auto mb-10">
+                    <table class="audit-table">
+                        <thead><tr><th>Client</th><th>Type</th><th>Chain</th><th>Date</th><th>Report</th></tr></thead>
+                        <tbody>
+                            <tr><td class="text-white">Mixoor</td><td>Security Assessment</td><td><span class="tag tag-solana">Solana</span></td><td class="font-mono text-xs">Dec 2025 &ndash; Feb 2026</td><td><a href="reports/pdf-viewer.html#file=Inversive-Mixoor_ILAR-2026-03.pdf&title=Mixoor%20-%20Security%20Assessment" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white">Fuul</td><td>Security Assessment</td><td><span class="tag tag-solana">Solana</span></td><td class="font-mono text-xs">Dec 2025</td><td><a href="reports/pdf-viewer.html#file=Inversive-Fuul_ILAR-2026-01.pdf&title=Fuul%20-%20Security%20Assessment" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white">Fuul</td><td>Invariant Testing</td><td><span class="tag tag-solana">Solana</span></td><td class="font-mono text-xs">Jan 2026</td><td><a href="reports/pdf-viewer.html#file=Inversive-Fuul_ILAR-2026-02.pdf&title=Fuul%20-%20Invariant%20Testing" target="_blank">View &rarr;</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Zealynx - Non-EVM -->
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-primary rounded-full"></span> Zealynx Security &mdash; Non-EVM
+                </h3>
+                <div class="overflow-x-auto mb-10">
+                    <table class="audit-table">
+                        <thead><tr><th>Client</th><th>Type</th><th>Chain</th><th>Date</th><th>Report</th></tr></thead>
+                        <tbody>
+                            <tr><td class="text-white"><a href="https://www.pgn.io/" target="_blank">Paragon</a></td><td>DEX Staking</td><td><span class="tag tag-solana">Solana</span></td><td class="font-mono text-xs">Jan&ndash;Jun 2025</td><td><span class="text-gray-600">Private</span></td></tr>
+                            <tr><td class="text-white">Neptun Finance</td><td>LBP Launchpad</td><td><span class="tag tag-solana">Solana</span></td><td class="font-mono text-xs">May 2024</td><td><span class="text-gray-600">Private</span></td></tr>
+                            <tr><td class="text-white"><a href="https://aurora.dev/" target="_blank">Aurora</a></td><td>ETH Wallet Integration</td><td><span class="tag tag-near">NEAR</span></td><td class="font-mono text-xs">May 2024</td><td><span class="text-gray-600">Private</span></td></tr>
+                            <tr><td class="text-white"><a href="https://aurora.dev/" target="_blank">Aurora</a></td><td>ERC-20/NEP-141 Rainbow Bridge</td><td><span class="tag tag-near">NEAR</span></td><td class="font-mono text-xs">Apr 2024</td><td><a href="reports/pdf-viewer.html#file=AuditOne-Near-Connector-AuditReport.pdf&title=Aurora%20-%20Rainbow%20Bridge" target="_blank">View &rarr;</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Zealynx - EVM -->
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-primary rounded-full"></span> Zealynx Security &mdash; EVM
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="audit-table">
+                        <thead><tr><th>Client</th><th>Type</th><th>Date</th><th>Report</th></tr></thead>
+                        <tbody>
+                            <tr><td class="text-white">Matchain</td><td>Liquid Staking</td><td class="font-mono text-xs">Jul 2025</td><td><a href="reports/pdf-viewer.html#file=Matchain-AuditReport2.pdf&title=Matchain%20-%20Liquid%20Staking" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white">Matchain</td><td>NFT Staking</td><td class="font-mono text-xs">Jul 2025</td><td><a href="reports/pdf-viewer.html#file=Matchain-AuditReport1.pdf&title=Matchain%20-%20NFT%20Staking" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white">Ipal Network</td><td>NFT-gated Access System</td><td class="font-mono text-xs">May 2025</td><td><a href="reports/pdf-viewer.html#file=Ipal_Network-Audit-Report.pdf&title=Ipal%20Network%20-%20NFT-gated%20Access" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://www.ampleprotocol.xyz/" target="_blank">Ample Protocol</a></td><td>Staking Module</td><td class="font-mono text-xs">May 2025</td><td><a href="reports/pdf-viewer.html#file=Ample_ZealynxAudit-Report.pdf&title=Ample%20Protocol%20-%20Staking%20Module" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://paymatic.xyz/" target="_blank">Paymatic</a></td><td>Payment Gateway</td><td class="font-mono text-xs">May 2025</td><td><a href="reports/pdf-viewer.html#file=Paymatic_Audit_Report.pdf&title=Paymatic%20-%20Payment%20Gateway" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://sign.global/tokentable" target="_blank">TokenTable</a></td><td>Token Distribution</td><td class="font-mono text-xs">Apr 2025</td><td><a href="reports/pdf-viewer.html#file=Codespect-TokenTable-Merkle-Distributor.pdf&title=TokenTable%20-%20Token%20Distribution" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://badger.com/" target="_blank">Badger DAO</a></td><td>Staking Vault</td><td class="font-mono text-xs">Oct 2024</td><td><a href="reports/pdf-viewer.html#file=BadgerDAO-Audit-Report.pdf&title=Badger%20DAO%20-%20Staking%20Vault" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://redstone.finance/" target="_blank">Redstone</a></td><td>Modular Oracles</td><td class="font-mono text-xs">Sep 2024</td><td><a href="reports/pdf-viewer.html#file=Codespect-Redstone-Audit-Oracles.pdf&title=Redstone%20-%20Modular%20Oracles" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://www.monadex.exchange/" target="_blank">Monadex</a></td><td>DEX with Raffle</td><td class="font-mono text-xs">Sep 2024</td><td><a href="reports/pdf-viewer.html#file=Monadex-Report.pdf&title=Monadex%20-%20DEX%20with%20Raffle" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://lido.fi/" target="_blank">LIDO Finance</a></td><td>Staking Module + Router</td><td class="font-mono text-xs">Jul 2024</td><td><a href="reports/pdf-viewer.html#file=Lido-Finance-Report.pdf&title=LIDO%20Finance%20-%20Staking%20Module" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://ribbonprotocol.org/" target="_blank">Ribbon</a></td><td>Web3 HealthFi OS</td><td class="font-mono text-xs">Jun 2024</td><td><a href="reports/pdf-viewer.html#file=Ribbon-Audit-report.pdf&title=Ribbon%20-%20Web3%20HealthFi%20OS" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://glif.io/" target="_blank">Glif</a></td><td>Liquidity Mining</td><td class="font-mono text-xs">Jun 2024</td><td><a href="reports/viewer.html#file=Glif-PreAudit-Report.md" target="_blank">Report &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://www.wedefin.com/" target="_blank">Wedefin</a></td><td>Decentralized Index Fund</td><td class="font-mono text-xs">May 2024</td><td><a href="reports/pdf-viewer.html#file=Wedefin-Audit-Report.pdf&title=Wedefin%20-%20Decentralized%20Index%20Fund" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://bastionwallet.io/" target="_blank">Bastion Wallet</a></td><td>ERC-4337 Account Abstraction</td><td class="font-mono text-xs">Mar 2024</td><td><a href="reports/pdf-viewer.html#file=BastionWallet-SM-Security-Review.pdf&title=Bastion%20Wallet%20-%20Account%20Abstraction" target="_blank">View &rarr;</a></td></tr>
+                            <tr><td class="text-white"><a href="https://www.rxt.world/" target="_blank">RXT World</a></td><td>RXT Token</td><td class="font-mono text-xs">Oct 2023</td><td><a href="reports/pdf-viewer.html#file=RXT-Token-Smart-Contract-Audit.pdf&title=RXT%20World%20-%20RXT%20Token" target="_blank">View &rarr;</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== TESTING CAMPAIGNS TAB ===== -->
+            <div id="tab-testing" class="audit-panel fade-up">
+                <!-- Inversive Labs -->
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-primary rounded-full"></span> Inversive Labs
+                </h3>
+                <div class="overflow-x-auto mb-10">
+                    <table class="audit-table">
+                        <thead><tr><th>Client</th><th>Scope</th><th>Tools Used</th><th>Date</th><th>Report</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-white">Fuul</td>
+                                <td>Invariant Testing &mdash; Solana Protocol with Solaris</td>
+                                <td><span class="tag tag-tooling">Solaris</span></td>
+                                <td class="font-mono text-xs">Jan 2026</td>
+                                <td><a href="reports/pdf-viewer.html#file=Inversive-Fuul_ILAR-2026-02.pdf&title=Fuul%20-%20Invariant%20Testing" target="_blank">View &rarr;</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Zealynx -->
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-primary rounded-full"></span> Zealynx Security
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="audit-table">
+                        <thead><tr><th>Client</th><th>Scope</th><th>Tools Used</th><th>Date</th><th>Report</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-white"><a href="https://glif.io/" target="_blank">Glif</a></td>
+                                <td>DeFi Primitive of Filecoin</td>
+                                <td><span class="tag">Foundry</span> <span class="tag">Echidna</span> <span class="tag">Medusa</span></td>
+                                <td class="font-mono text-xs">Jul 2024</td>
+                                <td><a href="reports/viewer.html#file=Glif-Pools-Testing.md&repo=https://github.com/scab24/Portfolio/tree/main/Testing_Campaign/Glif/pools" target="_blank">View &rarr;</a></td>
+                            </tr>
+                            <tr>
+                                <td class="text-white"><a href="https://glif.io/" target="_blank">Glif</a></td>
+                                <td>Liquidity Mining &mdash; 85 tests, 2M + 2L + 4I findings</td>
+                                <td><span class="tag">Foundry</span> <span class="tag">Echidna</span> <span class="tag">Medusa</span> <span class="tag">Halmos</span> <span class="tag">Ityfuzz</span> <span class="tag">Kontrol</span></td>
+                                <td class="font-mono text-xs">Jun 2024</td>
+                                <td><a href="reports/viewer.html#file=Glif-PreAudit-Report.md" target="_blank">Report &rarr;</a></td>
+                            </tr>
+                            <tr>
+                                <td class="text-white"><a href="https://revert.finance/" target="_blank">Revert Protocol</a></td>
+                                <td>AMM Liquidity Providers</td>
+                                <td><span class="tag">Foundry</span> <span class="tag">Echidna</span> <span class="tag">Medusa</span></td>
+                                <td class="font-mono text-xs">Jun 2024</td>
+                                <td><a href="reports/viewer.html#file=Revert-Protocol-Testing.md&repo=https://github.com/scab24/Portfolio/tree/main/Testing_Campaign/Revert-Protocol/Revert-Protocol" target="_blank">View &rarr;</a></td>
+                            </tr>
+                            <tr>
+                                <td class="text-white"><a href="https://www.wedefin.com/" target="_blank">Wedefin</a></td>
+                                <td>Decentralized Index Fund</td>
+                                <td><span class="tag">Foundry</span> <span class="tag">Echidna</span> <span class="tag">Medusa</span></td>
+                                <td class="font-mono text-xs">May 2024</td>
+                                <td><a href="reports/pdf-viewer.html#file=Wedefin-Audit-Report.pdf&title=Wedefin%20-%20Decentralized%20Index%20Fund&repo=https://github.com/scab24/Portfolio/tree/main/Testing_Campaign/Wedefin/Wedefin" target="_blank">Report &rarr;</a></td>
+                            </tr>
+                            <tr>
+                                <td class="text-white"><a href="https://www.possumlabs.io/" target="_blank">Possum Labs</a></td>
+                                <td>Stake Yield-bearing Assets</td>
+                                <td><span class="tag">Foundry</span> <span class="tag">Echidna</span></td>
+                                <td class="font-mono text-xs">Mar 2024</td>
+                                <td><a href="reports/viewer.html#file=Possum-Labs-Testing.md&repo=https://github.com/scab24/Portfolio/tree/main/Testing_Campaign/Possum_Labs/Possum-Labs" target="_blank">View &rarr;</a></td>
+                            </tr>
+                            <tr>
+                                <td class="text-white"><a href="https://bastionwallet.io/" target="_blank">Bastion Wallet</a></td>
+                                <td>ERC-4337 Account Abstraction SDK</td>
+                                <td><span class="tag">Foundry</span> <span class="tag">Echidna</span> <span class="tag">Medusa</span> <span class="tag">Halmos</span></td>
+                                <td class="font-mono text-xs">Jan 2024</td>
+                                <td><a href="reports/viewer.html#file=BastionWallet-Testing.md&repo=https://github.com/scab24/Portfolio/tree/main/Testing_Campaign/Bastion_Wallet/BastionWallet" target="_blank">View &rarr;</a></td>
+                            </tr>
+                            <tr>
+                                <td class="text-white"><a href="https://www.codehawks.com/contests/clrp8xvh70001dq1os4gaqbv5" target="_blank">Math Master</a></td>
+                                <td>Formal Verification &mdash; Public Contest</td>
+                                <td><span class="tag">Foundry</span> <span class="tag">Halmos</span></td>
+                                <td class="font-mono text-xs">Feb 2024</td>
+                                <td><a href="reports/viewer.html#file=Math-Master-Testing.md&repo=https://github.com/scab24/Portfolio/tree/main/Testing_Campaign/Math_Master/FVMath" target="_blank">View &rarr;</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== PUBLIC CONTESTS TAB ===== -->
+            <div id="tab-contests" class="audit-panel fade-up">
+                <div class="overflow-x-auto">
+                    <table class="audit-table">
+                        <thead><tr><th>Contest</th><th>Platform</th><th>Reward</th><th>Findings</th><th>Date</th><th>Report</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td class="text-white">Beanstalk Part 1</td>
+                                <td>CodeHawks</td>
+                                <td class="text-green-400 font-mono">$8,000</td>
+                                <td>1 Medium</td>
+                                <td class="font-mono text-xs">Feb 2024</td>
+                                <td><a href="https://www.codehawks.com/contests/clsxlpte900074r5et7x6kh96" target="_blank">Contest &rarr;</a></td>
+                            </tr>
+                            <tr>
+                                <td class="text-white">Tadle</td>
+                                <td>CodeHawks</td>
+                                <td class="text-green-400 font-mono">$2.33</td>
+                                <td>2 High</td>
+                                <td class="font-mono text-xs">Aug 2024</td>
+                                <td><a href="reports/viewer.html#file=Tadle-Audit-Report.md" target="_blank">Report &rarr;</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== OPEN SOURCE TAB ===== -->
+            <div id="tab-opensource" class="audit-panel fade-up">
+                <!-- Inversive Labs contributions -->
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-primary rounded-full"></span> Inversive Labs
+                </h3>
+                <div class="overflow-x-auto mb-10">
+                    <table class="audit-table">
+                        <thead><tr><th>Project</th><th>Description</th><th>Status</th><th>Link</th></tr></thead>
+                        <tbody>
+                            <tr><td class="text-white">Eloizer</td><td>Modular static analysis framework for Solana programs</td><td><span class="tag tag-tooling">Open Source</span></td><td><a href="tools/eloizer.html">Details &rarr;</a> · <a href="https://github.com/Inversive-Labs/eloizer" target="_blank" class="text-gray-500 hover:text-gray-300">GitHub</a></td></tr>
+                            <tr><td class="text-white">Solaris</td><td>Coverage-guided fuzzer for Solana smart contracts</td><td><span class="tag">Private</span></td><td><a href="tools/solaris.html">Details &rarr;</a></td></tr>
+                            <tr><td class="text-white">Radiant</td><td>Concolic execution engine for Solana smart contracts</td><td><span class="tag">Private</span></td><td><a href="tools/radiant.html">Details &rarr;</a></td></tr>
+                            <tr><td class="text-white">Radare2</td><td>Initial sBPF v0-v3 architecture support: disassembly, pseudo-decompilation, Rust string aggregation</td><td><span class="tag tag-tooling">Merged</span></td><td><a href="https://github.com/radareorg/radare2" target="_blank">GitHub &rarr;</a></td></tr>
+                            <tr><td class="text-white">Radius2</td><td>Initial sBPF v0 symbolic execution architecture support</td><td><span class="tag tag-tooling">Merged</span></td><td><a href="https://github.com/radareorg/radius2" target="_blank">GitHub &rarr;</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Individual contributions -->
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <span class="w-2 h-2 bg-primary rounded-full"></span> Individual Contributions
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="audit-table">
+                        <thead><tr><th>Project</th><th>Description</th><th>Link</th></tr></thead>
+                        <tbody>
+                            <tr><td class="text-white">Eloizer</td><td>Modular static analysis framework for Solana &mdash; 50+ detectors, AST-based, built from scratch in Rust</td><td><a href="tools/eloizer.html">Details &rarr;</a> · <a href="https://github.com/Inversive-Labs/eloizer" target="_blank" class="text-gray-500 hover:text-gray-300">GitHub</a></td></tr>
+                            <tr><td class="text-white">Aderyn (Cyfrin)</td><td>Hackathon-winning custom detector: division-before-multiplication for Solidity</td><td><a href="https://github.com/Cyfrin/aderyn/pull/388" target="_blank">Pull Request &rarr;</a></td></tr>
+                            <tr><td class="text-white">r55</td><td>Contribution to experimental RISC-V Ethereum Execution Environment</td><td><a href="https://github.com/r55-eth/r55/pull/14" target="_blank">Pull Request &rarr;</a></td></tr>
+                            <tr><td class="text-white">Eburger</td><td>Contributions to Eburger, a static analysis tool for Solidity</td><td><a href="https://github.com/forefy/eburger" target="_blank">GitHub &rarr;</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- ===================== RESEARCH ===================== -->
+    <section id="research" class="py-24 px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 fade-up">
+                <h2 class="text-3xl font-bold text-white">Research & Talks</h2>
+                <a href="https://www.youtube.com/@secoalba" target="_blank" class="flex items-center gap-2 text-gray-400 hover:text-red-400 transition text-sm">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    YouTube Channel
+                </a>
+            </div>
+
+            <!-- Research Sub-tabs -->
+            <div class="flex gap-3 mb-10 fade-up research-tabs-wrap">
+                <button class="research-tab active" data-rtab="talks-panel">Talks & Papers</button>
+                <button class="research-tab" data-rtab="articles-panel">Articles</button>
+            </div>
+
+            <!-- ===== TALKS & PAPERS PANEL ===== -->
+            <div id="talks-panel" class="research-panel active">
+                <!-- r2con Talk -->
+                <div class="fade-up bg-card border border-gray-800 rounded-xl p-5 sm:p-8 mb-8">
+                    <h3 class="text-white text-lg font-semibold mb-2">Supporting Solana Program Analysis in Radare2</h3>
+                    <p class="text-gray-500 text-sm font-mono mb-4">r2con 2025 &mdash; Inversive Labs</p>
+                    <p class="text-gray-400 text-sm mb-6">Exploring Solana's runtime model, sBPF ISA, and demonstrating radare2 plug-ins developed for sBPF disassembly and analysis.</p>
+                    <div class="aspect-video rounded-lg overflow-hidden bg-gray-900" style="position: relative; padding-bottom: 56.25%; height: 0;">
+                        <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/IAt-HgKPN88" title="r2con Talk" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                    </div>
+                </div>
+
+                <!-- YouTube Channel Preview -->
+                <div class="fade-up bg-card border border-gray-800 rounded-xl p-5 sm:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-red-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold">@secoalba</h3>
+                                <p class="text-gray-500 text-xs">Security research & tooling demos</p>
+                            </div>
+                        </div>
+                        <a href="https://www.youtube.com/@secoalba" target="_blank" class="text-sm text-gray-400 hover:text-red-400 transition hidden sm:block">Visit Channel &rarr;</a>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <a href="https://www.youtube.com/watch?v=IAt-HgKPN88" target="_blank" class="group relative rounded-lg overflow-hidden aspect-video bg-gray-900">
+                            <img src="https://img.youtube.com/vi/IAt-HgKPN88/mqdefault.jpg" alt="r2con Talk" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition flex items-center justify-center">
+                                <div class="w-10 h-10 bg-red-600/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"><svg class="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+                            </div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=6FoNgpSeZYw" target="_blank" class="group relative rounded-lg overflow-hidden aspect-video bg-gray-900">
+                            <img src="https://img.youtube.com/vi/6FoNgpSeZYw/mqdefault.jpg" alt="Video" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition flex items-center justify-center">
+                                <div class="w-10 h-10 bg-red-600/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"><svg class="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+                            </div>
+                        </a>
+                        <a href="https://www.youtube.com/watch?v=PKKPH5VDWhE" target="_blank" class="group relative rounded-lg overflow-hidden aspect-video bg-gray-900">
+                            <img src="https://img.youtube.com/vi/PKKPH5VDWhE/mqdefault.jpg" alt="Video" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition flex items-center justify-center">
+                                <div class="w-10 h-10 bg-red-600/90 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"><svg class="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Paper -->
+                <div class="fade-up bg-card border border-gray-800 rounded-xl p-5 sm:p-8 mt-8">
+                    <h3 class="text-white text-lg font-semibold mb-2">Uniswap v4 &mdash; A Mathematical Primer</h3>
+                    <p class="text-gray-500 text-sm font-mono mb-4">2024</p>
+                    <p class="text-gray-400 text-sm mb-6">LVR & IL Hedge Hook for Concentrated Liquidity Providers. Dynamic Fees & Delta-Gamma Neutrality: Power Perpetuals & Lending Protocols.</p>
+                    <div class="paper-preview rounded-lg overflow-hidden border border-gray-800 mb-4" style="height: 400px;">
+                        <object data="reports/UniswapV4_Hookathon_IL_Hedging_MathPrimer.pdf" type="application/pdf" width="100%" height="100%">
+                            <div class="flex items-center justify-center h-full bg-card">
+                                <p class="text-gray-500 text-sm">PDF preview not available in this browser.</p>
+                            </div>
+                        </object>
+                    </div>
+                    <a href="reports/pdf-viewer.html#file=UniswapV4_Hookathon_IL_Hedging_MathPrimer.pdf&title=Uniswap%20v4%20%E2%80%94%20A%20Mathematical%20Primer" target="_blank" class="text-primary text-sm hover:text-accent transition">Open Full Paper &rarr;</a>
+                </div>
+            </div>
+
+            <!-- ===== ARTICLES PANEL ===== -->
+            <div id="articles-panel" class="research-panel" data-nav-anchor="articles-nav">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Solaris Article -->
+                    <a href="blog/solaris.html" class="group bg-card border border-gray-800 rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:transform hover:-translate-y-1">
+                        <div class="aspect-[16/9] overflow-hidden">
+                            <img src="images/blog/solaris.jpg" alt="Solaris" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="tag tag-solana">Solana</span>
+                                    <span class="tag tag-tooling">Tooling</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-surface border border-gray-700 rounded-full px-2.5 py-0.5">
+                                    <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                                    <span class="text-gray-400 text-xs">Inversive</span>
+                                </div>
+                            </div>
+                            <h3 class="text-white font-semibold mb-2 group-hover:text-primary transition">Solaris: Coverage-Guided Fuzzing</h3>
+                            <p class="text-gray-400 text-sm mb-4 line-clamp-3">Stateful, structure-aware, sBPF bytecode coverage-guided fuzzer for Solana programs. Protobuf modeling, stateful exploration, and collision-resistant edge tracking.</p>
+                            <div class="flex items-center gap-2 mb-3 text-xs text-gray-500">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                <span>@ulexec &middot; @Seecoalba</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600 text-xs font-mono">Dec 2025</span>
+                                <span class="text-primary text-sm group-hover:text-accent transition">Read &rarr;</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Radiant Article -->
+                    <a href="blog/radiant.html" class="group bg-card border border-gray-800 rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:transform hover:-translate-y-1">
+                        <div class="aspect-[16/9] overflow-hidden">
+                            <img src="images/blog/radiant.jpg" alt="Radiant" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="tag tag-solana">Solana</span>
+                                    <span class="tag tag-tooling">Tooling</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-surface border border-gray-700 rounded-full px-2.5 py-0.5">
+                                    <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                                    <span class="text-gray-400 text-xs">Inversive</span>
+                                </div>
+                            </div>
+                            <h3 class="text-white font-semibold mb-2 group-hover:text-primary transition">Radiant: Concolic Execution</h3>
+                            <p class="text-gray-400 text-sm mb-4 line-clamp-3">Binary-level concolic execution framework for Solana. Dual-engine architecture, cross-CPI symbolic execution, and GDB bridge integration.</p>
+                            <div class="flex items-center gap-2 mb-3 text-xs text-gray-500">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                <span>@ulexec &middot; @Seecoalba</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600 text-xs font-mono">Dec 2025</span>
+                                <span class="text-primary text-sm group-hover:text-accent transition">Read &rarr;</span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Eloizer Article -->
+                    <a href="blog/eloizer.html" class="group bg-card border border-gray-800 rounded-xl overflow-hidden hover:border-primary/50 transition-all hover:transform hover:-translate-y-1">
+                        <div class="aspect-[16/9] overflow-hidden">
+                            <img src="images/blog/eloizer.jpg" alt="Eloizer" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="tag tag-solana">Solana</span>
+                                    <span class="tag tag-tooling">Tooling</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-surface border border-gray-700 rounded-full px-2.5 py-0.5">
+                                    <div class="w-1.5 h-1.5 bg-primary rounded-full"></div>
+                                    <span class="text-gray-400 text-xs">Inversive</span>
+                                </div>
+                            </div>
+                            <h3 class="text-white font-semibold mb-2 group-hover:text-primary transition">Eloizer: Static Analysis</h3>
+                            <p class="text-gray-400 text-sm mb-4 line-clamp-3">Modular static analysis framework for Solana programs. DSL-based rule system, AST queries, and extensible vulnerability detection.</p>
+                            <div class="flex items-center gap-2 mb-3 text-xs text-gray-500">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                <span>@ulexec &middot; @Seecoalba</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-600 text-xs font-mono">Jan 2026</span>
+                                <span class="text-primary text-sm group-hover:text-accent transition">Read &rarr;</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- ===================== CONTACT ===================== -->
+    <section id="contact" class="py-24 px-6">
+        <div class="max-w-3xl mx-auto text-center fade-up">
+            <h2 class="text-3xl font-bold text-white mb-4">Get in Touch</h2>
+            <p class="text-gray-400 mb-10">Interested in working together? Feel free to reach out.</p>
+            <div class="contact-links flex flex-wrap justify-center gap-6">
+                <a href="https://github.com/scab24" target="_blank" class="flex items-center gap-3 bg-card border border-gray-800 rounded-xl px-6 py-4 hover:border-primary transition">
+                    <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <span class="text-gray-300 text-sm">GitHub</span>
+                </a>
+                <a href="https://www.linkedin.com/in/sergio-corrales-alonso-barajas-52b6911a0/" target="_blank" class="flex items-center gap-3 bg-card border border-gray-800 rounded-xl px-6 py-4 hover:border-primary transition">
+                    <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    <span class="text-gray-300 text-sm">LinkedIn</span>
+                </a>
+                <a href="https://x.com/Seecoalba" target="_blank" class="flex items-center gap-3 bg-card border border-gray-800 rounded-xl px-6 py-4 hover:border-primary transition">
+                    <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    <span class="text-gray-300 text-sm">X / Twitter</span>
+                </a>
+                <a href="https://www.youtube.com/@secoalba" target="_blank" class="flex items-center gap-3 bg-card border border-gray-800 rounded-xl px-6 py-4 hover:border-primary transition">
+                    <svg class="w-5 h-5 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    <span class="text-gray-300 text-sm">YouTube</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Scroll to Top -->
+    <button class="scroll-top" id="scroll-top" aria-label="Scroll to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800/50 py-8 px-6">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-gray-600 text-sm">&copy; 2026 Sergio Corrales</p>
+            <p class="text-gray-700 text-xs">Security Researcher & Protocol Builder</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

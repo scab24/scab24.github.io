@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eloizer - Static Analyzer | Sergio Corrales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', accent: '#60a5fa', light: '#93c5fd',
+                        surface: '#0f172a', card: '#1e293b', cardHover: '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+    <div id="scroll-progress"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <div class="flex items-center gap-4">
+                <a href="../blog/eloizer.html" class="text-sm text-gray-400 hover:text-primary transition">Read Article</a>
+                <a href="../index.html#tools" class="back-link">&larr; Back</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="tool-page-hero pt-28 pb-16 px-6">
+        <div class="max-w-4xl mx-auto text-center fade-up">
+            <div class="inline-flex items-center gap-2 bg-card border border-gray-800 rounded-full px-4 py-2 mb-6">
+                <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+                <span class="text-gray-400 text-sm">Open Source</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Eloizer</h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-8">Static analysis for Solana smart contracts. Detect vulnerabilities, security issues, and code quality problems.</p>
+            <div class="flex flex-wrap justify-center gap-3 mb-8">
+                <span class="tag tag-tooling">Rust</span>
+                <span class="tag tag-solana">Solana</span>
+                <span class="tag tag-solana">Anchor</span>
+                <span class="tag tag-tooling">AST Analysis</span>
+            </div>
+            <a href="https://github.com/Inversive-Labs/eloizer" target="_blank" class="inline-flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                View on GitHub
+            </a>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- Overview -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center fade-up">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-6">Overview</h2>
+                    <p class="text-gray-400 leading-relaxed mb-4">Built in Rust, Eloizer leverages abstract syntax tree (AST) analysis and pattern matching to identify common security vulnerabilities and anti-patterns specific to Solana programs.</p>
+                    <p class="text-gray-400 leading-relaxed mb-4">Integrates seamlessly into CI/CD pipelines, allowing teams to catch critical issues early in the development cycle.</p>
+                    <p class="text-gray-400 leading-relaxed">Detect vulnerabilities, code quality and security issues in your Solana/Anchor projects with 50+ built-in detectors.</p>
+                </div>
+                <div class="rounded-xl overflow-hidden border border-gray-800 zoomable" onclick="openImageModal(this.querySelector('img').src)">
+                    <img src="../images/eloizer/architecture_static.png" alt="Eloizer Architecture" class="w-full h-auto">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section class="py-16 px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center fade-up">
+                <div class="rounded-xl overflow-hidden border border-gray-800 zoomable" onclick="openImageModal(this.querySelector('img').src)">
+                    <img src="../images/eloizer/gif_static_analyzer.gif" alt="Eloizer Demo" class="w-full h-auto">
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-6">Demo</h2>
+                    <p class="text-gray-400 leading-relaxed mb-4">See the Static Analyzer in action as it scans Solana smart contracts, identifying vulnerabilities and security issues in real-time.</p>
+                    <p class="text-gray-400 leading-relaxed">The tool provides instant feedback with detailed reports, severity classifications, and actionable remediation guidance for each detected issue.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- How It Works -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-4 text-center fade-up">How It Works</h2>
+            <p class="text-gray-400 text-center mb-12 fade-up">A systematic approach to static analysis</p>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="step-card fade-up">
+                    <div class="step-number">01</div>
+                    <h3 class="text-white font-semibold mb-2">Parse</h3>
+                    <p class="text-gray-400 text-sm">Analyzes Rust/Anchor code and generates AST representation</p>
+                </div>
+                <div class="step-card fade-up">
+                    <div class="step-number">02</div>
+                    <h3 class="text-white font-semibold mb-2">Detect</h3>
+                    <p class="text-gray-400 text-sm">Runs 50+ specialized security detectors against the AST</p>
+                </div>
+                <div class="step-card fade-up">
+                    <div class="step-number">03</div>
+                    <h3 class="text-white font-semibold mb-2">Classify</h3>
+                    <p class="text-gray-400 text-sm">Assigns severity levels (Critical, High, Medium, Low, Info) to each finding</p>
+                </div>
+                <div class="step-card fade-up">
+                    <div class="step-number">04</div>
+                    <h3 class="text-white font-semibold mb-2">Report</h3>
+                    <p class="text-gray-400 text-sm">Generates detailed reports with exact locations and remediation guidance</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- Key Features -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-12 text-center fade-up">Key Features</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Antipattern Detection</h3>
+                    <p class="text-gray-400 text-sm">50+ built-in detectors covering common vulnerabilities, security anti-patterns, and code quality issues.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Lightning Fast</h3>
+                    <p class="text-gray-400 text-sm">Written in Rust for maximum performance. Analyze entire codebases in seconds with parallel processing.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Framework Support</h3>
+                    <p class="text-gray-400 text-sm">Support for any Solana architecture, ensuring maximum flexibility without framework limitations.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Detailed Reports</h3>
+                    <p class="text-gray-400 text-sm">Technical reports with exact locations, severity levels, and remediation suggestions.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Customizable Rules</h3>
+                    <p class="text-gray-400 text-sm">Create custom detectors and configure severity levels for your specific needs.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">CI/CD Integration</h3>
+                    <p class="text-gray-400 text-sm">Easy integration with GitHub Actions, GitLab CI. Automated security checks on every commit.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- Technical Specifications -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-12 text-center fade-up">Technical Specifications</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="use-case-card fade-up">
+                    <h4>Supported Languages</h4>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="tag">Rust</span>
+                        <span class="tag">Solana Programs</span>
+                        <span class="tag">Anchor Framework</span>
+                        <span class="tag">Native Solana</span>
+                    </div>
+                </div>
+                <div class="use-case-card fade-up">
+                    <h4>Detection Categories</h4>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="tag">Arithmetic</span>
+                        <span class="tag">Access Control</span>
+                        <span class="tag">Account Validation</span>
+                        <span class="tag">PDA Derivation</span>
+                        <span class="tag">Reentrancy</span>
+                        <span class="tag">Best Practices</span>
+                    </div>
+                </div>
+                <div class="use-case-card fade-up">
+                    <h4>Output Formats</h4>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="tag">JSON</span>
+                        <span class="tag">SARIF</span>
+                        <span class="tag">HTML Reports</span>
+                        <span class="tag">Terminal</span>
+                        <span class="tag">CSV</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- CTA -->
+    <section class="py-20 px-6">
+        <div class="max-w-3xl mx-auto text-center fade-up cta-section p-12">
+            <h2 class="text-2xl font-bold text-white mb-4">Start Securing Your Solana Programs</h2>
+            <p class="text-gray-400 mb-8">Open source and ready to use</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="https://github.com/Inversive-Labs/eloizer" target="_blank" class="inline-flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    View on GitHub
+                </a>
+                <a href="../index.html#tools" class="inline-flex items-center gap-2 bg-card border border-gray-800 hover:border-primary text-gray-300 hover:text-white px-6 py-3 rounded-lg font-medium transition">
+                    View All Tools
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800/50 py-8 px-6">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-gray-600 text-sm">&copy; 2026 Sergio Corrales</p>
+            <a href="../index.html" class="text-gray-500 hover:text-primary text-sm transition">Back to Portfolio</a>
+        </div>
+    </footer>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <button class="close-btn" onclick="closeImageModal()">&times;</button>
+        <img id="modalImage" src="" alt="Enlarged view">
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeImageModal(); });
+    </script>
+</body>
+</html>

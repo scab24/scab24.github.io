@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radiant - Concolic Execution Engine | Sergio Corrales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', accent: '#60a5fa', light: '#93c5fd',
+                        surface: '#0f172a', card: '#1e293b', cardHover: '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+    <div id="scroll-progress"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <div class="flex items-center gap-4">
+                <a href="../blog/radiant.html" class="text-sm text-gray-400 hover:text-primary transition">Read Article</a>
+                <a href="../index.html#tools" class="back-link">&larr; Back</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="tool-page-hero pt-28 pb-16 px-6">
+        <div class="max-w-4xl mx-auto text-center fade-up">
+            <div class="inline-flex items-center gap-2 bg-card border border-gray-800 rounded-full px-4 py-2 mb-6">
+                <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                <span class="text-gray-400 text-sm">Private &mdash; Inversive Labs</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Radiant</h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-8">Bytecode-level concolic execution engine for Solana smart contracts, enabling program analysis through symbolic and concrete execution.</p>
+            <div class="flex flex-wrap justify-center gap-3">
+                <span class="tag tag-tooling">Rust</span>
+                <span class="tag tag-solana">Solana</span>
+                <span class="tag tag-tooling">sBPF</span>
+                <span class="tag tag-tooling">Z3 Solver</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- Overview -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center fade-up">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-6">Overview</h2>
+                    <p class="text-gray-400 leading-relaxed mb-4">Radiant combines concrete and symbolic execution to systematically explore program paths in Solana smart contracts, enabling security validation tailored to your protocol's architecture.</p>
+                    <p class="text-gray-400 leading-relaxed">Leverages constraint solving to discover edge cases and reveal hidden vulnerabilities in your smart contracts.</p>
+                </div>
+                <div class="rounded-xl overflow-hidden border border-gray-800 zoomable" onclick="openImageModal(this.querySelector('img').src)">
+                    <img src="../images/radiant/radiant_logo.png" alt="Radiant" class="w-full h-auto">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Radiant + Demo GIF -->
+    <section class="py-16 px-6">
+        <div class="max-w-5xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center fade-up">
+                <div class="rounded-xl overflow-hidden border border-gray-800 zoomable" onclick="openImageModal(this.querySelector('img').src)">
+                    <img src="../images/radiant/gif_radiant_demo.gif" alt="Radiant Workflow" class="w-full h-auto">
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-6">Why Radiant?</h2>
+                    <p class="text-gray-400 leading-relaxed mb-4">Smart contracts operate in adversarial environments where traditional testing methods struggle to uncover edge cases that only manifest under specific state conditions. Manual testing and conventional fuzzing can't systematically explore all possible execution paths, leaving critical vulnerabilities hidden until they're exploited in production.</p>
+                    <p class="text-gray-400 leading-relaxed">Radiant solves this through concolic execution, combining concrete and symbolic execution to enable enhanced program path exploration. By symbolizing instruction parameters and account fields, solving constraints and generate concrete test inputs, Radiant discovers edge cases and validates invariants across the execution space of your protocol.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- How It Works -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-4 text-center fade-up">How It Works</h2>
+            <p class="text-gray-400 text-center mb-12 fade-up">A systematic approach to concolic execution</p>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="step-card fade-up">
+                    <div class="step-number">01</div>
+                    <h3 class="text-white font-semibold mb-2">Test Creation</h3>
+                    <p class="text-gray-400 text-sm">Create a testcase with selected accounts, transactions and desired blockchain state</p>
+                </div>
+                <div class="step-card fade-up">
+                    <div class="step-number">02</div>
+                    <h3 class="text-white font-semibold mb-2">Symbolize</h3>
+                    <p class="text-gray-400 text-sm">Symbolize specific instruction parameters or account fields for desired instructions</p>
+                </div>
+                <div class="step-card fade-up">
+                    <div class="step-number">03</div>
+                    <h3 class="text-white font-semibold mb-2">Deploy</h3>
+                    <p class="text-gray-400 text-sm">Deploy pipeline to triage symbolized fields to find concrete values</p>
+                </div>
+                <div class="step-card fade-up">
+                    <div class="step-number">04</div>
+                    <h3 class="text-white font-semibold mb-2">Report</h3>
+                    <p class="text-gray-400 text-sm">Found solutions to constraints can be assessed to build enhanced validation capabilities</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- Key Features -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-12 text-center fade-up">Key Features</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Symbolic Execution</h3>
+                    <p class="text-gray-400 text-sm">Exploration of all execution paths derived from symbolic values.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Invariant Testing</h3>
+                    <p class="text-gray-400 text-sm">Validates protocol invariants and security properties across diverse execution scenarios.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Custom Test Suites</h3>
+                    <p class="text-gray-400 text-sm">Augmented test suites tailored to your contract's logic.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Edge Case Discovery</h3>
+                    <p class="text-gray-400 text-sm">Identifies boundary conditions and corner cases that traditional fuzzing can miss.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Cross-CPI Support</h3>
+                    <p class="text-gray-400 text-sm">Analyzes cross-program invocations to discover vulnerabilities spanning multiple programs and complex interaction patterns.</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">State Merging</h3>
+                    <p class="text-gray-400 text-sm">Optimizes exploration by merging equivalent execution states, reducing path explosion and improving analysis performance for complex programs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- Use Cases -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-12 text-center fade-up">Use Cases</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Pre-Deployment Testing</h3>
+                    <p class="text-gray-400 text-sm">Invariant analysis and edge case discovery before contract deployment</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Regression Testing</h3>
+                    <p class="text-gray-400 text-sm">Automated test suite generation ensuring contract updates don't introduce new issues</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Protocol Validation</h3>
+                    <p class="text-gray-400 text-sm">Verification of security invariants and protocol-specific correctness properties</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- CTA -->
+    <section class="py-20 px-6">
+        <div class="max-w-3xl mx-auto text-center fade-up cta-section p-12">
+            <h2 class="text-2xl font-bold text-white mb-4">Validate Your Smart Contracts</h2>
+            <p class="text-gray-400 mb-8">Concolic testing methodology tailored to your protocol's architecture</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="../index.html#contact" class="inline-flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition">
+                    Request Access
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
+                <a href="../index.html#tools" class="inline-flex items-center gap-2 bg-card border border-gray-800 hover:border-primary text-gray-300 hover:text-white px-6 py-3 rounded-lg font-medium transition">
+                    View All Tools
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800/50 py-8 px-6">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-gray-600 text-sm">&copy; 2026 Sergio Corrales</p>
+            <a href="../index.html" class="text-gray-500 hover:text-primary text-sm transition">Back to Portfolio</a>
+        </div>
+    </footer>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <button class="close-btn" onclick="closeImageModal()">&times;</button>
+        <img id="modalImage" src="" alt="Enlarged view">
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeImageModal(); });
+    </script>
+</body>
+</html>

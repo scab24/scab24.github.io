@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solaris: Coverage-Guided Fuzzing for Solana | Sergio Corrales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/protobuf.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', accent: '#60a5fa', light: '#93c5fd',
+                        surface: '#0f172a', card: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Article styles -->
+    <style>
+        .article-body { color: #d1d5db; line-height: 1.8; font-size: 0.95rem; }
+        .article-body h2 { color: white; font-size: 1.5rem; font-weight: 600; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(59,130,246,0.15); }
+        .article-body h3 { color: #e2e8f0; font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.75rem; }
+        .article-body h4 { color: #cbd5e1; font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
+        .article-body p { margin-bottom: 1rem; }
+        .article-body strong { color: #e2e8f0; font-weight: 600; }
+        .article-body code { background: rgba(59,130,246,0.1); color: #93c5fd; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; border: 1px solid rgba(59,130,246,0.08); }
+        .article-body pre { background: #0d1117; border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 20px; overflow-x: auto; margin: 1.5rem 0; }
+        .article-body pre code { background: none; padding: 0; color: #d1d5db; border: none; font-size: 0.85rem; line-height: 1.6; }
+        .article-body ul, .article-body ol { padding-left: 1.75rem; margin-bottom: 1rem; }
+        .article-body ul { list-style-type: disc; }
+        .article-body ol { list-style-type: decimal; }
+        .article-body li { margin-bottom: 0.4rem; }
+        .article-body li > ul, .article-body li > ol { margin-top: 0.4rem; margin-bottom: 0; }
+        .article-body img { max-width: 100%; height: auto; border-radius: 10px; margin: 1.5rem auto; display: block; border: 1px solid rgba(59,130,246,0.1); }
+        .article-body blockquote { border-left: 3px solid #3b82f6; padding: 0.75rem 1.25rem; margin: 1.5rem 0; color: #94a3b8; background: rgba(59,130,246,0.04); border-radius: 0 8px 8px 0; }
+        .article-body a { color: #60a5fa; text-decoration: none; border-bottom: 1px solid rgba(96,165,250,0.3); transition: border-color 0.2s; }
+        .article-body a:hover { border-color: #60a5fa; }
+        /* Canvas visualization */
+        .canvas-visualization { position: relative; width: 100%; max-width: 800px; height: 600px; background: transparent; border-radius: 8px; overflow: hidden; margin: 40px auto; }
+        @media (max-width: 768px) { .canvas-visualization { height: 450px; } }
+        @media (max-width: 480px) { .canvas-visualization { height: 400px; } }
+        .canvas-visualization canvas { display: block; width: 100%; height: 100%; }
+    </style>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <div class="flex items-center gap-4">
+                <a href="../tools/solaris.html" class="text-sm text-gray-400 hover:text-primary transition">Tool Page</a>
+                <a href="../index.html#research" class="back-link">&larr; Back</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-6 pt-28 pb-16">
+        <!-- Article Header -->
+        <div class="mb-10">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="tag tag-solana">Solana</span>
+                <span class="tag tag-tooling">Tooling</span>
+                <span class="text-gray-600 text-sm font-mono">December 2025</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-bold text-white mb-4 leading-tight">Solaris: Stateful, Structure-Aware, sBPF Bytecode Coverage-Guided Fuzzing</h1>
+            <div class="flex flex-wrap items-center gap-3 mb-8">
+                <div class="flex items-center gap-2 bg-card border border-gray-800 rounded-full px-4 py-1.5">
+                    <div class="w-2 h-2 bg-primary rounded-full"></div>
+                    <span class="text-gray-400 text-sm font-medium">Inversive Labs</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm text-gray-500">
+                    <span>by</span>
+                    <a href="https://x.com/ulexec" target="_blank" class="hover:text-primary transition">@ulexec</a>
+                    <span>&middot;</span>
+                    <a href="https://x.com/Seecoalba" target="_blank" class="hover:text-primary transition">@Seecoalba</a>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl overflow-hidden border border-gray-800 mb-10">
+            <img src="../images/blog/solaris.jpg" alt="Solaris" class="w-full object-cover" style="max-height: 420px;">
+        </div>
+
+        <div class="article-body">
+
+            <p>This article introduces <strong>Solaris</strong>, a stateful, structure-aware, sBPF bytecode coverage-guided fuzzer designed for Solana programs.</p>
+
+            <p>By tracking execution state across transaction sequences, understanding program structure, and using bytecode-level coverage feedback, Solaris systematically explores a target program state space.</p>
+
+            <h2 id="introduction">Introduction</h2>
+
+            <p>Solaris is a stateful, structure-aware, sBPF bytecode coverage-guided fuzzer for Solana programs. It maintains execution context across transaction sequences and uses sBPF bytecode coverage feedback to systematically explore the program's state space. This enables discovery of vulnerabilities that require specific state conditions and instruction orderings.</p>
+
+            <h2 id="motivation">Motivation</h2>
+
+            <p>Solana programs follow a stateless architecture and don't maintain state between transactions. Each instruction operates on accounts passed to it, and any state changes must be explicitly saved to those accounts. However, to properly test these programs, we need to fuzz them in a stateful manner, executing sequences of instructions that build up program state over time.</p>
+
+            <p>The fundamental challenge is discovering the specific state conditions and instruction sequences required to reach deep program logic. A naive fuzzer faces three key obstacles:</p>
+
+            <ol>
+                <li><strong>Structural Validity</strong>: Most random transactions fail basic validation (wrong account types, malformed instruction data)</li>
+                <li><strong>State Dependencies</strong>: Reaching interesting program states requires executing specific instruction sequences that establish particular conditions across multiple transactions</li>
+                <li><strong>Blind Exploration</strong>: Without coverage feedback at the bytecode level, the fuzzer cannot tell which inputs are exploring new execution paths</li>
+            </ol>
+
+            <div class="canvas-visualization">
+                <canvas id="fuzzer-canvas"></canvas>
+            </div>
+
+            <p>Solaris addresses these challenges through:</p>
+
+            <ol>
+                <li><strong>Structure-Aware Mutation</strong>: Understanding transaction requirements, account relationships, and instruction formats to generate semantically valid inputs</li>
+                <li><strong>Stateful Execution</strong>: Maintaining program state across transaction sequences</li>
+                <li><strong>sBPF Bytecode Coverage Tracking</strong>: Instrumenting the Solana Virtual Machine to track executed instructions and branches at the bytecode level</li>
+                <li><strong>Coverage-Guided Exploration</strong>: Using bytecode coverage feedback to prioritize test cases that discover new execution paths</li>
+            </ol>
+
+            <p>This approach enables Solaris to efficiently fuzz Solana programs by combining valid input generation with stateful execution and relevant coverage feedback, rather than wasting cycles on malformed transactions or redundant execution paths.</p>
+
+            <h2 id="cli-and-key-features">CLI and Key Features</h2>
+
+            <p>Solaris provides a command-line interface for configuring and running fuzzing campaigns:</p>
+
+            <img src="../images/blog/Solaris/1.png" style="display: block; width: 100%; max-width: 500px; height: auto; margin: 14px auto;">
+
+            <p>Key features include:</p>
+
+            <ul>
+                <li><strong>Corpus Management</strong>: Solaris maintains a corpus of interesting test cases that trigger new coverage or exhibit unique behavior. The corpus automatically grows as the fuzzer discovers inputs that reach new code paths. The corpus manager is also in charge to minimize the corpora in intervals along the fuzzing campaign.</li>
+
+                <li><strong>Scheduling Algorithms</strong>: Multiple scheduling strategies determine which test cases to mutate next:
+                    <ul>
+                        <li><strong>Coverage-based scheduling</strong>: Prioritizes test cases that reached recent coverage gains</li>
+                        <li><strong>Power scheduling</strong>: Assigns energy to test cases based on their potential to discover new paths</li>
+                    </ul>
+                </li>
+
+                <li><strong>Multi-Worker Support</strong>: Solaris can spawn multiple fuzzing workers that share a corpus and coverage map, enabling parallel exploration of the state space. Workers coordinate to avoid redundant work while maximizing throughput.</li>
+
+                <li><strong>Test Case Reproducibility</strong>: Every crash or invariant violation includes the sequence of instructions required to reproduce it. Test cases are serialized in a JSON format, making it straightforward to replay failures during debugging or integrate findings into regression test suites.</li>
+            </ul>
+
+            <h2 id="architecture">Architecture</h2>
+
+            <p>The Solaris architecture orchestrates multiple components to generate, mutate, execute, and evaluate test cases:</p>
+
+            <img src="../images/blog/Solaris/2.png" style="display: block; width: 100%; max-width: 900px; height: auto; margin: 14px auto;">
+
+            <h3>Test Case Representation</h3>
+
+            <p>Test cases are defined using <strong>Google Protocol Buffers</strong> (protobuf), a language-neutral, platform-neutral serialization format developed by Google. Unlike treating inputs as raw byte arrays, protobuf provides a structured, schema-driven representation where data is organized into typed fields (integers, strings, nested messages) defined in <code>.proto</code> files. This structured format offers two key advantages for fuzzing:</p>
+
+            <ol>
+                <li><strong>Type Safety</strong>: Each field has a defined type and semantic meaning (e.g., a <code>u64</code> representing a lamport amount, a <code>bytes</code> field for some data parameter, ... etc), preventing nonsensical mutations like treating some data field as an integer</li>
+                <li><strong>Structure-Aware Mutation</strong>: The fuzzer can navigate the message hierarchy to mutate specific fields intelligently rather than blindly flipping random bits</li>
+            </ol>
+
+            <p>In Solaris, protobuf schemas capture the complete structure of Solana transaction sequences. This enables the mutator to generate semantically valid test cases that respect transaction requirements while still exploring the input space.</p>
+
+            <h3>Corpus Manager</h3>
+
+            <p>The <strong>Corpus Manager</strong> maintains the pool of interesting test cases discovered during fuzzing. It tracks which inputs reached new coverage, minimizes the corpus set in intervals, and provides test case selection for the scheduler.</p>
+
+            <h3>Scheduler</h3>
+
+            <p>The <strong>Scheduler</strong> intelligently selects test cases from the corpus for mutation. Different strategies include:</p>
+
+            <ul>
+                <li><strong>Coverage-based</strong>: Favors recently-discovered test cases that expanded coverage</li>
+                <li><strong>Power-based</strong>: Assigns mutation energy based on augmented statistics gathered on runtime, such as program input accesses, testcase length, and other statistics that can be assessed in conjunction for exploration potential</li>
+            </ul>
+
+            <h3>Mutator</h3>
+
+            <p>The <strong>Mutator</strong> component applies transformations to selected test cases. It operates at two levels:</p>
+
+            <ol>
+                <li><strong>Generic Mutations</strong>: Standard fuzzing operations (bit flips, arithmetic mutations, message field swapping/insertion/deletion) applied to protobuf fields.</li>
+                <li><strong>Custom Mutations</strong>: Domain-specific generation logic that leverages constraints defined via <code>Arbitrary</code> trait implementations in target-specific <code>arbitrary.rs</code> files. These mutations understand Solana semantics. e.g., generating valid account types, producing realistic instruction parameter ranges within expected bounds, ... etc.</li>
+            </ol>
+
+            <p>This dual approach enables both broad exploration through generic mutations and semantically-guided generation through custom logic. The mutator tracks which strategies successfully discover new coverage and adaptively weights future mutation selection accordingly.</p>
+
+            <h3>Fuzzer Orchestrator</h3>
+
+            <p>The <strong>Fuzzer Orchestrator</strong> coordinates the main fuzzing loop. Delegates corpus entry selection to the Scheduler, applying mutations to the Mutator, executing test cases through Executors, and processing feedback through the Feedback Manager. In multi-worker mode, multiple fuzzer instances run in parallel, each with its own Executor, while sharing coverage information through a shared memory map to coordinate their exploration efforts.</p>
+
+            <h3>Executor and Harness</h3>
+
+            <p>The <strong>Executor</strong> manages the harness lifecycle and orchestrates test case execution. For each test case, the following takes place:</p>
+
+            <ol>
+                <li>Reset the harness to a clean initial state</li>
+                <li>Clear coverage feedback from the previous execution</li>
+                <li>Execute the mutated protobuf message through the harness</li>
+                <li>Collect coverage feedback and timing information from instrumentation hooks in the SVM</li>
+            </ol>
+
+            <p>The <strong>Harness</strong> is the program-specific component that translates protobuf messages into actual Solana transactions. In addition, it manages program state, and checks security invariants to detect violations.</p>
+
+            <p>Harnesses can define custom invariants specific to the instruction being executed, and program being tested (e.g., "total token supply should never exceed cap" or "only authorized accounts can withdraw").</p>
+
+            <h3>Instrumented sBPF VM</h3>
+
+            <p>Test cases execute in an <strong>instrumented sBPF virtual machine</strong> that tracks execution at the bytecode level. Solaris uses a modified version of <code>solana-sbpf</code> where the interpreter calls instrumentation hooks on every instruction execution. These hooks capture:</p>
+
+            <ul>
+                <li><strong>Edge coverage</strong>: Control flow transitions between basic blocks</li>
+                <li><strong>PC tracking</strong>: Individual bytecode instruction addresses that have been executed</li>
+                <li><strong>Per-program coverage</strong>: Separate edge tracking for each program involved in execution, including CPI calls</li>
+                <li><strong>Features</strong>: Generates synthetic coverage edges on a variety of operations on successful transaction chains to augment coverage feedback</li>
+            </ul>
+
+            <p>This bytecode-level feedback enables the fuzzer to distinguish between test cases that exercise different code paths versus those that follow the same execution trace.</p>
+
+            <h3>Feedback Manager</h3>
+
+            <p>The <strong>Feedback Manager</strong> receives execution results from the instrumented VM and evaluates how "interesting" each test case was.</p>
+
+            <p>When new edges are found, the test case is added to the corpus along with its coverage and assigned an energy score based on the number of new edges, execution success and other metrics.</p>
+
+            <p>The feedback manager also tracks mutation effectiveness. Essentially which strategies successfully discover new coverage, allowing the mutator to adaptively weight future mutation selection.</p>
+
+            <h2 id="modeling-decision-trees-with-protocol-buffers">Modeling Decision Trees with Protocol Buffers</h2>
+
+            <p>A key challenge in fuzzing stateful programs is modeling the decision tree of possible instruction sequences in a way that's structured enough to generate valid inputs, yet flexible enough to let the fuzzer discover the correct ordering organically through coverage feedback. Solaris solves this using Protocol Buffers' hierarchical message structure.</p>
+
+            <h3>Solaris Target Directory Structure</h3>
+
+            <p>The diagram below shows a typical solaris working filesystem:</p>
+
+            <img src="../images/blog/Solaris/3.png" style="display: block; width: 100%; max-width: 600px; height: auto; margin: 14px auto;">
+
+            <p>A Solaris fuzz target implementation usually contains the following:</p>
+
+            <ul>
+                <li><strong>artifacts/</strong>: Compiled program binaries for testing</li>
+                <li><strong>handlers/</strong>: Instruction execution functions that translate protobuf messages into Solana transactions.</li>
+                <li><strong>invariants/</strong>: Security property checkers that validate state integrity (e.g., <code>mint.rs</code> verifies token supply invariants, <code>state_machine.rs</code> checks state transition validity, <code>withdraw.rs</code> validates balance constraints)</li>
+                <li><strong>proto/</strong>: Protobuf schema definitions (<code>.proto</code> files) and generated Rust code</li>
+                <li><strong>arbitrary.rs</strong>: Custom <code>Arbitrary</code> trait implementations for domain-specific mutations</li>
+                <li><strong>harness.rs</strong>: Main fuzzing harness that orchestrates execution and delegates to handlers</li>
+                <li><strong>state.rs</strong>: Persistent state tracking across transactions (e.g., created accounts, keypairs, PDAs, ... etc)</li>
+            </ul>
+
+            <p>Each handler builds the appropriate instruction accounts, encodes instruction data, constructs signed transactions, and executes them on the SVM.</p>
+
+            <p>Handlers include both <strong>target program instructions</strong> and <strong>external program instructions</strong> (e.g., SPL Token operations).</p>
+
+            <p>This separation is critical for discovering vulnerabilities that arise when external programs modify state that the target program assumes it controls exclusively. These scenarios can be easily integrated into Solaris.</p>
+
+            <p>This modular structure separates concerns. The protobuf schema to defines the input space, handlers execute instructions, invariants check correctness, and the harness acts as the main coordinator.</p>
+
+            <h3>Example: Vault Program with Access Control</h3>
+
+            <p>To illustrate how Solaris models stateful programs, consider a simple Solana vault program with three instructions that must be executed in a specific sequence to achieve its correct operation:</p>
+
+<pre><code class="language-rust">#[program]
+pub mod example2 {
+    pub fn initialize(ctx: Context&lt;Initialize&gt;, initial_balance: u64) -&gt; Result&lt;()&gt; {
+        let vault = &amp;mut ctx.accounts.vault;
+        vault.owner = ctx.accounts.authority.key();
+        vault.balance = initial_balance;
+        vault.access_code = 0;
+        Ok(())
+    }
+
+    pub fn set_access_code(ctx: Context&lt;UpdateVault&gt;, code: u32) -&gt; Result&lt;()&gt; {
+        let vault = &amp;mut ctx.accounts.vault;
+        require!(
+            vault.owner == ctx.accounts.authority.key(),
+            ErrorCode::Unauthorized
+        );
+        vault.access_code = code;
+        Ok(())
+    }
+
+    pub fn withdraw(ctx: Context&lt;UpdateVault&gt;, amount: u64, provided_code: u32) -&gt; Result&lt;()&gt; {
+        let vault = &amp;mut ctx.accounts.vault;
+
+        require!(vault.access_code == provided_code, ErrorCode::InvalidAccessCode);
+        require!(amount &lt;= vault.balance, ErrorCode::InsufficientFunds);
+
+        let max_withdrawal = vault.balance / 2;
+        require!(amount &gt; 100 &amp;&amp; amount &lt;= max_withdrawal, ErrorCode::InvalidAmount);
+
+        if amount &gt; 500 &amp;&amp; amount &lt; 600 {
+            return Err(ErrorCode::ForbiddenAmount.into());
+        }
+
+        vault.balance = vault.balance.checked_sub(amount).unwrap();
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct Initialize&lt;'info&gt; {
+    #[account(mut)]
+    pub authority: Signer&lt;'info&gt;,
+    #[account(
+        init,
+        payer = authority,
+        space = 8 + 32 + 8 + 4,
+        seeds = [b"vault", authority.key().as_ref()],
+        bump
+    )]
+    pub vault: Account&lt;'info, Vault&gt;,
+    pub system_program: Program&lt;'info, System&gt;,
+}
+
+#[derive(Accounts)]
+pub struct UpdateVault&lt;'info&gt; {
+    #[account(mut)]
+    pub authority: Signer&lt;'info&gt;,
+    #[account(
+        mut,
+        seeds = [b"vault", authority.key().as_ref()],
+        bump
+    )]
+    pub vault: Account&lt;'info, Vault&gt;,
+}
+
+#[account]
+pub struct Vault {
+    pub owner: Pubkey,
+    pub balance: u64,
+    pub access_code: u32,
+}</code></pre>
+
+            <p>The diagram below shows the three program instructions on the left, alongside their corresponding protobuf message definitions on the right:</p>
+
+            <img src="../images/blog/Solaris/4.png" style="display: block; width: 100%; max-width: 900px; height: auto; margin: 14px auto;">
+
+            <p><strong>State Dependencies:</strong></p>
+
+            <p>The program exhibits state dependencies that makes fuzzing non trivial:</p>
+
+            <ul>
+                <li><strong>initialize</strong>: Creates a vault with an owner and initial balance, sets <code>access_code</code> to 0</li>
+                <li><strong>set_access_code</strong>: Sets a numeric access code
+                    <ul>
+                        <li>only owner can call, requires vault to exist</li>
+                    </ul>
+                </li>
+                <li><strong>withdraw</strong>: Withdraws funds
+                    <ul>
+                        <li>requires correct access code, sufficient balance, and satisfies amount constraints:</li>
+                        <li><code>amount &gt; 100</code>, <code>amount &lt;= balance/2</code>, and not in forbidden range [500, 600]</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <p>A naive fuzzer would struggle due to the following reasons:</p>
+            <ul>
+                <li>Instruction ordering matters (must initialize before set_access_code before withdraw)</li>
+                <li>Parameter relationships are non-obvious (access codes must match, amount constraints are interdependent)</li>
+            </ul>
+
+            <h3>Protobuf Schema Modelling</h3>
+
+            <p>To fuzz this program, we define a protobuf schema that captures the instruction sequence structure. The schema is organized into three hierarchical levels:</p>
+
+            <h4>Level 1: Top-Level Instruction Chain Structure</h4>
+
+<pre><code class="language-protobuf">message Example2Chain {
+    Example2InitializationMessages init_messages = 1;
+    repeated Example2AuxiliaryMessages auxiliary_messages = 2;
+}</code></pre>
+
+            <p>This top-level message represents a complete test case. It enforces that every execution begins with initialization, followed by a variable-length sequence of auxiliary operations. We can define this hierarchy at our convenience on a case-by-case basis depending the target program being fuzzed.</p>
+
+            <h4>Level 2: Initialization and Auxiliary Message Wrappers</h4>
+
+            <p><strong>Initialization phase (always executes first):</strong></p>
+
+<pre><code class="language-protobuf">message Example2InitializationMessages {
+    Example2Initialize initialize = 1;
+}</code></pre>
+
+            <p>This ensures initialization happens exactly once at the start of each test case.</p>
+
+            <p><strong>Auxiliary phase (fuzzer-controlled sequence):</strong></p>
+
+<pre><code class="language-protobuf">message Example2AuxiliaryMessages {
+    oneof message {
+        Example2SetAccessCode set_access_code = 1;
+        Example2Withdraw withdraw = 2;
+    }
+}</code></pre>
+
+            <p>The <code>oneof</code> keyword creates a choice point: each auxiliary message can be either <code>SetAccessCode</code> or <code>Withdraw</code>. The <code>repeated</code> modifier in the chain structure allows any number of these choices, enabling the fuzzer to generate sequences like <code>[SetAccessCode, Withdraw, SetAccessCode, Withdraw, ...]</code>.</p>
+
+            <h4>Level 3: Concrete Instruction Messages</h4>
+
+            <p><strong>Initialize instruction:</strong></p>
+
+<pre><code class="language-protobuf">message Example2Initialize {
+    uint64 initial_balance = 1;
+    uint32 authority_index = 2;
+}</code></pre>
+
+            <p><strong>SetAccessCode instruction:</strong></p>
+
+<pre><code class="language-protobuf">message Example2SetAccessCode {
+    uint32 access_code = 1;
+    uint32 authority_index = 2;
+    uint32 vault_index = 3;
+}</code></pre>
+
+            <p><strong>Withdraw instruction:</strong></p>
+
+<pre><code class="language-protobuf">message Example2Withdraw {
+    uint64 amount = 1;
+    uint32 provided_code = 2;
+    uint32 authority_index = 3;
+    uint32 vault_index = 4;
+}</code></pre>
+
+            <p>Each instruction message contains typed fields that map directly to the Rust function parameters, providing structure-aware mutation targets for the fuzzer.</p>
+
+            <h4>Design Properties</h4>
+
+            <p>This three-level hierarchy provides critical properties for effective fuzzing:</p>
+
+            <ol>
+                <li><strong>Required Initialization</strong>: <code>init_messages</code> always executes first, ensuring the vault exists before any operations</li>
+                <li><strong>Flexible Auxiliary Sequence</strong>: <code>repeated auxiliary_messages</code> allows any number of <code>set_access_code</code> and <code>withdraw</code> instructions in any order</li>
+                <li><strong>Type-Safe Parameters</strong>: Each message defines typed fields (e.g., <code>uint64 initial_balance</code>, <code>uint32 access_code</code>) that prevent nonsensical mutations</li>
+            </ol>
+
+            <p>Is important to note that, this schema is not meant to hardcode the "correct" sequence of instructions. It only ensures structural validity. The fuzzer must still discover through coverage feedback that:</p>
+            <ul>
+                <li>Setting an access code enables more withdraw code paths</li>
+                <li>Certain amount values trigger different branches</li>
+            </ul>
+
+            <h3>Visualizing the Decision Tree</h3>
+
+            <p>The protobuf schema implicitly defines a decision tree of possible instruction sequences. The diagram below shows how the schema creates a branching structure, with the <code>initialize</code> instruction always executing first, followed by a variable-length sequence of auxiliary messages:</p>
+
+            <img src="../images/blog/Solaris/7.png" style="display: block; width: 100%; max-width: 700px; height: auto; margin: 14px auto;">
+
+            <p>The tree structure its as follows:</p>
+
+            <ol>
+                <li><strong>Initialize</strong> (always executes first, 2 parameters: initial_balance, authority_index)</li>
+                <li><strong>1:N Auxiliary Messages</strong> (variable count and ordering determined by fuzzer)
+                    <ul>
+                        <li><strong>SetAccessCode</strong> (3 parameters: access_code, authority_index, vault_index)</li>
+                        <li><strong>Withdraw</strong> (4 parameters: amount, provided_code, authority_index, vault_index)</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <p>The <code>oneof</code> construct creates branches at each step in the auxiliary sequence, allowing the fuzzer to choose which instruction type to execute. The <code>repeated</code> keyword permits unlimited repetitions, enabling the fuzzer to discover that multiple auxiliary messages are necessary to reach deeper program states.</p>
+
+            <p>This design is permissive enough to allow invalid sequences, yet structured enough to ensure all generated sequences are syntactically valid Solana transactions. The fuzzer learns valid instruction orderings through coverage feedback rather than hardcoded rules.</p>
+
+            <h3>Test Case Evolution</h3>
+
+            <p>As fuzzing progresses, the corpus evolves organically to discover deeper program states. The diagram below shows four actual test cases from different stages of fuzzing, illustrating how the fuzzer learns to build more complex instruction sequences over time:</p>
+
+            <img src="../images/blog/Solaris/8.png" style="display: block; width: 100%; max-width: 1200px; height: auto; margin: 14px auto;">
+
+            <p>Reading from left to right, each panel shows a JSON-serialized protobuf test case at a different stage of the fuzzing campaign. The red-boxed messages in early panels and green-boxed messages in later panels highlight the key mutations that drove coverage gains.</p>
+
+            <ul>
+                <li><strong>Panel 1 - Early Stage:</strong> The corpus starts simple with only a <code>Withdraw</code> message in the auxiliary array, achieving minimal coverage.</li>
+
+                <li><strong>Panel 2 - Growing Complexity:</strong> The mutator inserts a second auxiliary message. The corpus now contains both <code>Withdraw</code> and <code>SetAccessCode</code>, but in the wrong order. The withdraw still fails, but the presence of <code>SetAccessCode</code> increases coverage by exploring the set_access_code instruction path.</li>
+
+                <li><strong>Panel 3 - Discovering Ordering:</strong> The fuzzer discovers the correct sequence: <code>SetAccessCode</code> followed by <code>Withdraw</code>. Notice both messages are now green-boxed. The correct ordering unlocks new branches in the withdraw function where it checks balance and amount constraints.</li>
+
+                <li><strong>Panel 4 - Richer Test Cases:</strong> As fuzzing continues, the corpus evolves toward more complex test cases that conform to the correct instruction ordering. Multiple <code>SetAccessCode</code> and <code>Withdraw</code> messages now appear in proper sequence, demonstrating that the fuzzer has learned to consistently generate valid instruction chains that maximize coverage.</li>
+            </ul>
+
+            <p>Notice how the fuzzer progresses from Panel 2 (wrong order) to Panel 3 (correct sequence). This evolution is only possible because the harness implements intelligent state tracking for the access code constraint.</p>
+
+            <p>While the <code>Withdraw</code> protobuf message includes a <code>provided_code</code> field, the harness doesn't actually use it. Instead, when executing a withdraw instruction, it retrieves the access code that was previously set via <code>SetAccessCode</code>:</p>
+
+<pre><code class="language-rust">let access_code = if let Some(stored_code) = example2_state.vault_access_codes.get(&amp;vault_pda.to_string()) {
+    *stored_code as u32  // Use the actual code from state
+} else {
+    msg.provided_code     // Fall back to protobuf field if no code was set
+};</code></pre>
+
+            <p>This means once the fuzzer discovers the <code>SetAccessCode</code> &rarr; <code>Withdraw</code> sequence (Panel 3), subsequent mutations automatically use the correct access code from state. Without this, the fuzzer would waste cycles randomly mutating <code>provided_code</code> trying to guess the right value, never reaching the deeper withdraw logic.</p>
+
+            <p>The <code>provided_code</code> field is technically unnecessary. It's only included in this example to demonstrate how Solaris handles stateful constraints. In practice, you'd typically omit such fields and rely on state tracking for the most part. Further state tracking will be showcased in the Harness section below.</p>
+
+            <p>In conclusion, the testcase evolution demonstrates how coverage-guided feedback drives automatic discovery of:</p>
+
+            <ul>
+                <li><strong>Sequence length</strong>: More messages enable reaching deeper program states</li>
+                <li><strong>Instruction ordering</strong>: Correct sequencing unlocks dependent code paths</li>
+                <li><strong>Constraint boundaries</strong>: Specific ranges trigger different branches</li>
+                <li><strong>State dependencies</strong>: The harness bridges protobuf fields with runtime state to enable semantic fuzzing</li>
+            </ul>
+
+            <p>This entire progression happens without manually specifying instruction orderings or parameter constraints. The fuzzer learns at runtime through bytecode coverage feedback and intelligent harness design.</p>
+
+            <h3>The Harness</h3>
+
+            <p>The harness bridges protobuf messages and Solana transactions, translating test cases into program transactions. This translation layer demonstrates how protobuf field mutations create cascading effects through account derivation and state management.</p>
+
+            <img src="../images/blog/Solaris/9.png" style="display: block; width: 100%; max-width: 1200px; height: auto; margin: 14px auto;">
+
+            <p>The diagram above shows the <code>initialize</code> instruction harness (highlighted in green boxes on the left) alongside the protobuf message definition (red box, top right). Two protobuf fields drive the entire execution:</p>
+
+            <h4>Protobuf Field Ingestion</h4>
+
+            <p><strong>1. <code>authority_index</code> field:</strong></p>
+
+            <p>The harness retrieves an authority keypair from a state-managed pool using the protobuf field as an index:</p>
+
+<pre><code class="language-rust">let authority = self.state.get_or_insert_extension::&lt;Example2State&gt;()
+    .get_or_create_authority(msg.authority_index as usize);
+let authority_pubkey = authority.pubkey();</code></pre>
+
+            <p>This single field mutation causes a domino effect:</p>
+            <ul>
+                <li>Different <code>authority_index</code> derives different authority keypair</li>
+                <li>Different authority derives different derived PDA (vault address)</li>
+                <li>Different vault PDA derives different account storage location</li>
+            </ul>
+
+            <p>The vault PDA is derived deterministically based on <code>authority_pubkey</code>:</p>
+
+<pre><code class="language-rust">let (vault_pda, _bump) = Pubkey::find_program_address(
+    &amp;[b"vault", authority_pubkey.as_ref()],
+    &amp;self.program_id,
+);</code></pre>
+
+            <p>By mutating just <code>authority_index</code>, the fuzzer explores different account states, producing scenarios relevant to account ownership, PDA collisions, and cross-account interactions.</p>
+
+            <p><strong>2. <code>initial_balance</code> field:</strong></p>
+
+            <p>The balance is encoded directly into the instruction data:</p>
+
+<pre><code class="language-rust">let mut instruction_data = vec![175, 175, 100, 31, 13, 152, 155, 237]; // discriminator
+instruction_data.extend_from_slice(&amp;msg.initial_balance.to_le_bytes());</code></pre>
+
+            <p>Mutating <code>initial_balance</code> explores different value ranges, triggering constraints in subsequent <code>withdraw</code> instructions.</p>
+
+            <h4>Stateful Execution: Preserving Context Across Instructions</h4>
+
+            <p>After successful transaction execution, the harness saves the vault-authority pair to internal state (highlighted in cyan box at bottom):</p>
+
+<pre><code class="language-rust">// Store vault info in state only after transaction succeeds
+self.state.get_or_insert_extension::&lt;Example2State&gt;()
+    .add_vault(vault_pda, authority_pubkey);</code></pre>
+
+            <p>This state persistence enables subsequent instructions to reference the same vault. As an example, the <code>set_access_code</code> harness (shown in cyan box, bottom right) retrieves the vault from internal state using the protobuf <code>vault_index</code>:</p>
+
+<pre><code class="language-rust">let example2_state = self.state.get_or_insert_extension::&lt;Example2State&gt;();
+let authority = example2_state.get_authority(msg.authority_index as usize)?;
+let vault_pda = example2_state.get_vault(msg.vault_index as usize)?;</code></pre>
+
+            <p>This state-aware selection ensures the fuzzer can:</p>
+            <ul>
+                <li>Build valid instruction chains referencing the same vault</li>
+                <li>Explore multi-vault scenarios by varying <code>vault_index</code></li>
+                <li>Test authority mismatches by using different <code>authority_index</code> values</li>
+            </ul>
+
+            <p>This harness architecture showcases how protobuf's structured representation enables intelligent exploration. Field mutations propagate through account derivation, instruction encoding, and cross-instruction state references, allowing the fuzzer to systematically explore the program's state space.</p>
+
+            <h2 id="program-scoped-sbpf-edge-tracking">Program-Scoped sBPF Edge Tracking</h2>
+
+            <p>Coverage feedback is fundamental to effective fuzzing. By tracking which code paths have been executed, the fuzzer can identify test cases that explore new program behavior and prioritize them for further mutation. However, obtaining accurate coverage in Solana's execution environment presents unique challenges because while each program executes in an isolated VM instance with its own host memory mappings, the SVM uses a fixed virtual address layout for all programs.</p>
+
+            <h3>The Collision Problem in sBPF Coverage</h3>
+
+            <p>The SVM maps sBPF programs to the same base address:</p>
+            <ul>
+                <li><strong>sBPF v0-v2</strong>: Programs are mapped at <code>0x100000000</code></li>
+                <li><strong>sBPF v3+</strong>: Programs are linked on compile-time and use zero-based addressing, mapped at <code>0x0</code></li>
+            </ul>
+
+            <p>This creates a fundamental problem for traditional edge coverage tracking. Edge coverage uses program counter (PC) values to identify control flow transitions. The standard edge calculation is:</p>
+
+<pre><code class="language-rust">edge = (previous_pc &gt;&gt; 1) ^ current_pc</code></pre>
+
+            <p>When multiple programs share the same virtual address layout, identical control flow transitions (same <code>previous_pc</code> and <code>current_pc</code> values) in different programs produce the same edge ID, even though they represent completely different code executing in different programs.</p>
+
+            <p>For example, a transition from 0x100000080 &rarr; 0x100000100 in the target program has the same edge ID as the identical transition in a dependency program, despite executing entirely different instructions at those addresses. This causes edge coverage pollution where the fuzzer cannot distinguish which program generated which coverage, leading to:</p>
+
+            <ol>
+                <li>False coverage attribution</li>
+                <li>Missed coverage gaps</li>
+                <li>Ineffective corpus prioritization</li>
+            </ol>
+
+            <h3>Program-Scoped Edge Tracking</h3>
+
+            <p>Solaris addresses this with a custom hash implementation that incorporates program IDs into edge calculation, mitigating collisions across different programs. The following diagram illustrates this:</p>
+
+            <div style="text-align: center; margin: 40px 0;">
+                <img src="../images/blog/Solaris/11.png" alt="Program-scoped edge hash algorithm" style="max-width: 400px; width: 100%;">
+            </div>
+
+            <p>The algorithm operates in two parallel paths that are combined at the end:</p>
+
+            <p><strong>Left Path (Edge Calculation)</strong>:</p>
+            <ol>
+                <li>Take the previous PC value (<code>0x100000000</code>)</li>
+                <li>Shift right by 1 bit, producing <code>0x080000000</code></li>
+                <li>XOR with current PC (<code>0x100000100</code>)</li>
+                <li>Result: base edge ID <code>0x180000100</code></li>
+            </ol>
+
+            <p><strong>Right Path (Program ID Aggregation)</strong>:</p>
+            <ol>
+                <li>Take the full program ID (Base58 encoded public key, e.g., <code>7oRegZsrEfNzmiUY0s43tHjFkkhb236YfZb1UZrCMuXH</code>)</li>
+                <li>Apply polynomial rolling hash to compress the 32-byte program ID into a 64-bit value</li>
+                <li>Result: program hash <code>0xA1B2C3D4E5F67890</code></li>
+            </ol>
+
+            <p><strong>Combination</strong>:</p>
+            <ol>
+                <li>Multiply the base edge by a large prime (<code>&times; 31</code>)</li>
+                <li>XOR with the program hash</li>
+                <li>Result: program-scoped edge ID <code>0xEA3223D4E6036890</code></li>
+            </ol>
+
+            <p>This approach scopes edge IDs to their originating program by incorporating the program ID into the hash. When two programs have identical control flow at the same virtual addresses, the program hash ensures their edges map to different IDs. While collisions remain theoretically possible, particularly with many programs executing simultaneously, we haven't observed significant edge pollution in practice across typical Solana programs and their dependencies during fuzzing campaigns following this approach.</p>
+
+            <h3>Cross-CPI Coverage Tracking</h3>
+
+            <p>Solana programs frequently invoke other programs through Cross-Program Invocation (CPI). When the target program calls a dependency, both programs generate coverage. Solaris maintains per-program coverage tracking alongside global coverage, enabling the fuzzer to identify new edges while also providing detailed per-program statistics in coverage reports.</p>
+
+            <p>The coverage report interface provides detailed per-program statistics and CFG inspection for coverage visualization:</p>
+
+            <div style="text-align: center; margin: 40px 0;">
+                <img src="../images/blog/Solaris/12.png" alt="Solaris coverage report showing per-program statistics" style="max-width: 100%; width: 100%;">
+            </div>
+
+            <p>Solaris coverage report displays:</p>
+
+            <p><strong>Fuzzing Statistics</strong>:</p>
+            <ul>
+                <li><strong>Total Executions</strong>: Number of test cases executed</li>
+                <li><strong>Corpus Entries</strong>: Test cases saved for mutation</li>
+                <li><strong>Total Edges</strong>: Unique edges discovered across all programs</li>
+                <li><strong>Crashes Found</strong>: Bugs discovered</li>
+                <li><strong>Runtime</strong>: Elapsed fuzzing time</li>
+                <li><strong>Programs Tracked</strong>: Number of distinct programs with coverage</li>
+            </ul>
+
+            <p><strong>Programs Coverage Summary</strong>:</p>
+            <p>Each row represents a different program (identified by its Base58 program ID):</p>
+            <ul>
+                <li><strong>Total PCs</strong>: Number of distinct program counter values in the program's bytecode</li>
+                <li><strong>Instruction Coverage</strong>: Percentage of instructions executed</li>
+                <li><strong>Block Coverage</strong>: Percentage of basic blocks executed</li>
+            </ul>
+
+            <p><strong>Detailed CFG Inspection</strong>:</p>
+            <p>Beyond aggregate statistics, Solaris provides detailed Control Flow Graph (CFG) visualization for all functions across all engaged programs.</p>
+
+            <p>Each basic block in the CFG is color-coded based on execution status: executed blocks are highlighted in green to show covered code paths while unexecuted blocks are highlighted in red, providing immediate visual feedback on which branches have been explored.</p>
+
+            <p>This per-function CFG visualization enables developers to precisely identify coverage gaps at the basic block level or IL level, making it straightforward to see exactly which branches, error handlers, or edge cases have not been reached by the current corpus.</p>
+
+            <p>This granular visibility enables developers to:</p>
+            <ol>
+                <li>Understand how test cases exercise both the target and its dependencies</li>
+                <li>Track coverage growth separately for each program in the dependency graph</li>
+                <li>Inspect color-coded CFGs to pinpoint exactly which basic blocks in which functions remain unexplored</li>
+            </ol>
+
+            <h3>Real-Time Coverage Visualization</h3>
+
+            <p>Solaris provides both a TUI (Terminal User Interface) and Web UI dashboard for monitoring fuzzing campaigns in real time.</p>
+
+            <p>The interface displays live coverage metrics, execution statistics, and allows inspection of assembly and intermediate representation (IL) views, much like the static coverage reports covered earlier.</p>
+
+            <p>This enables developers to observe which basic blocks and instructions are being reached as the fuzzer explores the program.</p>
+
+            <div style="text-align: center; margin: 40px 0;">
+                <img src="../images/blog/Solaris/13.gif" alt="Real-time TUI and Web UI dashboard" style="max-width: 100%; width: 100%;">
+                <p style="font-size: 0.9em; color: #666; margin-top: 10px;">Real-time TUI and Web UI dashboard showing live coverage tracking, execution statistics, and bytecode inspection</p>
+            </div>
+
+            <p>As with coverage reports, this visualization helps identify coverage plateaus and guides decisions about when to adjust fuzzing strategies or introduce manual guidance through hybrid fuzzing techniques.</p>
+
+            <h3>Hybrid Fuzzing with Radiant</h3>
+
+            <p>While coverage-guided fuzzing effectively explores reachable code paths, some program states require specific constraints that random mutation struggles to satisfy.</p>
+
+            <p>Solaris is planned for open-source release and will integrate with <strong>Radiant</strong>, our concolic execution engine for Solana programs.</p>
+
+            <p>This hybrid approach combines:</p>
+            <ol>
+                <li><strong>Coverage-guided fuzzing</strong> to rapidly explore broad program behavior</li>
+                <li><strong>Concolic execution</strong> to solve constraints and reach code paths blocked by complex checks in an agile manner</li>
+                <li><strong>Manual guidance</strong> to direct Solaris toward specific unexplored blocks</li>
+            </ol>
+
+            <p>The idea is that when Solaris encounters a coverage plateau, developers can use Radiant to symbolically analyze the path constraints preventing progress, generate concrete inputs that satisfy those constraints, and aggregate them into Solaris's corpus.</p>
+
+            <h2 id="conclusion">Conclusion</h2>
+
+            <p>Solaris addresses the core challenges of stateful fuzzing Solana programs through structure-aware test case generation using Protocol Buffers, stateful execution tracking across transaction sequences, and collision-resistant bytecode coverage feedback that accurately attributes edges across CPI boundaries.</p>
+
+            <p>The Protocol Buffer-based approach allows Solaris to generate syntactically valid transactions while still exploring the full input space.</p>
+
+            <p>The collision-resistant hash algorithm solves the edge attribution problem caused by SVM's memory model.</p>
+
+            <p>Together, these techniques enable systematic exploration of program state space without hardcoding specific instruction sequences or constraints.</p>
+
+            <p>Solaris is planned for open-source release and will integrate with Radiant for manually-guided hybrid fuzzing to handle constraint-heavy code paths that pure fuzzing struggles to reach.</p>
+
+        </div>
+    </main>
+
+    <footer class="border-t border-gray-800/50 py-8 px-6">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <p class="text-gray-600 text-sm">&copy; 2026 Sergio Corrales</p>
+            <a href="../index.html" class="text-gray-500 hover:text-primary text-sm transition">Back to Portfolio</a>
+        </div>
+    </footer>
+
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('fuzzer-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        let width, height;
+        let isMobile = false;
+        let isSmallMobile = false;
+        const STATE = { phase: 0, paths: 0, coverage: 0, objects: [], particles: [], activeAnimations: 0, maxConcurrentAnimations: 0 };
+        const C = { bg: '#000000', white: '#FFFFFF', grey: '#333333', purple: '#A855F7', purpleGlow: 'rgba(168, 85, 247, 0.6)', blue: '#3b82f6' };
+        function resize() { const container = canvas.parentElement; width = container.clientWidth; height = container.clientHeight; isMobile = window.innerWidth <= 768; isSmallMobile = window.innerWidth <= 480; STATE.maxConcurrentAnimations = isSmallMobile ? 2 : (isMobile ? 3 : 4); canvas.width = width * dpr; canvas.height = height * dpr; ctx.scale(dpr, dpr); canvas.style.width = width+'px'; canvas.style.height = height+'px'; }
+        window.addEventListener('resize', resize); resize();
+        class Particle { constructor(x,y,color,speed,life){this.x=x;this.y=y;this.color=color;const angle=Math.random()*Math.PI*2;this.vx=Math.cos(angle)*speed*Math.random();this.vy=Math.sin(angle)*speed*Math.random();this.life=life;this.maxLife=life;this.size=Math.random()*2+1} update(){this.x+=this.vx;this.y+=this.vy;this.life-=0.02;this.vx*=0.95;this.vy*=0.95} draw(ctx){ctx.globalAlpha=Math.max(0,this.life/this.maxLife);ctx.fillStyle=this.color;ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1} }
+        function spawnExplosion(x,y,color,count=20){for(let i=0;i<count;i++)STATE.particles.push(new Particle(x,y,color,6,1.0))}
+        class Node { constructor(x,y,type='minor',label=''){this.x=x;this.y=y;this.type=type;this.label=label;this.w=isSmallMobile?60:(isMobile?75:100);this.h=isSmallMobile?24:(isMobile?28:35);this.alpha=0;this.scale=0;this.visited=false;this.pulse=0;this.targetX=x;this.targetY=y} draw(ctx){if(this.alpha<=0)return;ctx.save();ctx.translate(this.x,this.y);ctx.scale(this.scale,this.scale);ctx.globalAlpha=this.alpha;ctx.fillStyle=this.visited?'rgba(168,85,247,0.3)':'rgba(0,0,0,0.3)';const hw=this.w/2,hh=this.h/2;ctx.beginPath();ctx.roundRect(-hw,-hh,this.w,this.h,6);ctx.fill();ctx.strokeStyle=this.visited?C.purple:'#555';ctx.lineWidth=1.5;ctx.stroke();if(this.label){ctx.globalAlpha=this.alpha;ctx.fillStyle=C.white;const fs=isSmallMobile?7:(isMobile?9:11);ctx.font='400 '+fs+'px Outfit';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(this.label,0,0)}if(this.pulse>0){ctx.strokeStyle=C.purple;ctx.lineWidth=2;ctx.globalAlpha=this.pulse;const expand=(1-this.pulse)*10;ctx.beginPath();ctx.roundRect(-hw-expand,-hh-expand,this.w+expand*2,this.h+expand*2,6);ctx.stroke()}ctx.restore()} }
+        class Edge { constructor(n1,n2){this.n1=n1;this.n2=n2;this.alpha=0;this.active=false;this.progress=0} draw(ctx){if(this.alpha<=0)return;ctx.globalAlpha=this.alpha*0.6;ctx.strokeStyle='#444';ctx.lineWidth=1.5;ctx.beginPath();const midX=(this.n1.x+this.n2.x)/2;ctx.moveTo(this.n1.x,this.n1.y);ctx.bezierCurveTo(midX,this.n1.y,midX,this.n2.y,this.n2.x,this.n2.y);ctx.stroke();if(this.active){const t=this.progress;const cx=Math.pow(1-t,3)*this.n1.x+3*Math.pow(1-t,2)*t*midX+3*(1-t)*Math.pow(t,2)*midX+Math.pow(t,3)*this.n2.x;const cy=Math.pow(1-t,3)*this.n1.y+3*Math.pow(1-t,2)*t*this.n1.y+3*(1-t)*Math.pow(t,2)*this.n2.y+Math.pow(t,3)*this.n2.y;ctx.shadowBlur=15;ctx.shadowColor=C.purple;ctx.fillStyle=C.purple;ctx.globalAlpha=1;ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}ctx.globalAlpha=1} }
+        let treeNodes=[],treeEdges=[];
+        function init(){initPhase3()}
+        function initPhase3(){const rootX=isSmallMobile?40:(isMobile?60:100);const rootY=height/2;const treeStructure=isSmallMobile?{label:"Initialize",children:[{label:"CreateVault",children:[{label:"Deposit"},{label:"Withdraw"}]},{label:"CreateNFT",children:[{label:"Transfer"},{label:"Burn"}]}]}:(isMobile?{label:"Initialize",children:[{label:"CreateVault",children:[{label:"Deposit"},{label:"Withdraw"}]},{label:"CreateNFT",children:[{label:"Transfer"},{label:"Burn"}]},{label:"Stake",children:[{label:"Claim"},{label:"Unstake"}]}]}:{label:"Initialize",children:[{label:"CreateVault",children:[{label:"Deposit"},{label:"Withdraw"},{label:"Close"}]},{label:"CreateNFT",children:[{label:"Transfer"},{label:"Burn"},{label:"Update"}]},{label:"Stake",children:[{label:"Claim"},{label:"Unstake"},{label:"Restake"}]}]});function getTreeDepth(s,d=0){if(!s.children||s.children.length===0)return d;return Math.max(...s.children.map(c=>getTreeDepth(c,d+1)))}const treeDepth=getTreeDepth(treeStructure);const rightPadding=isSmallMobile?60:(isMobile?80:100);const availableWidth=width-rootX-rightPadding;const levelSpacing=availableWidth/treeDepth;function calculateTreeLayout(structure,x,yMin,yMax,level=0){const node=new Node(x,(yMin+yMax)/2,level===0?'major':'minor',structure.label);treeNodes.push(node);if(structure.children&&structure.children.length>0){const nextX=x+levelSpacing;const childHeight=(yMax-yMin)/structure.children.length;node.children=[];structure.children.forEach((cs,idx)=>{const cYMin=yMin+idx*childHeight;const cYMax=yMin+(idx+1)*childHeight;const childNode=calculateTreeLayout(cs,nextX,cYMin,cYMax,level+1);const edge=new Edge(node,childNode);treeEdges.push(edge);node.children.push({edge,node:childNode})})}return node}const topMargin=isSmallMobile?40:(isMobile?60:80);const bottomMargin=isSmallMobile?40:(isMobile?60:80);calculateTreeLayout(treeStructure,rootX,topMargin,height-bottomMargin);treeEdges.forEach(e=>STATE.objects.push(e));treeNodes.forEach(n=>STATE.objects.push(n));treeNodes.forEach(n=>{n.scale=1;n.alpha=1});treeEdges.forEach(e=>{e.alpha=1});setTimeout(startFloodFill,500)}
+        function startFloodFill(){STATE.phase=3;for(let i=0;i<STATE.maxConcurrentAnimations;i++)setTimeout(()=>scheduleNextPath(),i*200)}
+        function scheduleNextPath(){if(STATE.activeAnimations<STATE.maxConcurrentAnimations)animatePath();setTimeout(scheduleNextPath,300+Math.random()*400)}
+        function animatePath(){if(STATE.activeAnimations>=STATE.maxConcurrentAnimations)return;STATE.activeAnimations++;const path=[];let currentNode=treeNodes[0];path.push(currentNode);while(currentNode.children&&currentNode.children.length>0){const rc=currentNode.children[Math.floor(Math.random()*currentNode.children.length)];currentNode=rc.node;path.push({node:currentNode,edge:rc.edge})}animatePathSequence(path,0)}
+        function animatePathSequence(path,index){if(index>=path.length){STATE.activeAnimations--;STATE.paths++;return}const item=path[index];const node=item.node||item;node.visited=true;node.pulse=1;gsap.to(node,{pulse:0,duration:0.3,ease:"power2.out"});if(index>0&&Math.random()<0.5)spawnExplosion(node.x,node.y,C.purple,5);if(item.edge){const edge=item.edge;edge.active=true;edge.progress=0;gsap.to(edge,{progress:1,duration:0.2,ease:"power1.inOut",onComplete:()=>{edge.active=false;edge.progress=0;setTimeout(()=>animatePathSequence(path,index+1),30)}})}else setTimeout(()=>animatePathSequence(path,index+1),50)}
+        let lastFrameTime=0;const targetFPS=60;const frameInterval=1000/targetFPS;
+        function loop(currentTime){const elapsed=currentTime-lastFrameTime;if(elapsed>frameInterval){lastFrameTime=currentTime-(elapsed%frameInterval);ctx.clearRect(0,0,width,height);STATE.particles=STATE.particles.filter(p=>p.life>0);for(let i=0;i<STATE.particles.length;i++){STATE.particles[i].update();STATE.particles[i].draw(ctx)}for(let i=0;i<STATE.objects.length;i++)STATE.objects[i].draw(ctx)}requestAnimationFrame(loop)}
+        let isAnimating=false;const observer=new IntersectionObserver((entries)=>{entries.forEach(entry=>{if(entry.isIntersecting&&!isAnimating){isAnimating=true;init();requestAnimationFrame(loop)}})},{threshold:0.2});observer.observe(canvas);
+    });
+    </script>
+    <!-- Scroll to Top -->
+    <button class="scroll-top" id="scroll-top" aria-label="Scroll to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+    <script>
+        hljs.highlightAll();
+        const scrollTopBtn = document.getElementById('scroll-top');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) scrollTopBtn.classList.add('visible');
+            else scrollTopBtn.classList.remove('visible');
+        });
+        scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Viewer | Sergio Corrales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', accent: '#60a5fa', light: '#93c5fd',
+                        surface: '#0f172a', card: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .markdown-body { color: #d1d5db; line-height: 1.8; font-size: 0.95rem; }
+        .markdown-body h1 { color: white; font-size: 2rem; font-weight: 700; margin: 2.5rem 0 1rem; border-bottom: 1px solid rgba(59,130,246,0.2); padding-bottom: 0.75rem; letter-spacing: -0.02em; }
+        .markdown-body h2 { color: white; font-size: 1.5rem; font-weight: 600; margin: 2rem 0 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(59,130,246,0.1); letter-spacing: -0.01em; }
+        .markdown-body h3 { color: #e2e8f0; font-size: 1.2rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
+        .markdown-body h4 { color: #cbd5e1; font-size: 1.05rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
+        .markdown-body p { margin-bottom: 1rem; }
+        .markdown-body strong { color: #e2e8f0; font-weight: 600; }
+        .markdown-body code { background: rgba(59,130,246,0.1); color: #93c5fd; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; border: 1px solid rgba(59,130,246,0.08); }
+        .markdown-body pre { background: #0d1117; border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 20px; overflow-x: auto; margin: 1.5rem 0; position: relative; }
+        .markdown-body pre code { background: none; padding: 0; color: #d1d5db; border: none; font-size: 0.85rem; line-height: 1.6; }
+        .markdown-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; border-radius: 8px; overflow: hidden; border: 1px solid rgba(59,130,246,0.12); }
+        .markdown-body thead { background: rgba(59,130,246,0.06); }
+        .markdown-body th { text-align: left; padding: 12px 16px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; border-bottom: 1px solid rgba(59,130,246,0.15); font-weight: 600; }
+        .markdown-body td { padding: 12px 16px; border-bottom: 1px solid rgba(30,41,59,0.5); font-size: 0.9rem; }
+        .markdown-body tr:last-child td { border-bottom: none; }
+        .markdown-body tr:hover { background: rgba(59,130,246,0.04); }
+        .markdown-body a { color: #60a5fa; text-decoration: none; border-bottom: 1px solid rgba(96,165,250,0.3); transition: border-color 0.2s; }
+        .markdown-body a:hover { border-color: #60a5fa; }
+        .markdown-body blockquote { border-left: 3px solid #3b82f6; padding: 0.75rem 1.25rem; margin: 1.5rem 0; color: #94a3b8; background: rgba(59,130,246,0.04); border-radius: 0 8px 8px 0; }
+        .markdown-body blockquote p:last-child { margin-bottom: 0; }
+        .markdown-body ul, .markdown-body ol { padding-left: 1.75rem; margin-bottom: 1rem; }
+        .markdown-body ul { list-style-type: disc; }
+        .markdown-body ol { list-style-type: decimal; }
+        .markdown-body li { margin-bottom: 0.4rem; }
+        .markdown-body li > ul, .markdown-body li > ol { margin-top: 0.4rem; margin-bottom: 0; }
+        .markdown-body hr { border: none; border-top: 1px solid rgba(59,130,246,0.15); margin: 2.5rem 0; }
+        .markdown-body img { max-width: 100%; border-radius: 10px; margin: 1.5rem 0; border: 1px solid rgba(59,130,246,0.1); }
+    </style>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <a id="repo-link" href="#" target="_blank" style="display:none;" class="flex items-center gap-2 bg-card border border-gray-800 rounded-lg px-4 py-2 text-sm text-gray-400 hover:text-white hover:border-primary transition">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                Full Repo
+            </a>
+            <a href="../index.html#security" class="back-link">&larr; Back to Security Work</a>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto px-6 pt-24 pb-16">
+        <div id="loading" class="text-center py-20">
+            <p class="text-gray-500">Loading report...</p>
+        </div>
+        <div id="content" class="markdown-body" style="display:none;"></div>
+    </main>
+
+    <footer class="border-t border-gray-800/50 py-8 px-6">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <p class="text-gray-600 text-sm">&copy; 2026 Sergio Corrales</p>
+            <a href="../index.html" class="text-gray-500 hover:text-primary text-sm transition">Back to Portfolio</a>
+        </div>
+    </footer>
+
+    <script>
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const file = params.get('file');
+        const repo = params.get('repo');
+
+        // Show repo link if provided
+        if (repo) {
+            const repoLink = document.getElementById('repo-link');
+            repoLink.href = repo;
+            repoLink.style.display = 'flex';
+        }
+
+        if (file && file.endsWith('.md')) {
+            fetch(file)
+                .then(r => r.text())
+                .then(md => {
+                    marked.setOptions({
+                        gfm: true,
+                        breaks: false,
+                        highlight: function(code, lang) {
+                            if (lang && hljs.getLanguage(lang)) {
+                                return hljs.highlight(code, { language: lang }).value;
+                            }
+                            return hljs.highlightAuto(code).value;
+                        }
+                    });
+                    document.getElementById('content').innerHTML = marked.parse(md);
+                    document.getElementById('content').style.display = 'block';
+                    document.getElementById('loading').style.display = 'none';
+                    // Apply syntax highlighting to any remaining code blocks
+                    document.querySelectorAll('.markdown-body pre code').forEach(block => {
+                        hljs.highlightElement(block);
+                    });
+                    // Extract title from first h1
+                    const h1 = document.querySelector('.markdown-body h1');
+                    if (h1) document.title = h1.textContent + ' | Sergio Corrales';
+                })
+                .catch(() => {
+                    document.getElementById('loading').innerHTML = '<p class="text-red-400">Failed to load report.</p>';
+                });
+        } else {
+            document.getElementById('loading').innerHTML = '<p class="text-red-400">No report specified.</p>';
+        }
+    </script>
+</body>
+</html>

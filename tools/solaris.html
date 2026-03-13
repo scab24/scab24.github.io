@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solaris - Coverage-Guided Fuzzer | Sergio Corrales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Raleway:wght@100;200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', accent: '#60a5fa', light: '#93c5fd',
+                        surface: '#0f172a', card: '#1e293b', cardHover: '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+    <div id="scroll-progress"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <div class="flex items-center gap-4">
+                <a href="../blog/solaris.html" class="text-sm text-gray-400 hover:text-primary transition">Read Article</a>
+                <a href="../index.html#tools" class="back-link">&larr; Back</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="tool-page-hero pt-28 pb-16 px-6">
+        <div class="max-w-4xl mx-auto text-center fade-up">
+            <div class="inline-flex items-center gap-2 bg-card border border-gray-800 rounded-full px-4 py-2 mb-6">
+                <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                <span class="text-gray-400 text-sm">Private &mdash; Inversive Labs</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Solaris</h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-8">Coverage-guided, structure-aware, and stateful fuzzer that systematically explores program state space to discover edge cases and vulnerabilities through bytecode-level instrumentation.</p>
+            <div class="flex flex-wrap justify-center gap-3">
+                <span class="tag tag-tooling">Rust</span>
+                <span class="tag tag-solana">Solana</span>
+                <span class="tag tag-tooling">sBPF</span>
+                <span class="tag tag-tooling">Protobuf</span>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- ========== Fuzzing Infrastructure (from Jekyll include) ========== -->
+    <style>
+.methodology-section {
+    padding: 6rem 0;
+    background: transparent;
+    position: relative;
+    overflow: visible;
+    z-index: 10 !important;
+    transform: none;
+}
+
+.methodology-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 3rem;
+}
+
+.fuzzing-intro {
+    text-align: center;
+    margin: 0 auto 4rem;
+    max-width: 800px;
+}
+
+.fuzzing-title {
+    font-size: 2.5rem;
+    font-weight: 100;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'Raleway', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    margin-bottom: 2rem;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.fuzzing-subtitle {
+    font-size: 1.2rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Raleway', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    line-height: 1.7;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* Vertical System Diagrams */
+.systems-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    isolation: auto;
+}
+
+.system-block {
+    position: relative;
+}
+
+.system-block:nth-child(1) { animation-delay: 0.1s; }
+.system-block:nth-child(2) { animation-delay: 0.2s; }
+.system-block:nth-child(3) { animation-delay: 0.3s; }
+.system-block:nth-child(4) { animation-delay: 0.4s; }
+.system-block:nth-child(5) { animation-delay: 0.5s; }
+
+.system-label {
+    text-align: center;
+    margin-bottom: 2.5rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.system-title {
+    font-size: 2rem;
+    font-weight: 100;
+    color: rgba(255, 255, 255, 0.95);
+    font-family: 'Raleway', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    text-align: center;
+}
+
+.system-description {
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Raleway', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    line-height: 1.7;
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* Canvas Visualization */
+.canvas-visualization {
+    position: relative;
+    width: 100%;
+    height: 600px;
+    background: transparent;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .canvas-visualization { height: 450px; }
+}
+
+@media (max-width: 480px) {
+    .canvas-visualization { height: 400px; }
+}
+
+.canvas-visualization canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* sBPF Coverage Visualization */
+.coverage-visualization {
+    display: flex;
+    gap: 4rem;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+}
+
+.bytecode-panel {
+    flex: 1;
+    max-width: 400px;
+}
+
+.bytecode-header {
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Raleway', sans-serif;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.bytecode-lines {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    font-family: 'Courier New', monospace !important;
+    font-size: 0.85rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.bytecode-lines * { font-family: 'Courier New', monospace !important; }
+
+.bytecode-line {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem;
+    margin-bottom: 0.3rem;
+    position: relative;
+    border-left: 2px solid transparent;
+}
+
+.execution-marker {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: rgba(100, 200, 255, 0.8);
+    opacity: 0;
+    box-shadow: 0 0 10px rgba(100, 200, 255, 0.6);
+}
+
+.line-1 { opacity: 0; animation: fadeIn 0.3s ease 0.8s forwards, lineExecution1 2.5s linear 2s infinite; }
+.line-1 .execution-marker { animation: executeMarker1 2.5s linear 2s infinite; }
+.line-2 { opacity: 0; animation: fadeIn 0.3s ease 1s forwards, lineExecution2 2.5s linear 2s infinite; }
+.line-2 .execution-marker { animation: executeMarker2 2.5s linear 2s infinite; }
+.line-3 { opacity: 0; animation: fadeIn 0.3s ease 1.2s forwards, lineExecution3 2.5s linear 2s infinite; }
+.line-3 .execution-marker { animation: executeMarker3 2.5s linear 2s infinite; }
+.line-4 { opacity: 0; animation: fadeIn 0.3s ease 1.4s forwards, lineExecution4 2.5s linear 2s infinite; }
+.line-4 .execution-marker { animation: executeMarker4 2.5s linear 2s infinite; }
+.line-5 { opacity: 0; animation: fadeIn 0.3s ease 1.6s forwards, lineExecution5 2.5s linear 2s infinite; }
+.line-5 .execution-marker { animation: executeMarker5 2.5s linear 2s infinite; }
+.line-6 { opacity: 0; animation: fadeIn 0.3s ease 1.8s forwards, lineExecution6 2.5s linear 2s infinite; }
+.line-6 .execution-marker { animation: executeMarker6 2.5s linear 2s infinite; }
+
+.line-number { color: rgba(255, 255, 255, 0.3); min-width: 3rem; }
+.line-code { color: rgba(255, 255, 255, 0.6); flex: 1; font-family: 'Courier New', monospace !important; }
+
+.coverage-arrow {
+    font-size: 2rem;
+    color: rgba(255, 255, 255, 0.2);
+    opacity: 0;
+    animation: fadeIn 0.5s ease 1.5s forwards;
+}
+
+.coverage-stats { flex: 1; max-width: 300px; }
+
+.stat-item {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    opacity: 0;
+    animation: slideIn 0.5s ease forwards;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.stat-item:nth-child(1) { animation: slideIn 0.5s ease 2s forwards, statPulse1 2.5s linear 2s infinite; }
+.stat-item:nth-child(2) { animation: slideIn 0.5s ease 2.2s forwards, statPulse2 2.5s linear 2s infinite; }
+.stat-item:nth-child(3) { animation: slideIn 0.5s ease 2.4s forwards, statPulse3 2.5s linear 2s infinite; }
+
+.stat-label {
+    font-size: 0.75rem; font-weight: 300; color: rgba(255, 255, 255, 0.5);
+    font-family: 'Raleway', sans-serif; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.5rem; font-weight: 300; color: rgba(255, 255, 255, 0.9); font-family: 'Raleway', sans-serif;
+}
+
+.stat-bar { height: 4px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; margin-top: 0.5rem; overflow: hidden; }
+.stat-bar-fill { height: 100%; background: linear-gradient(90deg, rgba(100, 255, 100, 0.6), rgba(100, 255, 100, 0.3)); border-radius: 2px; width: 0; }
+.stat-bar-fill-1 { animation: fillBar1 2.5s linear 2.2s infinite; }
+.stat-bar-fill-2 { animation: fillBar2 2.5s linear 2.4s infinite; }
+.stat-bar-fill-3 { animation: fillBar3 2.5s linear 2.6s infinite; }
+
+/* Structure-Aware Mutations */
+.structure-mutations { display: flex; justify-content: center; align-items: center; padding: 4rem 2rem; }
+
+/* Invariant Testing */
+.invariant-visualization { display: flex; flex-direction: column; align-items: center; padding: 4rem 2rem; gap: 1rem; }
+.invariant-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; max-width: 900px; width: 100%; }
+
+.invariant-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.invariant-card:hover { border-color: rgba(255, 255, 255, 0.2); }
+.invariant-name { font-size: 0.9rem; font-weight: 300; color: rgba(255, 255, 255, 0.95); font-family: 'Raleway', sans-serif; margin-bottom: 0.5rem; }
+.invariant-formula { font-size: 0.75rem; font-weight: 300; color: rgba(255, 255, 255, 0.5); font-family: 'Courier New', monospace; margin-bottom: 0.5rem; }
+.invariant-status { font-size: 0.7rem; font-weight: 300; color: rgba(100, 255, 150, 0.8); font-family: 'Raleway', sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+.invariant-status.checking { color: rgba(255, 200, 100, 0.8); animation: checkingPulse 1.5s ease-in-out infinite; }
+
+.structure-box {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 2rem 3rem;
+    position: relative;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    opacity: 0;
+    animation: slideIn 0.6s ease forwards;
+    width: 620px;
+    margin: 0 auto;
+}
+
+.structure-box:nth-child(1) { animation-delay: 0.8s; }
+.structure-box:nth-child(3) { animation-delay: 1.8s; }
+
+.structure-title {
+    font-size: 0.8rem; font-weight: 300; color: rgba(255, 255, 255, 0.5);
+    font-family: 'Raleway', sans-serif; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem; text-align: center;
+}
+
+.protobuf-schema { font-family: 'Courier New', monospace !important; font-size: 0.75rem; line-height: 1.8; overflow-x: auto; }
+.protobuf-schema * { font-family: 'Courier New', monospace !important; }
+.schema-line { display: block; margin-bottom: 0.3rem; font-family: 'Courier New', monospace !important; }
+.schema-keyword { color: rgba(150, 150, 255, 0.8); font-family: 'Courier New', monospace !important; }
+.schema-type { color: rgba(255, 200, 100, 0.8); font-family: 'Courier New', monospace !important; }
+.schema-field { color: rgba(255, 255, 255, 0.7); font-family: 'Courier New', monospace !important; }
+.schema-value { color: rgba(100, 255, 150, 0.9); transition: opacity 0.08s ease; font-family: 'Courier New', monospace !important; }
+
+.mutation-indicator-label { text-align: center; margin-top: 0; }
+.mutation-status {
+    font-size: 0.75rem; font-weight: 300; color: rgba(255, 255, 255, 0.4);
+    font-family: 'Raleway', sans-serif; text-transform: uppercase; letter-spacing: 0.15em;
+    padding: 0.5rem 1.5rem; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px;
+    background: rgba(255, 255, 255, 0.03); display: inline-block; animation: statusPulse 2s ease-in-out infinite;
+}
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+
+@keyframes executeMarker1 { 0%, 5% { opacity: 0; } 6%, 10% { opacity: 1; } 11%, 100% { opacity: 0; } }
+@keyframes lineExecution1 { 0%, 5% { background: transparent; border-left-color: transparent; } 6%, 10% { background: rgba(100, 200, 255, 0.15); border-left-color: rgba(100, 200, 255, 0.6); } 11%, 100% { background: rgba(100, 255, 100, 0.1); border-left-color: rgba(100, 255, 100, 0.5); } }
+@keyframes executeMarker2 { 0%, 10% { opacity: 0; } 11%, 15% { opacity: 1; } 16%, 100% { opacity: 0; } }
+@keyframes lineExecution2 { 0%, 10% { background: transparent; border-left-color: transparent; } 11%, 15% { background: rgba(100, 200, 255, 0.15); border-left-color: rgba(100, 200, 255, 0.6); } 16%, 100% { background: rgba(100, 255, 100, 0.1); border-left-color: rgba(100, 255, 100, 0.5); } }
+@keyframes executeMarker3 { 0%, 15% { opacity: 0; } 16%, 20% { opacity: 1; } 21%, 100% { opacity: 0; } }
+@keyframes lineExecution3 { 0%, 15% { background: transparent; border-left-color: transparent; } 16%, 20% { background: rgba(100, 200, 255, 0.15); border-left-color: rgba(100, 200, 255, 0.6); } 21%, 100% { background: rgba(100, 255, 100, 0.1); border-left-color: rgba(100, 255, 100, 0.5); } }
+@keyframes executeMarker4 { 0%, 40% { opacity: 0; } 41%, 45% { opacity: 1; } 46%, 100% { opacity: 0; } }
+@keyframes lineExecution4 { 0%, 40% { background: transparent; border-left-color: transparent; } 41%, 45% { background: rgba(100, 200, 255, 0.15); border-left-color: rgba(100, 200, 255, 0.6); } 46%, 100% { background: rgba(100, 255, 100, 0.1); border-left-color: rgba(100, 255, 100, 0.5); } }
+@keyframes executeMarker5 { 0%, 20% { opacity: 0; } 21%, 25% { opacity: 1; } 26%, 100% { opacity: 0; } }
+@keyframes lineExecution5 { 0%, 20% { background: transparent; border-left-color: transparent; } 21%, 25% { background: rgba(100, 200, 255, 0.15); border-left-color: rgba(100, 200, 255, 0.6); } 26%, 100% { background: rgba(100, 255, 100, 0.1); border-left-color: rgba(100, 255, 100, 0.5); } }
+@keyframes executeMarker6 { 0%, 25% { opacity: 0; } 26%, 30% { opacity: 1; } 31%, 100% { opacity: 0; } }
+@keyframes lineExecution6 { 0%, 25% { background: transparent; border-left-color: transparent; } 26%, 30% { background: rgba(100, 200, 255, 0.15); border-left-color: rgba(100, 200, 255, 0.6); } 31%, 100% { background: rgba(100, 255, 100, 0.1); border-left-color: rgba(100, 255, 100, 0.5); } }
+
+@keyframes statPulse1 { 0%, 25% { border-color: rgba(255, 255, 255, 0.15); } 26%, 32% { border-color: rgba(100, 255, 150, 0.6); box-shadow: 0 0 15px rgba(100, 255, 150, 0.3); } 33%, 100% { border-color: rgba(255, 255, 255, 0.15); } }
+@keyframes statPulse2 { 0%, 10% { border-color: rgba(255, 255, 255, 0.15); } 11%, 17% { border-color: rgba(100, 255, 150, 0.6); box-shadow: 0 0 15px rgba(100, 255, 150, 0.3); } 18%, 45% { border-color: rgba(255, 255, 255, 0.15); } 46%, 52% { border-color: rgba(100, 255, 150, 0.6); box-shadow: 0 0 15px rgba(100, 255, 150, 0.3); } 53%, 100% { border-color: rgba(255, 255, 255, 0.15); } }
+@keyframes statPulse3 { 0%, 45% { border-color: rgba(255, 255, 255, 0.15); } 46%, 52% { border-color: rgba(100, 255, 150, 0.6); box-shadow: 0 0 15px rgba(100, 255, 150, 0.3); } 53%, 100% { border-color: rgba(255, 255, 255, 0.15); } }
+
+@keyframes fillBar1 { 0%, 25% { width: 50%; } 26%, 100% { width: 67%; } }
+@keyframes fillBar2 { 0%, 10% { width: 72%; } 11%, 45% { width: 80%; } 46%, 100% { width: 85%; } }
+@keyframes fillBar3 { 0%, 45% { width: 42%; } 46%, 100% { width: 55%; } }
+
+@keyframes statusPulse { 0%, 100% { opacity: 0.6; border-color: rgba(255, 255, 255, 0.1); } 50% { opacity: 1; border-color: rgba(255, 255, 255, 0.3); } }
+@keyframes checkingPulse { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+@keyframes highlight { 0%, 100% { background: rgba(255, 150, 50, 0.2); } 50% { background: rgba(255, 150, 50, 0.4); } }
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .coverage-visualization, .structure-mutations { flex-direction: column; gap: 2rem; }
+    .coverage-arrow { transform: rotate(90deg); font-size: 1.5rem; }
+}
+
+@media (max-width: 768px) {
+    .methodology-section { padding: 3rem 0; }
+    .methodology-container { padding: 0 1rem; }
+    .fuzzing-intro { margin: 3rem auto 3rem; padding: 0 1rem; }
+    .fuzzing-title { font-size: 1.5rem; margin-bottom: 1rem; }
+    .fuzzing-subtitle { font-size: 0.95rem; line-height: 1.7; }
+    .systems-container { gap: 3rem; max-width: 100%; padding: 0 1rem; }
+    .system-label { margin-bottom: 2rem; }
+    .system-title { font-size: 1.6rem; font-weight: 300; margin-bottom: 0.5rem; }
+    .system-description { font-size: 0.9rem; line-height: 1.6; max-width: 100%; }
+    .coverage-visualization { padding: 2rem 0.5rem; }
+    .bytecode-panel { max-width: 100%; width: 100%; }
+    .bytecode-header { font-size: 0.75rem; margin-bottom: 0.75rem; }
+    .bytecode-lines { padding: 1rem; font-size: 0.7rem; overflow-x: auto; width: 100%; }
+    .bytecode-line { padding: 0.4rem; margin-bottom: 0.2rem; }
+    .line-number { min-width: 2.5rem; font-size: 0.7rem; }
+    .line-code { font-size: 0.7rem; }
+    .coverage-arrow { transform: rotate(90deg); font-size: 1.5rem; margin: 1rem 0; }
+    .coverage-stats { max-width: 100%; width: 100%; }
+    .stat-item { padding: 1.25rem; margin-bottom: 0.75rem; }
+    .stat-label { font-size: 0.7rem; margin-bottom: 0.4rem; }
+    .stat-value { font-size: 1.3rem; }
+    .structure-mutations { padding: 2rem 0.5rem; }
+    .structure-box { width: 100%; max-width: 100%; padding: 1.5rem 1rem; overflow-x: auto; }
+    .structure-title { font-size: 0.75rem; margin-bottom: 1rem; }
+    .protobuf-schema { font-size: 0.65rem; line-height: 1.7; min-width: 400px; }
+    .invariant-visualization { padding: 2rem 1rem; }
+    .invariant-grid { grid-template-columns: 1fr; gap: 1.5rem; max-width: 100%; }
+    .invariant-card { padding: 1.25rem; }
+    .invariant-name { font-size: 0.95rem; margin-bottom: 0.6rem; }
+    .invariant-formula { font-size: 0.75rem; margin-bottom: 0.85rem; padding: 0.4rem; }
+    .invariant-status { font-size: 0.7rem; }
+}
+
+@media (max-width: 480px) {
+    .fuzzing-title { font-size: 1.8rem; font-weight: 300; }
+    .system-title { font-size: 1.4rem; font-weight: 400; }
+    .systems-container { gap: 2.5rem; max-width: 100%; padding: 0 0.5rem; }
+    .structure-box { padding: 1rem 0.75rem; }
+    .protobuf-schema { font-size: 0.6rem; min-width: 350px; }
+}
+    </style>
+
+    <section class="methodology-section">
+        <div class="methodology-container">
+            <!-- Fuzzing Implementation -->
+            <div class="fuzzing-intro">
+                <h3 class="fuzzing-title">Purpose-Built Fuzzing Infrastructure for Solana</h3>
+                <p class="fuzzing-subtitle">Off-the-shelf fuzzing tools cannot effectively test Solana smart contracts. We have engineered a complete instrumentation and fuzzing stack specifically for sBPF bytecode, enabling capabilities that distinguish our audits from traditional security firms</p>
+            </div>
+
+            <div class="systems-container">
+
+                <!-- Feature 1: Program Analysis & State Space Exploration -->
+                <div class="system-block">
+                    <div class="system-label">
+                        <h3 class="system-title">Program Analysis & State Space Exploration</h3>
+                        <p class="system-description">We model protocol state machines and construct decision trees that guide our fuzzing tools toward critical state transitions, using schema-driven input generation to track instruction sequences and systematically explore execution paths and discover vulnerabilities in complex protocol logic.</p>
+                    </div>
+                    <div class="canvas-visualization">
+                        <canvas id="fuzzer-canvas"></canvas>
+                    </div>
+                </div>
+
+                <!-- Feature 2: Bytecode-Level Coverage -->
+                <div class="system-block">
+                    <div class="system-label">
+                        <h3 class="system-title">Bytecode-Level Coverage Instrumentation</h3>
+                        <p class="system-description">Traditional audits cannot quantify code coverage. Our custom sBPF runtime instrumentation tracks execution at the bytecode level, providing empirical metrics on audit thoroughness.</p>
+                    </div>
+                    <div class="coverage-visualization">
+                        <div class="bytecode-panel">
+                            <div class="bytecode-header">Program Bytecode</div>
+                            <div class="bytecode-lines">
+                                <div class="bytecode-line line-1">
+                                    <span class="line-number">0x1000</span>
+                                    <span class="line-code">ldxdw r1, [r10-8]</span>
+                                    <span class="execution-marker"></span>
+                                </div>
+                                <div class="bytecode-line line-2">
+                                    <span class="line-number">0x1008</span>
+                                    <span class="line-code">add64 r1, r2</span>
+                                    <span class="execution-marker"></span>
+                                </div>
+                                <div class="bytecode-line line-3">
+                                    <span class="line-number">0x1010</span>
+                                    <span class="line-code">jgt r1, 0xFFFFFFFF, 0x1020</span>
+                                    <span class="execution-marker"></span>
+                                </div>
+                                <div class="bytecode-line line-4">
+                                    <span class="line-number">0x1018</span>
+                                    <span class="line-code">syscall sol_invoke_signed</span>
+                                    <span class="execution-marker"></span>
+                                </div>
+                                <div class="bytecode-line line-5">
+                                    <span class="line-number">0x1020</span>
+                                    <span class="line-code">stxdw [r10-16], r0</span>
+                                    <span class="execution-marker"></span>
+                                </div>
+                                <div class="bytecode-line line-6">
+                                    <span class="line-number">0x1028</span>
+                                    <span class="line-code">exit</span>
+                                    <span class="execution-marker"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="coverage-arrow">&rarr;</div>
+                        <div class="coverage-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Edge Coverage</div>
+                                <div class="stat-value stat-value-1">67%</div>
+                                <div class="stat-bar"><div class="stat-bar-fill stat-bar-fill-1"></div></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Unique Edges</div>
+                                <div class="stat-value stat-value-2">1,247</div>
+                                <div class="stat-bar"><div class="stat-bar-fill stat-bar-fill-2"></div></div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">New Paths</div>
+                                <div class="stat-value stat-value-3">423</div>
+                                <div class="stat-bar"><div class="stat-bar-fill stat-bar-fill-3"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3: Structure-Aware Input Generation -->
+                <div class="system-block">
+                    <div class="system-label">
+                        <h3 class="system-title">Structure-Aware Input Generation</h3>
+                        <p class="system-description">Random fuzzing generates invalid inputs rejected early in execution or during deserialization. Our schema-aware mutation engine respects protocol data structures and instruction formats, ensuring test cases penetrate deep into program logic.</p>
+                    </div>
+                    <div class="structure-mutations">
+                        <div class="structure-box">
+                            <div class="structure-title">Mutating Schema</div>
+                            <div class="protobuf-schema">
+                                <span class="schema-line"><span class="schema-keyword">message</span> <span class="schema-type">VaultInstruction</span> {</span>
+                                <span class="schema-line">&nbsp;&nbsp;<span class="schema-type">uint64</span> <span class="schema-field">amount</span> = <span class="schema-value" id="amount-value">1000</span>;</span>
+                                <span class="schema-line">&nbsp;&nbsp;<span class="schema-type">bytes</span> <span class="schema-field">destination</span> = <span class="schema-value" id="dest-value">11111111111111111111111111111111</span>;</span>
+                                <span class="schema-line">&nbsp;&nbsp;<span class="schema-keyword">optional</span> <span class="schema-type">AccountMeta</span> <span class="schema-field">signer</span> = {</span>
+                                <span class="schema-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="schema-type">bytes</span> <span class="schema-field">pubkey</span> = <span class="schema-value" id="signer-value">TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA</span>;</span>
+                                <span class="schema-line">&nbsp;&nbsp;&nbsp;&nbsp;<span class="schema-type">bool</span> <span class="schema-field">is_writable</span> = <span class="schema-value" id="writable-value">true</span>;</span>
+                                <span class="schema-line">&nbsp;&nbsp;};</span>
+                                <span class="schema-line">}</span>
+                            </div>
+                            <div class="mutation-indicator-label">
+                                <span class="mutation-status">Fuzzing...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 4: Invariant Testing -->
+                <div class="system-block">
+                    <div class="system-label">
+                        <h3 class="system-title">Automated Invariant Validation</h3>
+                        <p class="system-description">Our automated framework tests invariants across millions of execution paths, systematically validating critical security properties and security guarantees.</p>
+                    </div>
+                    <div class="invariant-visualization">
+                        <div class="invariant-grid">
+                            <div class="invariant-card" id="inv-1">
+                                <div class="invariant-name">Balance Conservation</div>
+                                <div class="invariant-formula">&Sigma;(balances) = constant</div>
+                                <div class="invariant-status">&check; Passing</div>
+                            </div>
+                            <div class="invariant-card" id="inv-2">
+                                <div class="invariant-name">Access Control</div>
+                                <div class="invariant-formula">authorized(caller) &rarr; allowed(action)</div>
+                                <div class="invariant-status">&check; Passing</div>
+                            </div>
+                            <div class="invariant-card" id="inv-3">
+                                <div class="invariant-name">State Consistency</div>
+                                <div class="invariant-formula">total_supply &ge; &Sigma;(holdings)</div>
+                                <div class="invariant-status">&check; Passing</div>
+                            </div>
+                            <div class="invariant-card" id="inv-4">
+                                <div class="invariant-name">Overflow Protection</div>
+                                <div class="invariant-formula">&forall;x: x + y &le; MAX_U64</div>
+                                <div class="invariant-status checking">&#x27F3; Checking</div>
+                            </div>
+                        </div>
+                        <div class="mutation-indicator-label">
+                            <span class="mutation-status">Validating Invariants...</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    <!-- ========== End Fuzzing Infrastructure ========== -->
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- How It Works -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-4 text-center fade-up">How It Works</h2>
+            <p class="text-gray-400 text-center mb-12 fade-up">A systematic approach to fuzzing Solana programs</p>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="step-card fade-up">
+                    <div class="step-number">01</div>
+                    <h3 class="text-white font-semibold mb-2">Define Schema</h3>
+                    <p class="text-gray-400 text-sm">Model program instructions and their parameters using structured schemas</p>
+                </div>
+                <div class="step-card fade-up">
+                    <div class="step-number">02</div>
+                    <h3 class="text-white font-semibold mb-2">Write Harness</h3>
+                    <p class="text-gray-400 text-sm">Implement fuzzing harness that translates structured inputs into program instructions</p>
+                </div>
+                <div class="step-card fade-up">
+                    <div class="step-number">03</div>
+                    <h3 class="text-white font-semibold mb-2">Run Fuzzer</h3>
+                    <p class="text-gray-400 text-sm">Execute fuzzer with coverage-guided mutations to explore program states</p>
+                </div>
+                <div class="step-card fade-up">
+                    <div class="step-number">04</div>
+                    <h3 class="text-white font-semibold mb-2">Analyze Results</h3>
+                    <p class="text-gray-400 text-sm">Review discovered bugs, crashes, and invariant violations with reproducing test cases</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- Additional Features -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-12 text-center fade-up">Additional Features</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Coverage Reports</h3>
+                    <p class="text-gray-400 text-sm">Export visual code coverage reports to validate fuzzing campaign efficacy and demonstrate testing thoroughness</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Corpus Management</h3>
+                    <p class="text-gray-400 text-sm">Maintain and evolve test case corpus to maximize coverage and minimize redundancy</p>
+                </div>
+                <div class="feature-card fade-up">
+                    <div class="feature-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Crash Reporting & Reproduction</h3>
+                    <p class="text-gray-400 text-sm">Reproduce bugs with a single test case for easy debugging and analysis</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- Use Cases -->
+    <section class="py-20 px-6">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-2xl font-bold text-white mb-12 text-center fade-up">Use Cases</h2>
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="use-case-card fade-up">
+                    <h4>Security Testing</h4>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="tag">Invariant Discovery</span>
+                        <span class="tag">Edge Case Detection</span>
+                        <span class="tag">Vulnerability Research</span>
+                    </div>
+                </div>
+                <div class="use-case-card fade-up">
+                    <h4>Pre-Deployment</h4>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="tag">Program Hardening</span>
+                        <span class="tag">Coverage Analysis</span>
+                        <span class="tag">Regression Testing</span>
+                    </div>
+                </div>
+                <div class="use-case-card fade-up">
+                    <h4>Continuous Integration</h4>
+                    <div class="flex flex-wrap gap-2 mt-3">
+                        <span class="tag">Automated Fuzzing</span>
+                        <span class="tag">CI/CD Pipelines</span>
+                        <span class="tag">Quality Assurance</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider max-w-4xl mx-auto"></div>
+
+    <!-- CTA -->
+    <section class="py-20 px-6">
+        <div class="max-w-3xl mx-auto text-center fade-up cta-section p-12">
+            <h2 class="text-2xl font-bold text-white mb-4">Intelligent Fuzz Testing for Solana Programs</h2>
+            <p class="text-gray-400 mb-8">Get early access to Solaris for Solana</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <a href="../index.html#contact" class="inline-flex items-center gap-2 bg-primary hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition">
+                    Request Access
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
+                <a href="../index.html#tools" class="inline-flex items-center gap-2 bg-card border border-gray-800 hover:border-primary text-gray-300 hover:text-white px-6 py-3 rounded-lg font-medium transition">
+                    View All Tools
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800/50 py-8 px-6">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-gray-600 text-sm">&copy; 2026 Sergio Corrales</p>
+            <a href="../index.html" class="text-gray-500 hover:text-primary text-sm transition">Back to Portfolio</a>
+        </div>
+    </footer>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <button class="close-btn" onclick="closeImageModal()">&times;</button>
+        <img id="modalImage" src="" alt="Enlarged view">
+    </div>
+
+    <script src="../js/main.js"></script>
+    <script>
+        function openImageModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeImageModal() {
+            document.getElementById('imageModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeImageModal(); });
+    </script>
+
+    <!-- GSAP for canvas animation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- Canvas Animation: Program Analysis & State Space Exploration -->
+    <script>
+window.addEventListener('DOMContentLoaded', function() {
+    const canvas = document.getElementById('fuzzer-canvas');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+
+    let width, height;
+    let isMobile = false;
+    let isSmallMobile = false;
+
+    const STATE = {
+        phase: 0, paths: 0, coverage: 0,
+        objects: [], particles: [],
+        activeAnimations: 0, maxConcurrentAnimations: 0
+    };
+
+    const C = {
+        bg: '#000000', white: '#FFFFFF', grey: '#333333',
+        purple: '#A855F7', purpleGlow: 'rgba(168, 85, 247, 0.6)', blue: '#3b82f6'
+    };
+
+    function resize() {
+        const container = canvas.parentElement;
+        width = container.clientWidth;
+        height = container.clientHeight;
+        isMobile = window.innerWidth <= 768;
+        isSmallMobile = window.innerWidth <= 480;
+        STATE.maxConcurrentAnimations = isSmallMobile ? 2 : (isMobile ? 3 : 4);
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+        ctx.scale(dpr, dpr);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Particle {
+        constructor(x, y, color, speed, life) {
+            this.x = x; this.y = y; this.color = color;
+            const angle = Math.random() * Math.PI * 2;
+            this.vx = Math.cos(angle) * speed * Math.random();
+            this.vy = Math.sin(angle) * speed * Math.random();
+            this.life = life; this.maxLife = life;
+            this.size = Math.random() * 2 + 1;
+        }
+        update() { this.x += this.vx; this.y += this.vy; this.life -= 0.02; this.vx *= 0.95; this.vy *= 0.95; }
+        draw(ctx) {
+            ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+            ctx.fillStyle = this.color;
+            ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    function spawnExplosion(x, y, color, count = 20) {
+        for (let i = 0; i < count; i++) STATE.particles.push(new Particle(x, y, color, 6, 1.0));
+    }
+
+    class Card {
+        constructor(x, y, w, h, text, type = 'program') {
+            this.x = x; this.y = y; this.w = w; this.h = h; this.text = text; this.type = type;
+            this.alpha = 0; this.scale = 0; this.borderAlpha = 0; this.glowStrength = 0; this.textAlpha = 1;
+        }
+        draw(ctx) {
+            if (this.alpha <= 0.01) return;
+            ctx.save();
+            ctx.translate(this.x, this.y); ctx.scale(this.scale, this.scale); ctx.globalAlpha = this.alpha;
+            if (this.type === 'program' || this.glowStrength > 0) {
+                const strength = this.type === 'program' ? 40 : 30 * this.glowStrength;
+                const color = this.type === 'program' ? 'rgba(255, 255, 255, 0.1)' : C.purpleGlow;
+                ctx.shadowBlur = strength; ctx.shadowColor = color;
+            }
+            ctx.strokeStyle = this.type === 'program' ? C.white : C.grey;
+            if (this.glowStrength > 0) ctx.strokeStyle = `rgba(168, 85, 247, ${this.glowStrength})`;
+            ctx.lineWidth = 1; ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+            const r = 4; const hw = this.w / 2; const hh = this.h / 2;
+            ctx.beginPath();
+            if (this.w < 10) ctx.arc(0, 0, this.w, 0, Math.PI * 2);
+            else ctx.roundRect(-hw, -hh, this.w, this.h, r);
+            ctx.fill(); ctx.stroke();
+            if (this.textAlpha > 0.01 && this.w > 20) {
+                ctx.shadowBlur = 0; ctx.globalAlpha = this.alpha * this.textAlpha; ctx.fillStyle = C.white;
+                const pfs = isSmallMobile ? 12 : (isMobile ? 14 : 16);
+                const ifs = isSmallMobile ? 10 : (isMobile ? 11 : 13);
+                ctx.font = this.type === 'program' ? `600 ${pfs}px Outfit` : `400 ${ifs}px "JetBrains Mono"`;
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(this.text, 0, 0);
+            }
+            ctx.restore();
+        }
+    }
+
+    class Node {
+        constructor(x, y, type = 'minor', label = '') {
+            this.x = x; this.y = y; this.type = type; this.label = label;
+            this.w = isSmallMobile ? 70 : (isMobile ? 85 : 100);
+            this.h = isSmallMobile ? 28 : (isMobile ? 30 : 35);
+            this.alpha = 0; this.scale = 0; this.visited = false; this.pulse = 0;
+            this.targetX = x; this.targetY = y;
+        }
+        draw(ctx) {
+            if (this.alpha <= 0) return;
+            ctx.save(); ctx.translate(this.x, this.y); ctx.scale(this.scale, this.scale);
+            ctx.globalAlpha = this.alpha;
+            ctx.fillStyle = this.visited ? 'rgba(168, 85, 247, 0.3)' : 'rgba(0, 0, 0, 0.3)';
+            const hw = this.w / 2; const hh = this.h / 2;
+            ctx.beginPath(); ctx.roundRect(-hw, -hh, this.w, this.h, 6); ctx.fill();
+            ctx.strokeStyle = this.visited ? C.purple : '#555'; ctx.lineWidth = 1.5; ctx.stroke();
+            if (this.label) {
+                ctx.globalAlpha = this.alpha; ctx.fillStyle = C.white;
+                const fs = isSmallMobile ? 8 : (isMobile ? 9 : 11);
+                ctx.font = `400 ${fs}px Outfit`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(this.label, 0, 0);
+            }
+            if (this.pulse > 0) {
+                ctx.strokeStyle = C.purple; ctx.lineWidth = 2; ctx.globalAlpha = this.pulse;
+                const expand = (1 - this.pulse) * 10;
+                ctx.beginPath(); ctx.roundRect(-hw - expand, -hh - expand, this.w + expand * 2, this.h + expand * 2, 6); ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+
+    class Edge {
+        constructor(n1, n2) { this.n1 = n1; this.n2 = n2; this.alpha = 0; this.active = false; this.progress = 0; }
+        draw(ctx) {
+            if (this.alpha <= 0) return;
+            ctx.globalAlpha = this.alpha * 0.6; ctx.strokeStyle = '#444'; ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            const midX = (this.n1.x + this.n2.x) / 2;
+            ctx.moveTo(this.n1.x, this.n1.y);
+            ctx.bezierCurveTo(midX, this.n1.y, midX, this.n2.y, this.n2.x, this.n2.y);
+            ctx.stroke();
+            if (this.active) {
+                const t = this.progress;
+                const cx = Math.pow(1-t,3)*this.n1.x + 3*Math.pow(1-t,2)*t*midX + 3*(1-t)*Math.pow(t,2)*midX + Math.pow(t,3)*this.n2.x;
+                const cy = Math.pow(1-t,3)*this.n1.y + 3*Math.pow(1-t,2)*t*this.n1.y + 3*(1-t)*Math.pow(t,2)*this.n2.y + Math.pow(t,3)*this.n2.y;
+                ctx.shadowBlur = 15; ctx.shadowColor = C.purple; ctx.fillStyle = C.purple; ctx.globalAlpha = 1;
+                ctx.beginPath(); ctx.arc(cx, cy, 4, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+            }
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    let programCard; let instructionCards = []; let treeNodes = []; let treeEdges = [];
+
+    function init() {
+        const progW = isSmallMobile ? 100 : (isMobile ? 120 : 140);
+        const progH = isSmallMobile ? 45 : (isMobile ? 52 : 60);
+        programCard = new Card(width / 2, height / 2, progW, progH, "PROGRAM");
+        STATE.objects.push(programCard);
+        gsap.to(programCard, { alpha: 1, scale: 1, duration: 1.5, ease: "expo.out", delay: 0.5 });
+        setTimeout(initPhase2, 2500);
+    }
+
+    function initPhase2() {
+        const instructions = ["Initialize", "Deposit", "Withdraw", "Swap", "FlashLoan", "Liquidate", "Vote", "Close"];
+        const radius = isSmallMobile ? 120 : (isMobile ? 160 : 220);
+        const count = instructions.length;
+        instructions.forEach((text, i) => {
+            const angle = (i / count) * Math.PI * 2 - Math.PI / 2;
+            const x = width / 2 + Math.cos(angle) * radius;
+            const y = height / 2 + Math.sin(angle) * radius;
+            const cardW = isSmallMobile ? 80 : (isMobile ? 100 : 120);
+            const cardH = isSmallMobile ? 32 : (isMobile ? 36 : 40);
+            const card = new Card(x, y, cardW, cardH, text, 'instruction');
+            instructionCards.push(card); STATE.objects.push(card);
+            gsap.to(card, { alpha: 1, scale: 1, duration: 1.0, ease: "back.out(1.1)", delay: 0.5 + i * 0.1 });
+            gsap.to(card, { glowStrength: 1, duration: 0.3, delay: 2.0 + i * 0.2, yoyo: true, repeat: 1 });
+        });
+        setTimeout(initPhase3, 5500);
+    }
+
+    function initPhase3() {
+        instructionCards.forEach((card, i) => {
+            gsap.to(card, { x: width/2, y: height/2, scale: 0, alpha: 0, duration: 1.0, ease: "power3.inOut", delay: i * 0.03 });
+        });
+        gsap.to(programCard, { w: 6, h: 6, textAlpha: 0, duration: 1.2, ease: "power3.inOut", delay: 0.8, onComplete: () => spawnExplosion(programCard.x, programCard.y, C.white, 40) });
+        const rootX = isSmallMobile ? 50 : (isMobile ? 70 : 100);
+        const rootY = height / 2;
+        gsap.to(programCard, { x: rootX, y: rootY, duration: 1.2, ease: "power3.inOut", delay: 1.0 });
+
+        const treeStructure = isSmallMobile ? {
+            label: "Initialize", children: [
+                { label: "CreateVault", children: [{ label: "Deposit" }, { label: "Withdraw" }] },
+                { label: "CreateNFT", children: [{ label: "Transfer" }, { label: "Burn" }] }
+            ]
+        } : (isMobile ? {
+            label: "Initialize", children: [
+                { label: "CreateVault", children: [{ label: "Deposit" }, { label: "Withdraw" }] },
+                { label: "CreateNFT", children: [{ label: "Transfer" }, { label: "Burn" }] },
+                { label: "Stake", children: [{ label: "Claim" }, { label: "Unstake" }] }
+            ]
+        } : {
+            label: "Initialize", children: [
+                { label: "CreateVault", children: [{ label: "Deposit" }, { label: "Withdraw" }, { label: "Close" }] },
+                { label: "CreateNFT", children: [{ label: "Transfer" }, { label: "Burn" }, { label: "Update" }] },
+                { label: "Stake", children: [{ label: "Claim" }, { label: "Unstake" }, { label: "Restake" }] }
+            ]
+        });
+
+        function getTreeDepth(s, d = 0) { return !s.children || s.children.length === 0 ? d : Math.max(...s.children.map(c => getTreeDepth(c, d + 1))); }
+        const treeDepth = getTreeDepth(treeStructure);
+        const rightPadding = isSmallMobile ? 60 : (isMobile ? 80 : 100);
+        const availableWidth = width - rootX - rightPadding;
+        const levelSpacing = availableWidth / treeDepth;
+
+        function calculateTreeLayout(structure, x, yMin, yMax, level = 0) {
+            const node = new Node(x, (yMin + yMax) / 2, level === 0 ? 'major' : 'minor', structure.label);
+            treeNodes.push(node);
+            if (structure.children && structure.children.length > 0) {
+                const nextX = x + levelSpacing;
+                const childHeight = (yMax - yMin) / structure.children.length;
+                node.children = [];
+                structure.children.forEach((cs, idx) => {
+                    const childYMin = yMin + idx * childHeight;
+                    const childYMax = yMin + (idx + 1) * childHeight;
+                    const childNode = calculateTreeLayout(cs, nextX, childYMin, childYMax, level + 1);
+                    const edge = new Edge(node, childNode);
+                    treeEdges.push(edge);
+                    node.children.push({ edge, node: childNode });
+                });
+            }
+            return node;
+        }
+
+        const topMargin = isSmallMobile ? 40 : (isMobile ? 60 : 80);
+        const bottomMargin = isSmallMobile ? 40 : (isMobile ? 60 : 80);
+        calculateTreeLayout(treeStructure, rootX, topMargin, height - bottomMargin);
+        treeEdges.forEach(e => STATE.objects.push(e));
+        treeNodes.forEach(n => STATE.objects.push(n));
+
+        treeNodes.forEach(n => { n.targetX = n.x; n.targetY = n.y; n.x = rootX; n.y = rootY; n.scale = 0; n.alpha = 1; });
+        treeNodes.forEach((n, i) => {
+            if (i === 0) { n.scale = 1; return; }
+            gsap.to(n, { x: n.targetX, y: n.targetY, scale: 1, duration: 1.2, ease: "power2.out", delay: 2.2 + (n.targetX - rootX) / 2000 });
+        });
+        treeEdges.forEach(e => { gsap.to(e, { alpha: 1, duration: 0.8, ease: "power2.out", delay: 2.4 }); });
+        setTimeout(startFloodFill, 4000);
+    }
+
+    function startFloodFill() {
+        STATE.phase = 3;
+        for (let i = 0; i < STATE.maxConcurrentAnimations; i++) setTimeout(() => scheduleNextPath(), i * 200);
+    }
+
+    function scheduleNextPath() {
+        if (STATE.activeAnimations < STATE.maxConcurrentAnimations) animatePath();
+        setTimeout(scheduleNextPath, 300 + Math.random() * 400);
+    }
+
+    function animatePath() {
+        if (STATE.activeAnimations >= STATE.maxConcurrentAnimations) return;
+        STATE.activeAnimations++;
+        const path = []; let currentNode = treeNodes[0]; path.push(currentNode);
+        while (currentNode.children && currentNode.children.length > 0) {
+            const rc = currentNode.children[Math.floor(Math.random() * currentNode.children.length)];
+            currentNode = rc.node; path.push({ node: currentNode, edge: rc.edge });
+        }
+        animatePathSequence(path, 0);
+    }
+
+    function animatePathSequence(path, index) {
+        if (index >= path.length) { STATE.activeAnimations--; STATE.paths++; return; }
+        const item = path[index]; const node = item.node || item;
+        node.visited = true; node.pulse = 1;
+        gsap.to(node, { pulse: 0, duration: 0.3, ease: "power2.out" });
+        if (index > 0 && Math.random() < 0.5) spawnExplosion(node.x, node.y, C.purple, 5);
+        if (item.edge) {
+            const edge = item.edge; edge.active = true; edge.progress = 0;
+            gsap.to(edge, { progress: 1, duration: 0.2, ease: "power1.inOut", onComplete: () => { edge.active = false; edge.progress = 0; setTimeout(() => animatePathSequence(path, index + 1), 30); } });
+        } else {
+            setTimeout(() => animatePathSequence(path, index + 1), 50);
+        }
+    }
+
+    let lastFrameTime = 0; const targetFPS = 60; const frameInterval = 1000 / targetFPS;
+    function loop(currentTime) {
+        const elapsed = currentTime - lastFrameTime;
+        if (elapsed > frameInterval) {
+            lastFrameTime = currentTime - (elapsed % frameInterval);
+            ctx.clearRect(0, 0, width, height);
+            STATE.particles = STATE.particles.filter(p => p.life > 0);
+            for (let i = 0; i < STATE.particles.length; i++) { STATE.particles[i].update(); STATE.particles[i].draw(ctx); }
+            for (let i = 0; i < STATE.objects.length; i++) { STATE.objects[i].draw(ctx); }
+        }
+        requestAnimationFrame(loop);
+    }
+
+    let isAnimating = false;
+    const canvasObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting && !isAnimating) { isAnimating = true; init(); requestAnimationFrame(loop); }
+        });
+    }, { threshold: 0.2 });
+    canvasObserver.observe(canvas);
+});
+    </script>
+
+    <!-- Animate coverage stats -->
+    <script>
+const statValues = [
+    { el: '.stat-value-1', values: ['50%', '67%'], timing: [0, 650] },
+    { el: '.stat-value-2', values: ['1,125', '1,189', '1,247'], timing: [0, 275, 1150] },
+    { el: '.stat-value-3', values: ['372', '423'], timing: [0, 1150] }
+];
+
+function animateStats() {
+    statValues.forEach(stat => {
+        const element = document.querySelector(stat.el);
+        if (!element) return;
+        element.textContent = stat.values[0];
+        stat.timing.slice(1).forEach((time, idx) => {
+            setTimeout(() => { element.textContent = stat.values[idx + 1]; }, time);
+        });
+    });
+}
+
+let statsInterval;
+const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting && !statsInterval) { animateStats(); statsInterval = setInterval(animateStats, 2500); }
+    });
+}, { threshold: 0.2 });
+const coverageViz = document.querySelector('.coverage-visualization');
+if (coverageViz) statsObserver.observe(coverageViz);
+    </script>
+
+    <!-- Animate structure-aware mutations -->
+    <script>
+const amountValues = ['1000', '50000', '999999999', '42', '7500', '250000', '1'];
+const destValues = [
+    'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+    'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+    '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
+    'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+    'BPFLoaderUpgradeab1e11111111111111111111111',
+    'SysvarC1ock11111111111111111111111111111111',
+    'ComputeBudget111111111111111111111111111111'
+];
+const signerValues = [
+    'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+    'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL',
+    'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+    '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
+    'BPFLoaderUpgradeab1e11111111111111111111111',
+    'SysvarRent111111111111111111111111111111111',
+    'Stake11111111111111111111111111111111111111'
+];
+const writableValues = ['true', 'false', 'true', 'true', 'false', 'true', 'false'];
+
+let mutationInterval;
+const mutationObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting && !mutationInterval) {
+            const amountEl = document.getElementById('amount-value');
+            const destEl = document.getElementById('dest-value');
+            const signerEl = document.getElementById('signer-value');
+            const writableEl = document.getElementById('writable-value');
+            if (!amountEl || !destEl || !signerEl || !writableEl) return;
+            let iteration = 0;
+            function updateValues() {
+                const idx = iteration % amountValues.length;
+                amountEl.style.opacity = '0.3'; destEl.style.opacity = '0.3';
+                signerEl.style.opacity = '0.3'; writableEl.style.opacity = '0.3';
+                setTimeout(() => {
+                    amountEl.textContent = amountValues[idx]; destEl.textContent = destValues[idx];
+                    signerEl.textContent = signerValues[idx]; writableEl.textContent = writableValues[idx];
+                    amountEl.style.opacity = '1'; destEl.style.opacity = '1';
+                    signerEl.style.opacity = '1'; writableEl.style.opacity = '1';
+                }, 80);
+                iteration++;
+            }
+            mutationInterval = setInterval(updateValues, 300);
+        }
+    });
+}, { threshold: 0.2 });
+const structureMutations = document.querySelector('.structure-mutations');
+if (structureMutations) mutationObserver.observe(structureMutations);
+    </script>
+
+    <!-- Animate invariant checking -->
+    <script>
+const invariantCards = ['inv-1', 'inv-2', 'inv-3', 'inv-4'];
+let currentCheckingIndex = 3;
+
+function cycleInvariantChecking() {
+    const currentCard = document.getElementById(invariantCards[currentCheckingIndex]);
+    if (currentCard) {
+        const statusEl = currentCard.querySelector('.invariant-status');
+        statusEl.textContent = '\u2713 Passing';
+        statusEl.classList.remove('checking');
+    }
+    currentCheckingIndex = (currentCheckingIndex + 1) % invariantCards.length;
+    const nextCard = document.getElementById(invariantCards[currentCheckingIndex]);
+    if (nextCard) {
+        const statusEl = nextCard.querySelector('.invariant-status');
+        statusEl.textContent = '\u27F3 Checking';
+        statusEl.classList.add('checking');
+    }
+}
+
+let invariantInterval;
+const invariantObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting && !invariantInterval) { invariantInterval = setInterval(cycleInvariantChecking, 2500); }
+    });
+}, { threshold: 0.2 });
+const invariantViz = document.querySelector('.invariant-visualization');
+if (invariantViz) invariantObserver.observe(invariantViz);
+    </script>
+</body>
+</html>

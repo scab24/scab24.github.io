@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report | Sergio Corrales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', accent: '#60a5fa', light: '#93c5fd',
+                        surface: '#0f172a', card: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        #pdf-container { width: 100%; height: calc(100vh - 140px); border: 1px solid rgba(59,130,246,0.15); border-radius: 12px; overflow: hidden; background: #1e293b; }
+        #pdf-container object, #pdf-container iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <div class="flex items-center gap-4">
+                <a id="repo-link" href="#" target="_blank" style="display:none;" class="flex items-center gap-2 bg-card border border-gray-800 rounded-lg px-4 py-2 text-sm text-gray-400 hover:text-white hover:border-primary transition">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    Full Repo
+                </a>
+                <a id="download-link" href="#" download class="flex items-center gap-2 bg-card border border-gray-800 rounded-lg px-4 py-2 text-sm text-gray-400 hover:text-white hover:border-primary transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Download PDF
+                </a>
+                <a href="../index.html#security" class="back-link">&larr; Back</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto px-6 pt-20 pb-8">
+        <div id="report-title" class="mb-4">
+            <h1 class="text-xl font-bold text-white" id="title-text">Audit Report</h1>
+        </div>
+        <div id="pdf-container">
+            <div id="loading" class="flex items-center justify-center h-full">
+                <p class="text-gray-500">Loading report...</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const file = params.get('file');
+        const title = params.get('title');
+        const repo = params.get('repo');
+
+        // Show repo link if provided
+        if (repo) {
+            const repoLink = document.getElementById('repo-link');
+            repoLink.href = repo;
+            repoLink.style.display = 'flex';
+        }
+
+        if (title) {
+            document.getElementById('title-text').textContent = title;
+            document.title = title + ' | Sergio Corrales';
+        }
+
+        if (file && file.endsWith('.pdf')) {
+            const container = document.getElementById('pdf-container');
+            const downloadLink = document.getElementById('download-link');
+            downloadLink.href = file;
+
+            // Try object first (better PDF rendering), fallback to iframe
+            container.innerHTML = `
+                <object data="${file}" type="application/pdf">
+                    <iframe src="${file}">
+                        <p class="p-8 text-center text-gray-400">
+                            Your browser cannot display this PDF inline.
+                            <a href="${file}" target="_blank" class="text-primary hover:text-accent ml-1">Open PDF directly &rarr;</a>
+                        </p>
+                    </iframe>
+                </object>
+            `;
+
+            if (title) {
+                document.getElementById('title-text').textContent = title;
+            } else {
+                // Extract readable name from filename
+                const name = file.replace('.pdf', '').replace(/-/g, ' ').replace(/_/g, ' ');
+                document.getElementById('title-text').textContent = name;
+            }
+        } else {
+            document.getElementById('pdf-container').innerHTML = '<p class="p-8 text-center text-red-400">No PDF file specified.</p>';
+        }
+    </script>
+</body>
+</html>

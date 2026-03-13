@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Radiant: Concolic Execution for Solana Programs | Sergio Corrales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', accent: '#60a5fa', light: '#93c5fd',
+                        surface: '#0f172a', card: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .article-body { color: #d1d5db; line-height: 1.8; font-size: 0.95rem; }
+        .article-body h2 { color: white; font-size: 1.5rem; font-weight: 600; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(59,130,246,0.15); }
+        .article-body h3 { color: #e2e8f0; font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.75rem; }
+        .article-body h4 { color: #cbd5e1; font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
+        .article-body p { margin-bottom: 1rem; }
+        .article-body strong { color: #e2e8f0; font-weight: 600; }
+        .article-body code { background: rgba(59,130,246,0.1); color: #93c5fd; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; border: 1px solid rgba(59,130,246,0.08); }
+        .article-body pre { background: #0d1117; border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 20px; overflow-x: auto; margin: 1.5rem 0; }
+        .article-body pre code { background: none; padding: 0; color: #d1d5db; border: none; font-size: 0.85rem; line-height: 1.6; }
+        .article-body ul, .article-body ol { padding-left: 1.75rem; margin-bottom: 1rem; }
+        .article-body ul { list-style-type: disc; }
+        .article-body ol { list-style-type: decimal; }
+        .article-body li { margin-bottom: 0.4rem; }
+        .article-body img { max-width: 100%; height: auto; border-radius: 10px; margin: 1.5rem auto; display: block; border: 1px solid rgba(59,130,246,0.1); }
+        .article-body blockquote { border-left: 3px solid #3b82f6; padding: 0.75rem 1.25rem; margin: 1.5rem 0; color: #94a3b8; background: rgba(59,130,246,0.04); border-radius: 0 8px 8px 0; }
+        .article-body a { color: #60a5fa; text-decoration: none; border-bottom: 1px solid rgba(96,165,250,0.3); transition: border-color 0.2s; }
+        .article-body a:hover { border-color: #60a5fa; }
+    </style>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <div class="flex items-center gap-4">
+                <a href="../tools/radiant.html" class="text-sm text-gray-400 hover:text-primary transition">Tool Page</a>
+                <a href="../index.html#research" class="back-link">&larr; Back</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Article -->
+    <main class="max-w-4xl mx-auto px-6 pt-28 pb-16">
+        <div class="mb-10">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="tag tag-solana">Solana</span>
+                <span class="tag tag-tooling">Tooling</span>
+                <span class="text-gray-600 text-sm font-mono">December 2025</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-bold text-white mb-4 leading-tight">Radiant: Concolic Execution for Solana Programs</h1>
+            <div class="flex flex-wrap items-center gap-3 mb-8">
+                <div class="flex items-center gap-2 bg-card border border-gray-800 rounded-full px-4 py-1.5">
+                    <div class="w-2 h-2 bg-primary rounded-full"></div>
+                    <span class="text-gray-400 text-sm font-medium">Inversive Labs</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm text-gray-500">
+                    <span>by</span>
+                    <a href="https://x.com/ulexec" target="_blank" class="hover:text-primary transition">@ulexec</a>
+                    <span>&middot;</span>
+                    <a href="https://x.com/Seecoalba" target="_blank" class="hover:text-primary transition">@Seecoalba</a>
+                </div>
+            </div>
+        </div>
+        <div class="rounded-xl overflow-hidden border border-gray-800 mb-10">
+            <img src="../images/blog/radiant.jpg" alt="Radiant" class="w-full object-cover" style="max-height: 420px;">
+        </div>
+        <div class="article-body">
+
+            <p>This article introduces <strong>Radiant</strong>, a binary-level concolic execution framework for Solana programs.</p>
+
+            <h2>Introduction</h2>
+
+            <p>Radiant is an advanced testing framework for Solana programs that leverages concolic execution, a hybrid approach combining concrete and symbolic execution.</p>
+
+            <p>Radiant models program input fields and account states as either concrete values or symbolic variables. Given a target code location, it uses symbolic execution to determine which input values enable execution paths that reach that location.</p>
+
+            <h2>Motivation</h2>
+
+            <p>Security auditors combine multiple techniques when analyzing smart contracts, ranging from manual code review to understand program logic, fuzzing to systematically test the code base, and formal verification for critical properties. Each technique has distinct strengths. Manual review leverages human insight and reasoning, fuzzing explores behavior empirically while formal methods provide mathematical rigor.</p>
+
+            <p>Radiant augments this toolkit with concolic execution, a technique that combines concrete execution with symbolic execution. But why concolic execution instead of purely symbolic execution?</p>
+
+            <p>Solana's architecture presents a unique challenge, programs are stateless and operate on accounts passed as input. A transaction can include dozens of accounts, each with arbitrary data and state. Making everything symbolic, can quickly become impractical. The high number of symbolic variables can overwhelm the constraint solver, and make analysis intractable.</p>
+
+            <p>Radiant's concolic approach solves this by starting with a concrete execution context representing a deployment with actual account data, balances, and program state. From this concrete baseline, one can selectively mark specific values as symbolic. Perhaps just the instruction parameters, or specific fields within an account's data. This selective symbolization keeps the analysis focused and tractable while still enabling targeted path exploration.</p>
+
+            <p>This approach is particularly powerful when combined with fuzzing. Fuzzers excel at exploring the program state space at scale but struggle to reach deep nested code paths fenced by conditional statements. Radiant addresses this by solving constraints on the symbolized values to generate precise inputs that reach specific code locations.</p>
+
+            <h2>How it works</h2>
+
+            <p>Understanding Radiant's approach requires first recognizing the limitations of traditional testing methods. Consider a typical testing scenario applied to given Solana program:</p>
+
+            <img src="../images/blog/Radiant/1.png" alt="Control flow graph showing execution paths" style="max-width: 400px;">
+
+            <p>The control flow graph (CFG) above shows the execution paths taken when running different tests. Each test explores certain branches and basic blocks within a given program's logic.</p>
+
+            <img src="../images/blog/Radiant/2.png" alt="Multiple tests increasing code coverage" style="max-width: 400px;">
+
+            <p>While multiple tests increase code coverage, they still follow predictable paths determined by the specific test inputs. This approach often misses edge cases that lurk in unexplored execution paths.</p>
+
+            <img src="../images/blog/Radiant/3.png" alt="Bug manifesting in a specific basic block" style="max-width: 400px;">
+
+            <p>Consider a scenario where a bug manifests in a specific basic block due to miscalculations caused by a previous block due to unexpected state changes.</p>
+
+            <h3>Targeted Symbolic Execution</h3>
+
+            <p>Radiant addresses this by enabling <strong>targeted basic block exploration</strong>. Following a bottom-up approach, instead of hoping random inputs will stumble upon problematic code paths, Radiant can explicitly target specific basic blocks to reach.</p>
+
+            <p>Target basic blocks can be selected through multiple approaches:</p>
+            <ul>
+                <li><strong>Manual Analysis</strong>: Security auditors identify suspicious code patterns and target those blocks directly</li>
+                <li><strong>Automated Approaches</strong>: Heuristics or static analysis tools identify potentially vulnerable blocks</li>
+                <li><strong>Hybrid Strategies</strong>: Automatically explore multiple targets while excluding regions of code that are known to be safe or irrelevant</li>
+            </ul>
+
+            <p>Once a target basic block is selected, Radiant performs symbolic execution to discover the conditions needed to reach it:</p>
+
+            <img src="../images/blog/Radiant/4.png" alt="Symbolic execution targeting a basic block" style="max-width: 560px;">
+
+            <ol>
+                <li><strong>Symbolic Variable Introduction</strong>: Radiant treats selected input fields and account states as symbolic variables rather than concrete values</li>
+                <li><strong>Path Exploration</strong>: As execution progresses, whenever a <strong>symbolic program counter (PC)</strong> is encountered, typically a branch instruction representing a conditional statement that depends on symbolic variables, the control flow diverges</li>
+                <li><strong>Parallel Path Analysis</strong>: Each divergent path is explored symbolically in parallel, building path constraints that capture the conditions required to reach each branch</li>
+                <li><strong>Target Achievement</strong>: When the symbolic execution reaches the target basic block, Radiant has accumulated all the path constraints necessary to reach that code</li>
+                <li><strong>Concretization</strong>: Finally, Radiant solves these constraints and concretizes the symbolic values, producing concrete input values that will deterministically trigger the target basic block</li>
+            </ol>
+
+            <p>This is fundamentally how binary-level symbolic execution frameworks like <a href="https://angr.io/">angr</a> and <a href="https://github.com/trailofbits/manticore">Manticore</a> operate on traditional binaries.</p>
+
+            <p>These tools enable security researchers and developers to analyze complex execution paths, and generate concrete inputs that trigger specific code paths.</p>
+
+            <h2>Architecture</h2>
+
+            <p>Radiant's architecture consists of two parallel execution engines coordinated through a debugger bridge:</p>
+
+            <img src="../images/blog/Radiant/5.png" alt="Radiant architecture diagram" style="max-width: 560px;">
+
+            <h3>Solana Runtime Emulator</h3>
+
+            <p>The left side of the architecture provides concrete execution through the <strong>Solana Runtime Emulator</strong>. Radiant leverages <a href="https://github.com/LiteSVM/litesvm"><strong>LiteSVM</strong></a>, a lightweight Solana Virtual Machine that executes programs in their native sBPF bytecode format. This component runs actual program instructions with concrete values while maintaining accurate runtime state, including account data, instruction context, and program execution flow.</p>
+
+            <h3>Symbolic Execution Engine</h3>
+
+            <p>The right side contains the <strong>Symbolic Execution Engine</strong>, built around a <strong>Taint Tracking Engine</strong>. This engine includes an <strong>IL Interpreter</strong> that operates on a lifted representation of the program.</p>
+
+            <p>Radiant is built on top of a modified version of <a href="https://github.com/aemmitt-ns/radius"><strong>radius2</strong></a>, a powerful symbolic execution framework that leverages <a href="https://rada.re/n/"><strong>radare2</strong></a>'s ESIL as its intermediate language.</p>
+
+            <p>This work builds directly on our sBPF architecture contributions to radare2, which we developed specifically to enable advanced binary analysis for Solana programs. We presented this work at <a href="https://www.youtube.com/watch?v=IAt-HgKPN88"><strong>r2con 2025</strong></a>, showcasing the process of implementing sBPF support in radare2.</p>
+
+            <h3>Debugger Bridge</h3>
+
+            <p>The <strong>Debugger Bridge</strong> serves as the coordination layer between both engines, implemented through a <strong>GDB stub server</strong> integrated into a modified version of <code>solana-sbpf</code>. This implementation enables standard GDB Remote Serial Protocol communication between the Solana VM and the symbolic execution engine.</p>
+
+            <p>The bridge operates using a two-stage architecture:</p>
+            <ul>
+                <li><strong>Deployment</strong>: Runs an instance of <code>LiteSVM</code> with an embedded GDB server listening for connections.</li>
+                <li><strong>Symbolic Execution</strong>: Uses <code>radare2</code> to attach to the GDB server, read concrete context from memory, and pass it to <code>radius2</code> for symbolic execution. This process repeats intermittently whenever <code>radius2</code> needs additional concrete context.</li>
+            </ul>
+
+            <p>Through the GDB protocol, Radiant can:</p>
+            <ul>
+                <li>Set breakpoints at specific program counter locations</li>
+                <li>Control execution flow</li>
+                <li>Read memory and register state on-demand</li>
+                <li>Synchronize concrete execution with symbolic execution context</li>
+            </ul>
+
+            <p>This dual-engine architecture enables concolic execution. The modified <code>solana-sbpf</code> runtime provides program and transaction concrete context through its GDB interface, while <code>radare2</code> extracts this context and <code>radius2</code> leverages it to build symbolic constraints necessary for path exploration.</p>
+
+            <img src="../images/blog/Radiant/11.svg" alt="Architecture detail diagram" style="max-width: 700px;">
+
+            <p>Ideally, symbolic execution would leverage compiler-based intermediate representations like LLVM IR, which provide well-defined semantics and strong tooling support. However, existing LLVM-based symbolic execution frameworks lack mature support for sBPF's ISA and SIMD extensions. Rather than building sBPF support from scratch in an LLVM-based framework, we chose to use ESIL from radare2, which already had the foundation for sBPF analysis through our prior contributions.</p>
+
+            <p>This choice required validation. We needed to ensure our ESIL instruction models accurately represent sBPF semantics. To achieve this, we leveraged the debugger bridge to implement a differential fuzzer that compared execution traces between the ESIL interpreter and live debugger sessions.</p>
+
+            <img src="../images/blog/Radiant/13.svg" alt="Differential fuzzer diagram" style="max-width: 850px;">
+
+            <p>By fuzzing instructions and comparing their effects on registers and memory in both environments, we were able to validate with a reasonable degree of confidence, that our ESIL models correctly capture sBPF semantics, providing higher confidence in the symbolic execution results despite not using a compiler IR.</p>
+
+            <h2>Example Walkthrough</h2>
+
+            <p>Let's demonstrate Radiant with a practical example: discovering the exact input values that trigger a panic condition in a Solana program.</p>
+
+            <blockquote>
+                <p><strong>Note</strong>: This example uses a simplified program to clearly illustrate Radiant's symbolic execution capabilities. Real-world Solana programs involve significantly more complex logic, but the same methodology applies.</p>
+            </blockquote>
+
+            <h3>The Target Program</h3>
+
+            <p>Consider the following Solana program:</p>
+
+<pre><code class="language-rust">#[program]
+pub mod hello_world {
+    use super::*;
+
+    pub fn initialize_fn(ctx: Context&lt;InitializeContext&gt;, input: u8) -&gt; Result&lt;()&gt; {
+        msg!(
+            "Hello World address: {}",
+            ctx.accounts.hello_world_account.key()
+        );
+        let hello_world_store = &amp;mut ctx.accounts.hello_world_account;
+        hello_world_store.input = input;
+
+        if input &gt; 200 &amp;&amp; input &lt; 210 {
+            panic!("This number is magic")
+        }
+
+        Ok(())
+    }
+}</code></pre>
+
+            <p>The program accepts a <code>u8</code> input parameter and panics only when the value falls within the narrow range of 201-209.</p>
+
+            <h3>Understanding snapshot_pc and target_pc</h3>
+
+            <p>Before running Radiant, we need to identify two critical program counter locations:</p>
+
+            <img src="../images/blog/Radiant/6.png" alt="snapshot_pc and target_pc locations" style="max-width: 700px;">
+
+            <ul>
+                <li><strong>snapshot_pc</strong>: The program counter where Radiant takes a snapshot of the program state and begins symbolic execution.</li>
+                <li><strong>target_pc</strong>: The specific basic block we want to reach, in this case, the panic statement.</li>
+            </ul>
+
+            <blockquote>
+                <p><strong>Note</strong>: If <code>snapshot_pc</code> is set to 0, Radiant will automatically populate this to the instruction function entry point or program entry point.</p>
+            </blockquote>
+
+            <h3>Radiant Test Configuration</h3>
+
+            <p>The test setup involves two main components:</p>
+
+            <p><strong>1. Radiant Test Configuration</strong> (<code>tests/test.rs</code>):</p>
+
+<pre><code class="language-rust">use radiant_test::*;
+use std::collections::HashSet;
+use crate::setup::*;
+
+#[test]
+fn test_example() -&gt; Result&lt;()&gt; {
+    let snapshot_pc = 0x100007018;
+    let target_pc = 0x1000078d8;
+
+    let (config, deployment_thread) = setup::config(
+        snapshot_pc,
+        target_pc,
+        20,
+        true,
+        false
+    );
+
+    let mut test = RadiantTest::new(config)?;
+
+    let result = test.run(SymbolizeSpec::InstructionData {
+        length: 1
+    })?;
+
+    let solutions = result.into_bytes();
+
+    println!("\n[+] Found {} solutions", solutions.len());
+
+    for (i, sol) in solutions.iter().enumerate() {
+        let value = sol[0];
+        println!("   Solution #{}: {} (0x{:02x})", i + 1, value, value);
+
+        assert!(value &gt; 200 &amp;&amp; value &lt; 210,
+            "Solution {} is outside valid range (201-209)", value);
+    }
+
+    Ok(())
+}</code></pre>
+
+            <p><strong>2. Program Deployment</strong> (<code>src/deployment.rs</code>):</p>
+
+<pre><code class="language-rust">pub fn call_initialize_fn(&amp;mut self, input: u8) -&gt; Result&lt;()&gt; {
+    println!("\n[*] Calling initialize_fn...");
+
+    let (hello_world_account_pda, _bump) = self.deployed.find_pda(&amp;[b"hello_world_seed"]);
+
+    let mut data = vec![0x12, 0xbb, 0xa9, 0xd5, 0x5e, 0xb4, 0x56, 0x98];
+    data.push(0u8);
+
+    let instruction = Instruction {
+        program_id: self.deployed.program_id,
+        accounts: vec![
+            AccountMeta::new(self.deployed.payer_pubkey(), true),
+            AccountMeta::new(hello_world_account_pda, false),
+            AccountMeta::new_readonly(system_program::ID, false),
+        ],
+        data,
+    };
+
+    let recent_blockhash = self.deployed.svm.inner.latest_blockhash();
+    let message = Message::new(&amp;[instruction], Some(&amp;self.deployed.payer_pubkey()));
+    let tx = Transaction::new(&amp;[&amp;self.deployed.payer], message, recent_blockhash);
+
+    self.deployed.enable_debug();
+
+    match self.deployed.svm.inner.send_transaction(tx) {
+        Ok(result) =&gt; {
+            println!("[+] initialize_fn successful!");
+            for log in &amp;result.logs {
+                println!("   {}", log);
+            }
+            Ok(())
+        }
+        Err(e) =&gt; Err(anyhow::anyhow!("initialize_fn failed: {:?}", e)),
+    }
+}</code></pre>
+
+            <h3>Binary Analysis with radare2</h3>
+
+            <p>Finding the correct <code>snapshot_pc</code> and <code>target_pc</code> values requires binary-level analysis. We extended radare2 to support sBPF architecture:</p>
+
+            <img src="../images/blog/Radiant/7.png" alt="radare2 sBPF disassembly" style="max-width: 700px;">
+
+            <p>The screenshot demonstrates:</p>
+            <ul>
+                <li><strong>Left panel</strong>: sBPF disassembly showing bytecode instructions</li>
+                <li><strong>Right panel</strong>: IL representation with aggregated Rust source strings</li>
+            </ul>
+
+            <h3>Demo</h3>
+
+            <img src="../images/products/radiant/gif_radiant_demo.gif" alt="Radiant demo" style="max-width: 700px;">
+
+            <p>The demo above shows Radiant discovering all input values in the range 201-209 that trigger the panic condition.</p>
+
+            <h3>Results</h3>
+
+            <p>When executed, Radiant outputs:</p>
+
+<pre><code class="language-javascript">[+] Found 9 solutions
+   Solution #1: 201 (0xc9)
+   Solution #2: 202 (0xca)
+   Solution #3: 203 (0xcb)
+   Solution #4: 204 (0xcc)
+   Solution #5: 205 (0xcd)
+   Solution #6: 206 (0xce)
+   Solution #7: 207 (0xcf)
+   Solution #8: 208 (0xd0)
+   Solution #9: 209 (0xd1)</code></pre>
+
+            <p>Radiant has systematically identified all nine values that satisfy the constraint.</p>
+
+            <h2>Cross-CPI Concolic Execution</h2>
+
+            <p>One of Radiant's advanced capabilities is cross-program invocation (CPI) concolic execution.</p>
+
+            <blockquote>
+                <p><strong>Note</strong>: The following example uses a simplified two-program interaction to demonstrate the cross-CPI technique.</p>
+            </blockquote>
+
+            <h3>Targeting Code Reachable Only via CPI</h3>
+
+            <p>Consider a scenario where your target basic block exists in a callee program but can only be reached through a caller program's CPI invocation:</p>
+
+            <img src="../images/blog/Radiant/8.png" alt="Cross-CPI target scenario" style="max-width: 700px;">
+
+            <h3>Example</h3>
+
+            <p><strong>Callee Program</strong> (<code>cpi_callee</code>):</p>
+
+<pre><code class="language-rust">#[program]
+pub mod cpi_callee {
+    use super::*;
+
+    pub fn increment(ctx: Context&lt;Modify&gt;, amount: u64) -&gt; Result&lt;()&gt; {
+        let counter = &amp;mut ctx.accounts.counter;
+
+        require!(
+            counter.authority == ctx.accounts.authority.key(),
+            ErrorCode::Unauthorized
+        );
+
+        if amount &gt;= 660 &amp;&amp; amount &lt; 666 {
+            panic!("TARGET REACHED: amount falls in bounds");
+        }
+
+        if amount &gt;= 666 &amp;&amp; amount &lt; 700 {
+            panic!("TARGET REACHED: amount falls in bounds 2");
+        }
+
+        counter.count = counter.count.checked_add(amount)
+            .ok_or(ErrorCode::Overflow)?;
+        counter.operation_count += 1;
+
+        msg!("Counter incremented by {}. New value: {}", amount, counter.count);
+        Ok(())
+    }
+}</code></pre>
+
+            <p><strong>Caller Program</strong> (<code>cpi_caller</code>):</p>
+
+<pre><code class="language-rust">#[program]
+pub mod cpi_caller {
+    use super::*;
+
+    pub fn cpi_increment_counter(
+        ctx: Context&lt;CpiModifyCounter&gt;,
+        amount: u64,
+    ) -&gt; Result&lt;()&gt; {
+        let transformed_amount = amount.checked_add(123).unwrap();
+
+        let cpi_program = ctx.accounts.callee_program.to_account_info();
+        let cpi_accounts = cpi_callee::cpi::accounts::Modify {
+            authority: ctx.accounts.authority.to_account_info(),
+            counter: ctx.accounts.counter.to_account_info(),
+        };
+        let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
+
+        cpi_callee::cpi::increment(cpi_ctx, transformed_amount)?;
+        Ok(())
+    }
+}</code></pre>
+
+            <h3>Radiant's Cross-CPI Solution</h3>
+
+            <img src="../images/blog/Radiant/9.png" alt="Cross-CPI solution diagram" style="max-width: 700px;">
+
+            <p>Radiant's cross-CPI concolic execution works by tracking symbolic values across program boundaries:</p>
+
+            <ol>
+                <li><strong>Symbolic Value Propagation</strong>: When symbolic execution reaches a CPI invocation point in the caller, Radiant identifies the symbolic variables being passed as arguments.</li>
+                <li><strong>CPI Boundary Translation</strong>: At the <code>sol_invoke_signed_*</code> boundary, Radiant translates the symbolic values from the caller's context into the callee's execution context.</li>
+                <li><strong>Callee Exploration</strong>: Symbolic execution continues in the callee program.</li>
+                <li><strong>Constraint Propagation</strong>: When the target basic block is reached, constraints are propagated backward through the CPI boundary.</li>
+                <li><strong>Unified Constraint Solving</strong>: The constraint solver evaluates combined constraints from both programs.</li>
+            </ol>
+
+            <h3>Implementation</h3>
+
+            <img src="../images/blog/Radiant/12.svg" alt="Cross-CPI implementation diagram" style="max-width: 800px;">
+
+            <p>Both programs are deployed in the same LiteSVM instance. When the caller VM executes, a GDB server starts on port 9999. During symbolic execution, when radius2 detects the CPI syscall, a second VM instance is spawned for the callee with its own GDB server on port 10000.</p>
+
+            <h3>Cross-CPI Test Configuration</h3>
+
+<pre><code class="language-rust">#[test]
+fn test_cross_cpi() -&gt; Result&lt;()&gt; {
+    let ((caller_program_path, callee_program_path), deployment_thread) =
+        setup::setup_deployment();
+
+    let config = RadiantTestConfig::new(caller_program_path)
+       .cross_cpi_state(
+            0x100007ae0,
+            Some(0x100007d90),
+            0x100007c88,
+            0x100008bf8,
+        )
+        .callee_avoid(vec![])
+        .max_solutions(20)
+        .verbose(true);
+
+    let mut test = RadiantTest::new(config)?;
+    let result = test.run(SymbolizeSpec::InstructionData { length: 8 })?;
+    let solutions = result.into_bytes();
+
+    println!("\n[CROSS CPI] Found {} solutions", solutions.len());
+
+    for (i, sol) in solutions.iter().enumerate() {
+        if sol.len() &gt;= 8 {
+            let amount = u64::from_le_bytes(sol[0..8].try_into().unwrap());
+            println!("  Solution #{}: amount = {} (0x{:x})", i + 1, amount, amount);
+            assert!(amount + 123 &gt;= 666 &amp;&amp; amount + 123 &lt; 700,
+                "Callee solution {} is not in [666, 700)", amount);
+        }
+    }
+
+    Ok(())
+}</code></pre>
+
+            <h3>Cross-CPI Results</h3>
+
+            <img src="../images/blog/Radiant/10.png" alt="Cross-CPI results" style="max-width: 500px;">
+
+            <p>The output shows the complete cross-CPI analysis. The solutions include values like:</p>
+            <ul>
+                <li>Solution #1: amount = 569 (0x239), transforms to 692</li>
+                <li>Solution #11: amount = 557 (0x22d), transforms to 680</li>
+                <li>Solution #20: amount = 564 (0x234), transforms to 687</li>
+            </ul>
+
+            <h2>Additional Capabilities</h2>
+
+            <ul>
+                <li><strong>Solana Syscalls</strong>: Radiant handles Solana syscalls during symbolic execution.</li>
+                <li><strong>Cross-Transaction Composability</strong>: Symbolic solutions from one transaction can be used in subsequent transactions.</li>
+                <li><strong>Cross-CPI Symbolic Execution</strong>: Radiant consumes symbolic solutions with translated constraint contexts across CPI boundaries.</li>
+                <li><strong>Future Open Source</strong>: We plan to open-source Radiant once it reaches higher maturity.</li>
+            </ul>
+
+            <h2>Conclusion</h2>
+
+            <p>Radiant brings concolic execution to Solana program security testing. By combining concrete and symbolic execution through its dual-engine architecture.</p>
+
+            <p>The framework's capabilities, from targeted basic block exploration to cross-CPI symbolic execution, address the unique challenges of analyzing composable Solana programs symbolically.</p>
+
+            <p>As Solana's ecosystem continues to grow in complexity, with protocols increasingly relying on multi-program interactions and intricate state machines, tools like Radiant become relevant for security research.</p>
+
+            <p>We're continuing to develop and refine Radiant, and we look forward to open-sourcing it in the future.</p>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800/50 py-8 px-6">
+        <div class="max-w-4xl mx-auto flex items-center justify-between">
+            <p class="text-gray-600 text-sm">&copy; 2026 Sergio Corrales</p>
+            <a href="../index.html" class="text-gray-500 hover:text-primary text-sm transition">Back to Portfolio</a>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top -->
+    <button class="scroll-top" id="scroll-top" aria-label="Scroll to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+    <script>
+        hljs.highlightAll();
+        const scrollTopBtn = document.getElementById('scroll-top');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) scrollTopBtn.classList.add('visible');
+            else scrollTopBtn.classList.remove('visible');
+        });
+        scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    </script>
+</body>
+</html>

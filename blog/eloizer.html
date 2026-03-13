@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>An Introduction to Eloizer | Sergio Corrales</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/shell.min.js"></script>
+    <link rel="stylesheet" href="../css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', accent: '#60a5fa', light: '#93c5fd',
+                        surface: '#0f172a', card: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .article-body { color: #d1d5db; line-height: 1.8; font-size: 0.95rem; }
+        .article-body h2 { color: white; font-size: 1.5rem; font-weight: 600; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(59,130,246,0.15); }
+        .article-body h3 { color: #e2e8f0; font-size: 1.2rem; font-weight: 600; margin: 2rem 0 0.75rem; }
+        .article-body h4 { color: #cbd5e1; font-size: 1.05rem; font-weight: 600; margin: 1.5rem 0 0.5rem; }
+        .article-body p { margin-bottom: 1rem; }
+        .article-body strong { color: #e2e8f0; font-weight: 600; }
+        .article-body code { background: rgba(59,130,246,0.1); color: #93c5fd; padding: 2px 8px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; border: 1px solid rgba(59,130,246,0.08); }
+        .article-body pre { background: #0d1117; border: 1px solid rgba(59,130,246,0.15); border-radius: 10px; padding: 20px; overflow-x: auto; margin: 1.5rem 0; }
+        .article-body pre code { background: none; padding: 0; color: #d1d5db; border: none; font-size: 0.85rem; line-height: 1.6; }
+        .article-body ul, .article-body ol { padding-left: 1.75rem; margin-bottom: 1rem; }
+        .article-body ul { list-style-type: disc; }
+        .article-body ol { list-style-type: decimal; }
+        .article-body li { margin-bottom: 0.4rem; }
+        .article-body li > ul { margin-top: 0.4rem; margin-bottom: 0; }
+        .article-body img { max-width: 100%; height: auto; border-radius: 10px; margin: 1.5rem auto; display: block; border: 1px solid rgba(59,130,246,0.1); }
+        .article-body blockquote { border-left: 3px solid #3b82f6; padding: 0.75rem 1.25rem; margin: 1.5rem 0; color: #94a3b8; background: rgba(59,130,246,0.04); border-radius: 0 8px 8px 0; }
+        .article-body a { color: #60a5fa; text-decoration: none; border-bottom: 1px solid rgba(96,165,250,0.3); transition: border-color 0.2s; }
+        .article-body a:hover { border-color: #60a5fa; }
+        .article-body table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; border-radius: 8px; overflow: hidden; border: 1px solid rgba(59,130,246,0.12); }
+        .article-body thead { background: rgba(59,130,246,0.06); }
+        .article-body th { text-align: left; padding: 12px 16px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; border-bottom: 1px solid rgba(59,130,246,0.15); font-weight: 600; }
+        .article-body td { padding: 12px 16px; border-bottom: 1px solid rgba(30,41,59,0.5); font-size: 0.9rem; }
+        .article-body tr:last-child td { border-bottom: none; }
+        .article-body tr:hover { background: rgba(59,130,246,0.04); }
+    </style>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+    <div id="scroll-progress"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <div class="flex items-center gap-4">
+                <a href="../tools/eloizer.html" class="text-sm text-gray-400 hover:text-primary transition">Tool Page</a>
+                <a href="https://github.com/Inversive-Labs/eloizer" target="_blank" class="text-sm text-gray-400 hover:text-gray-300 transition">GitHub</a>
+                <a href="../index.html#research" class="back-link">&larr; Back</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Article -->
+    <main class="max-w-4xl mx-auto px-6 pt-28 pb-16">
+        <div>
+
+            <!-- Article Header -->
+            <header class="mb-12">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="tag tag-solana">Solana</span>
+                    <span class="tag tag-tooling">Tooling</span>
+                </div>
+                <p class="text-sm text-gray-500 mb-4">January 2026</p>
+                <h1 class="text-3xl md:text-4xl font-bold text-white mb-4 leading-tight">An Introduction to Eloizer: A Static Analyzer for Solana Programs</h1>
+                <div class="flex flex-wrap items-center gap-3 mb-8">
+                    <div class="flex items-center gap-2 bg-card border border-gray-800 rounded-full px-4 py-1.5">
+                        <div class="w-2 h-2 bg-primary rounded-full"></div>
+                        <span class="text-gray-400 text-sm font-medium">Inversive Labs</span>
+                    </div>
+                    <div class="flex items-center gap-3 text-sm text-gray-500">
+                        <span>by</span>
+                        <a href="https://x.com/ulexec" target="_blank" class="hover:text-primary transition">@ulexec</a>
+                        <span>&middot;</span>
+                        <a href="https://x.com/Seecoalba" target="_blank" class="hover:text-primary transition">@Seecoalba</a>
+                    </div>
+                </div>
+            </header>
+
+            <div class="rounded-xl overflow-hidden border border-gray-800 mb-10">
+                <img src="../images/blog/eloizer.jpg" alt="Eloizer" class="w-full object-cover" style="max-height: 420px;">
+            </div>
+
+            <!-- Article Body -->
+            <article class="article-body">
+
+                <p>This post introduces Eloizer, a static analyzer for Solana programs that we built and <a href="https://github.com/Inversive-Labs/eloizer">released as open source</a>.</p>
+
+                <h2>Introduction</h2>
+
+                <p>Eloizer is a static analyzer for Solana programs. It parses Rust source files directly without requiring compilation, applies detection rules to find common vulnerability patterns, and reports findings with precise source locations. The tool runs in under a second on most projects, making it practical for use during development.</p>
+
+                <p>We built Eloizer because we needed a fast, extensible way to catch security issues in Solana code. It detects problems like missing ownership checks, duplicate mutable accounts, and unchecked arithmetic operations. The tool includes a DSL for writing custom detection rules, so you can add checks specific to your project without modifying the core analyzer.</p>
+
+                <p>This post explains how Eloizer works: the architecture, the rule system, and how to use it. We'll cover the trade-offs between source-level and compiler-based analysis, show how to write custom rules, and demonstrate the CLI usage.</p>
+
+                <h2>Motivation</h2>
+
+                <p>Security auditors combine multiple techniques when analyzing smart contracts: manual code review to understand program logic, fuzzing to discover unexpected behaviors, and formal verification for critical properties. Each technique has tradeoffs.</p>
+
+                <p>Static analysis occupies a specific niche: fast, automated detection of known vulnerability patterns. It won't catch every bug, and you still need dynamic analysis and human review, but it catches common mistakes instantly. When integrated into development workflows, it surfaces issues early, when fixes are cheap.</p>
+
+                <p>We built Eloizer since at the time, open-source static analysis options for Solana were scarce. We wanted a tool that could:</p>
+
+                <ul>
+                    <li>Run locally during development, fast enough for iterative use</li>
+                    <li>Integrate into CI pipelines with deterministic results</li>
+                    <li>Support custom rules without forking the analyzer</li>
+                    <li>Provide precise source locations for IDE integration</li>
+                </ul>
+
+                <h2>Architecture</h2>
+
+                <p>Eloizer's architecture separates concerns into distinct components:</p>
+
+                <img src="../images/blog/Eloizer/architecture_eloizer.png" alt="Eloizer architecture diagram" style="max-width: 600px;">
+
+                <p>The architecture has three main layers:</p>
+
+                <ul>
+                    <li><strong>RuleEngine</strong>: Manages rule registration and execution. Rules can be filtered by severity, ID, or type (Anchor, Native and other frameworks).</li>
+                    <li><strong>Analyzer</strong>: Coordinates file discovery, parsing, and rule execution.</li>
+                    <li><strong>DSL Layer</strong>: Provides <code>AstQuery</code> for querying the AST and <code>RuleBuilder</code> for defining rules declaratively.</li>
+                </ul>
+
+                <h3>Parsing Libraries</h3>
+
+                <p>Compiling a Solana project often requires nightly toolchains, BPF targets, and long build times, which is too slow for an analyzer meant to run on every change. Eloizer avoids the compiler and reads the source directly with two complementary crates.</p>
+
+                <ul>
+                    <li><code>syn</code>: The foundational parsing layer that transforms Rust source files into structured AST representations (<code>syn::File</code>). With the <code>full</code> and <code>visit</code> features enabled, it provides automatic traversal capabilities for all Rust syntax elements, <code>impl</code> blocks, expressions, attributes, macros, and source spans. This eliminates the need for manual visitor implementations and forms the basis for all syntax-level rule detection.</li>
+                    <li><code>anchor-syn</code>: A specialized layer that interprets Anchor framework constructs. It processes procedural macros like <code>#[derive(Accounts)]</code>, <code>#[instruction]</code>, and <code>#[event]</code>, transforming them into typed representations (<code>AccountInfo</code>, <code>Signer</code>, <code>UncheckedAccount</code>). Additionally, it extracts Anchor's constraint metadata (<code>is_signer()</code>, <code>has_one</code>, <code>seeds</code>) that would otherwise only be validated at runtime.</li>
+                </ul>
+
+                <p>As a result, Eloizer parses the project once with <code>syn</code> to build the full AST, and only the nodes that require Anchor semantics are delegated to <code>anchor-syn</code>. This approach preserves speed while maintaining awareness of macros and their constraints.</p>
+
+                <h3>Understanding the Design Trade-offs</h3>
+
+                <p>Static analyzers face a fundamental architectural decision: operate at the source level through direct parsing, or integrate with the compiler for semantic analysis. This choice shapes both capabilities and constraints.</p>
+
+                <p>Eloizer takes the source-level approach, parsing files directly with <code>syn</code> and <code>anchor-syn</code> without requiring compilation. Trail of Bits' <a href="https://github.com/crytic/solana-lints">solana-lints</a> exemplifies the alternative, a compiler plugin using <a href="https://github.com/trailofbits/dylint">Dylint</a> that operates within rustc itself.</p>
+
+                <h4>Compiler Integration Approach</h4>
+
+                <p>Running inside <code>rustc</code> grants access to the compiler's semantic understanding:</p>
+
+                <ul>
+                    <li><strong>Dataflow tracking</strong>: Follow variable values through assignments and control flow via MIR (Mid-level Intermediate Representation)</li>
+                    <li><strong>Type resolution</strong>: Access complete trait implementations and type relationships through <code>rustc_middle::ty</code></li>
+                    <li><strong>Path analysis</strong>: Prove security checks execute on all possible code paths using dominator tree analysis</li>
+                    <li><strong>Behavioral understanding</strong>: Analyze what code does, not just how it looks</li>
+                </ul>
+
+                <p>These capabilities come with requirements: nightly Rust toolchain, <code>rustc-dev</code> components, successful compilation, and expertise in compiler internals (<code>LateLintPass</code>, <code>rustc_hir</code>, <code>clippy_utils</code>).</p>
+
+                <h4>Source-Level Parsing</h4>
+
+                <p>Operating directly on source code provides complementary advantages:</p>
+
+                <ul>
+                    <li><strong>Near-instant analysis</strong>: Results appear quickly without build delays</li>
+                    <li><strong>No build requirements</strong>: Completely avoids Solana program's build process, no need for specific nightly toolchains, dependency discrepancies, or waiting for compilation. This is especially valuable when builds fail due to toolchain issues unrelated to the code being analyzed</li>
+                    <li><strong>Resilience</strong>: Analyzes incomplete or broken code that won't compile</li>
+                    <li><strong>Lightweight setup</strong>: Standard Rust toolchain suffices. No nightly or compiler components</li>
+                    <li><strong>Approachable extension</strong>: The DSL abstracts complexity, letting security researchers write rules without compiler knowledge</li>
+                </ul>
+
+                <p>The tradeoff is explicit: Eloizer identifies structural patterns and missing code elements but cannot perform full dataflow analysis or verify semantic properties that require type information.</p>
+
+                <h4>Design Rationale</h4>
+
+                <p>Three principles guided our architectural choice:</p>
+
+                <ol>
+                    <li><strong>Development integration</strong>: Sub-second analysis enables pre-commit hooks and real-time editor feedback</li>
+                    <li><strong>Shift-left security</strong>: Detect issues during initial coding, before compilation attempts</li>
+                    <li><strong>Community contribution</strong>: Lower the barrier for security researchers to add detection capabilities</li>
+                </ol>
+
+                <p>The practical distinction lies in when each tool provides value: source-level analysis like Eloizer catches structural issues immediately as code is written, while compiler-based analysis requires successful compilation but can then verify deeper semantic properties. Neither approach is fully comprehensive, structural patterns can find vulnerabilities that semantic analysis might miss, and vice versa.</p>
+
+                <h2>The Analysis Pipeline</h2>
+
+                <img src="../images/blog/Eloizer/how_it_work.png" alt="Eloizer analysis pipeline" style="max-width: 400px;">
+
+                <p>The pipeline processes each source file through six stages:</p>
+
+                <p><strong>1. File Discovery</strong>: Eloizer walks the project directory, identifying Rust source files (<code>.rs</code>).</p>
+
+                <p><strong>2. Parsing</strong>: Each file is parsed using <code>syn</code>. The parser produces a <code>syn::File</code> AST containing the full syntactic structure: items (functions, structs, enums, modules), attributes, and expressions.</p>
+
+                <p><strong>3. Node Extraction</strong>: Not every AST node is relevant for security analysis. The DSL's query layer extracts specific node types: functions (including those inside <code>impl</code> blocks), structs (particularly those with <code>#[derive(Accounts)]</code>), and relevant attributes. When a struct is Anchor-specific, we also run it through <code>anchor-syn</code> to obtain typed fields and constraint metadata before the rule logic executes. This extraction happens lazily as rules query the AST.</p>
+
+                <p><strong>4. Rule Execution</strong>: Each registered rule runs against the parsed AST. Rules use the DSL to express queries like "find all functions that contain division operations" or "find account structs with duplicate mutable references". The query returns matching nodes, which are converted to findings.</p>
+
+                <p><strong>5. Enrichment</strong>: Raw findings need context to be actionable. The <code>SpanExtractor</code> component maps AST spans back to source locations (file, line, column) and extracts code snippets. This enables precise error reporting.</p>
+
+                <p><strong>6. Report Generation</strong>: Findings are formatted for output. The CLI supports terminal output with severity coloring, quiet mode for CI integration, and Markdown export for documentation.</p>
+
+                <h2>Domain Specific Language</h2>
+
+                <p>Writing detection rules directly against <code>syn</code>'s AST types requires manually implementing visitor traits and handling traversal logic. Consider detecting structs that derive <code>Accounts</code> without the DSL:</p>
+
+<pre><code class="language-rust">// Without DSL: Manual visitor implementation
+struct AccountsStructVisitor {
+    findings: Vec&lt;Finding&gt;,
+}
+
+impl&lt;'ast&gt; Visit&lt;'ast&gt; for AccountsStructVisitor {
+    fn visit_item_struct(&amp;mut self, struct_item: &amp;'ast ItemStruct) {
+        // Check if struct derives Accounts
+        for attr in &amp;struct_item.attrs {
+            if let Meta::List(meta_list) = &amp;attr.meta {
+                if meta_list.path.is_ident("derive") {
+                    let tokens = meta_list.tokens.to_string();
+                    if tokens.contains("Accounts") {
+                        // Now check fields for duplicate mutables
+                        if let Fields::Named(fields) = &amp;struct_item.fields {
+                            let mut mutable_count = 0;
+                            for field in &amp;fields.named {
+                                // 30+ lines of attribute parsing...
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        visit::visit_item_struct(self, struct_item);
+    }
+}</code></pre>
+
+                <p>Each rule would duplicate this boilerplate: AST traversal, pattern matching, span extraction, and result formatting. We built a DSL that eliminates this repetition by separating <em>what</em> to detect from <em>how</em> to traverse the AST:</p>
+
+<pre><code class="language-rust">// With DSL: Declarative query
+AstQuery::new(ast)
+    .structs()
+    .derives_accounts()
+    .has_duplicate_mutable_accounts()</code></pre>
+
+                <p>The DSL has two core components: <code>RuleBuilder</code> for declarative rule definition and <code>AstQuery</code> for composable AST queries.</p>
+
+                <h3>RuleBuilder: Declarative Rule Definition</h3>
+
+                <p>The <code>RuleBuilder</code> provides a fluent API for defining rules. Instead of implementing traits and handling low-level details, you declare the rule's metadata and provide a query that describes what patterns to find:</p>
+
+<pre><code class="language-rust">pub fn create_rule() -&gt; Arc&lt;dyn Rule&gt; {
+    RuleBuilder::new()
+        .id("duplicate-mutable-accounts")
+        .severity(Severity::Medium)
+        .title("Duplicate Mutable Accounts")
+        .description("Detects account structs with multiple mutable references...")
+        .recommendations(vec![
+            "Add constraints to ensure accounts are different",
+            "Use #[account(constraint = a.key() != b.key())]",
+        ])
+        .dsl_query(|ast, _file_path, _span_extractor| {
+            AstQuery::new(ast)
+                .structs()
+                .derives_accounts()
+                .has_duplicate_mutable_accounts()
+        })
+        .build()
+}</code></pre>
+
+                <p>The <code>dsl_query</code> closure receives the parsed AST and returns an <code>AstQuery</code>. When the rule executes, <strong>the builder automatically converts matching nodes to findings</strong>, attaching the rule's metadata, severity, description, recommendations, and extracting precise source locations via <code>SpanExtractor</code>. The author focuses on detection logic; the infrastructure handles finding generation.</p>
+
+                <h3>AstQuery: Composable AST Queries</h3>
+
+                <p>The <code>AstQuery</code> type is the workhorse of the DSL. It wraps a collection of AST nodes and provides chainable methods that filter and transform them:</p>
+
+<pre><code class="language-rust">pub struct AstQuery&lt;'a&gt; {
+    results: Vec&lt;AstNode&lt;'a&gt;&gt;,
+}</code></pre>
+
+                <p>Each method <strong>consumes</strong> the current query and <strong>returns a new query</strong> with transformed results. This functional composition pattern ensures immutability and enables natural chaining:</p>
+
+<pre><code class="language-rust">AstQuery::new(ast)
+    .structs()                         // Extract all struct definitions
+    .derives_accounts()                // Keep only #[derive(Accounts)] structs
+    .has_duplicate_mutable_accounts()  // Custom filter for vulnerability pattern</code></pre>
+
+                <p>Internally, each method iterates over <code>self.results</code>, applies its filter logic, and constructs a new <code>AstQuery</code> with the filtered nodes:</p>
+
+<pre><code class="language-rust">pub fn structs(self) -&gt; Self {
+    let mut new_results = Vec::new();
+    for node in self.results {
+        if let NodeData::File(file) = node.data {
+            for item in &amp;file.items {
+                if let Item::Struct(struct_item) = item {
+                    new_results.push(AstNode::from_struct(struct_item));
+                }
+            }
+        }
+    }
+    Self { results: new_results }
+}</code></pre>
+
+                <p>The pipeline processes nodes eagerly at each step. This reads almost like a description of what we're looking for: "From the AST, find structs that derive Accounts and have duplicate mutable accounts."</p>
+
+                <p>The design enables two categories of filters: <strong>generic</strong> (built into <code>AstQuery</code> for common patterns) and <strong>custom</strong> (implemented as extension traits for domain-specific logic).</p>
+
+                <img src="../images/blog/Eloizer/struct.png" alt="AstQuery struct diagram" style="max-width: 700px;">
+
+                <h2>Generic Filters</h2>
+
+                <p>Generic filters are methods on <code>AstQuery</code> that handle common traversal patterns. They're implemented once and reused across rules.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Filter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>.functions()</code></td>
+                            <td>Select all function definitions, including those inside <code>impl</code> blocks</td>
+                        </tr>
+                        <tr>
+                            <td><code>.structs()</code></td>
+                            <td>Select all struct definitions</td>
+                        </tr>
+                        <tr>
+                            <td><code>.public_functions()</code></td>
+                            <td>Filter to functions with <code>pub</code> visibility</td>
+                        </tr>
+                        <tr>
+                            <td><code>.with_name("foo")</code></td>
+                            <td>Filter nodes by identifier name</td>
+                        </tr>
+                        <tr>
+                            <td><code>.calls_to("bar")</code></td>
+                            <td>Find nodes that contain calls to a specific function</td>
+                        </tr>
+                        <tr>
+                            <td><code>.filter(predicate)</code></td>
+                            <td>Apply a custom predicate function</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>These filters compose naturally. For example, to find all public functions that call <code>invoke</code>:</p>
+
+<pre><code class="language-rust">AstQuery::new(ast)
+    .functions()
+    .public_functions()
+    .calls_to("invoke")</code></pre>
+
+                <img src="../images/blog/Eloizer/generic.png" alt="Examples of generic filters" style="max-width: 760px;">
+
+                <p>Generic filters cover most syntactic detection scenarios. They operate purely on AST structure, matching nodes based on their shape without understanding Solana or Anchor semantics. <strong>For domain-specific logic, like verifying Anchor constraints or tracking variable assignments, custom filters are needed.</strong></p>
+
+                <h2>Custom Filters</h2>
+
+                <p>Generic filters handle syntactic patterns, but security vulnerabilities often require deeper analysis. Custom filters encode domain-specific logic that understands Solana and Anchor semantics.</p>
+
+                <p>We use Rust's <strong>extension trait pattern</strong> for custom filters. This keeps the core <code>AstQuery</code> generic and decoupled from Solana-specific logic. Each rule can define its own trait with custom methods, implemented for <code>AstQuery</code>, enabling seamless chaining:</p>
+
+<pre><code class="language-rust">// Define a custom filter as a trait
+pub trait DuplicateMutableAccountsFilters&lt;'a&gt; {
+    fn has_duplicate_mutable_accounts(self) -&gt; AstQuery&lt;'a&gt;;
+}
+
+// Implement for AstQuery - now it chains naturally
+impl&lt;'a&gt; DuplicateMutableAccountsFilters&lt;'a&gt; for AstQuery&lt;'a&gt; {
+    fn has_duplicate_mutable_accounts(self) -&gt; AstQuery&lt;'a&gt; {
+        // Iterate structs, count mutable accounts, check constraints
+        // Return only structs with unprotected duplicate mutables
+    }
+}</code></pre>
+
+                <p><strong>Why extension traits instead of direct methods on <code>AstQuery</code>?</strong></p>
+
+                <ul>
+                    <li><strong>Modularity</strong>: Rules bring their own logic without modifying the core DSL</li>
+                    <li><strong>Namespace isolation</strong>: Prevents method name collisions across different detectors</li>
+                    <li><strong>Extensibility</strong>: Users can add custom filters without forking the analyzer</li>
+                </ul>
+
+                <p>This pattern enables sophisticated detection logic while maintaining the DSL's composability. Custom filters perform domain-specific analysis:</p>
+
+                <ul>
+                    <li><strong>Anchor attribute parsing</strong>: Extract <code>#[account(...)]</code> tokens and validate protective patterns (<code>constraint</code>, <code>seeds</code>, <code>bump</code>, <code>key()</code> comparisons)</li>
+                    <li><strong>Semantic type checking</strong>: Convert <code>syn::ItemStruct</code> to <code>anchor_syn::AccountsStruct</code> for typed field access (<code>Signer&lt;'info&gt;</code>, <code>AccountInfo&lt;'info&gt;</code>) and constraint metadata (<code>is_signer()</code>, <code>has_one</code>)</li>
+                    <li><strong>Variable tracking</strong>: Follow definitions through assignments to determine if divisors are constants, parameters, or potentially-zero values</li>
+                    <li><strong>Cross-field validation</strong>: Detect bidirectional constraints where field protection appears in another field's attributes</li>
+                </ul>
+
+                <p>The trait-based design means a rule can chain generic and custom filters naturally: <code>.structs().derives_accounts().has_duplicate_mutable_accounts()</code>. The DSL handles the plumbing; the filter author focuses on the detection logic.</p>
+
+                <img src="../images/blog/Eloizer/DSL.png" alt="DSL filter hierarchy" style="max-width: 760px;">
+
+                <h2>Writing a Custom Rule</h2>
+
+                <p>To demonstrate how the DSL enables sophisticated vulnerability detection, let's examine the <code>duplicate-mutable-accounts</code> rule.</p>
+
+                <h3>The Vulnerability Pattern</h3>
+
+                <p>In Anchor programs, multiple mutable account references in a single instruction can lead to unexpected behavior when the same account is passed multiple times. Consider this vulnerable struct:</p>
+
+<pre><code class="language-rust">#[derive(Accounts)]
+pub struct Transfer&lt;'info&gt; {
+    #[account(mut)]
+    pub from: Account&lt;'info, TokenAccount&gt;,
+    #[account(mut)]
+    pub to: Account&lt;'info, TokenAccount&gt;,
+    pub authority: Signer&lt;'info&gt;,
+}</code></pre>
+
+                <p>If a caller passes the same account for both <code>from</code> and <code>to</code>, the program executes both debits and credits on the same account. Without explicit constraints preventing this, the program's logic may produce incorrect results.</p>
+
+                <p>The safe version enforces uniqueness:</p>
+
+<pre><code class="language-rust">#[derive(Accounts)]
+pub struct Transfer&lt;'info&gt; {
+    #[account(mut)]
+    pub from: Account&lt;'info, TokenAccount&gt;,
+    #[account(
+        mut,
+        constraint = from.key() != to.key()
+    )]
+    pub to: Account&lt;'info, TokenAccount&gt;,
+    pub authority: Signer&lt;'info&gt;,
+}</code></pre>
+
+                <h3>Rule Implementation</h3>
+
+                <p>The rule uses <code>RuleBuilder</code> to declare metadata and specify the detection query:</p>
+
+<pre><code class="language-rust">pub fn create_rule() -&gt; Arc&lt;dyn Rule&gt; {
+    RuleBuilder::new()
+        .id("duplicate-mutable-accounts")
+        .severity(Severity::Medium)
+        .title("Duplicate Mutable Accounts")
+        .description(
+            "Detects account structs with multiple mutable references \
+             without constraints ensuring uniqueness"
+        )
+        .recommendations(vec![
+            "Add constraints: #[account(constraint = account1.key() != account2.key())]",
+            "Use seeds/bump constraints for PDA-based uniqueness",
+            "Implement explicit validation in instruction handlers",
+        ])
+        .dsl_query(|ast, _file_path, _span_extractor| {
+            AstQuery::new(ast)
+                .structs()
+                .derives_accounts()
+                .has_duplicate_mutable_accounts()
+        })
+        .build()
+}</code></pre>
+
+                <p>The DSL query is concise: find all structs that derive <code>Accounts</code> and have duplicate mutable accounts without protection. The complexity lives in the custom filter.</p>
+
+                <h3>Custom Filter Logic</h3>
+
+                <p>The <code>has_duplicate_mutable_accounts</code> filter performs multi-pass analysis:</p>
+
+<pre><code class="language-rust">pub trait DuplicateMutableAccountsFilters&lt;'a&gt; {
+    fn has_duplicate_mutable_accounts(self) -&gt; AstQuery&lt;'a&gt;;
+}
+
+impl&lt;'a&gt; DuplicateMutableAccountsFilters&lt;'a&gt; for AstQuery&lt;'a&gt; {
+    fn has_duplicate_mutable_accounts(self) -&gt; AstQuery&lt;'a&gt; {
+        self.filter(|node| {
+            if let NodeData::Struct(struct_item) = &amp;node.data {
+                let mut mutable_account_count = 0;
+                let mut mutable_accounts_with_constraints = 0;
+
+                // First pass: collect all constraint expressions
+                let mut all_constraints = Vec::new();
+                if let Fields::Named(fields) = &amp;struct_item.fields {
+                    for field in &amp;fields.named {
+                        for attr in &amp;field.attrs {
+                            if let Meta::List(meta_list) = &amp;attr.meta {
+                                if meta_list.path.is_ident("account") {
+                                    let tokens = meta_list.tokens.to_string();
+                                    if tokens.contains("constraint") {
+                                        all_constraints.push(tokens);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Second pass: check each mutable account
+                    for field in &amp;fields.named {
+                        let mut is_mutable = false;
+                        let mut has_protection = false;
+
+                        for attr in &amp;field.attrs {
+                            if let Meta::List(meta_list) = &amp;attr.meta {
+                                if meta_list.path.is_ident("account") {
+                                    let tokens = meta_list.tokens.to_string();
+
+                                    if tokens.contains("mut") {
+                                        is_mutable = true;
+                                    }
+
+                                    // Check for protective constraints
+                                    if tokens.contains("constraint") ||
+                                       tokens.contains("seeds") ||
+                                       tokens.contains("bump") ||
+                                       tokens.contains("!=") ||
+                                       tokens.contains("key()") {
+                                        has_protection = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        // Check bidirectional constraints
+                        if is_mutable &amp;&amp; !has_protection {
+                            if let Some(field_name) = &amp;field.ident {
+                                for constraint in &amp;all_constraints {
+                                    if constraint.contains(&amp;field_name.to_string())
+                                       &amp;&amp; constraint.contains("!=") {
+                                        has_protection = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if is_mutable {
+                            mutable_account_count += 1;
+                            if has_protection {
+                                mutable_accounts_with_constraints += 1;
+                            }
+                        }
+                    }
+                }
+
+                // Vulnerability: 2+ mutable accounts without full constraint coverage
+                mutable_account_count &gt;= 2
+                    &amp;&amp; mutable_account_count != mutable_accounts_with_constraints
+            } else {
+                false
+            }
+        })
+    }
+}</code></pre>
+
+                <p>The filter performs three key checks:</p>
+
+                <ol>
+                    <li><strong>Attribute Parsing</strong>: Extracts <code>#[account(...)]</code> attribute tokens to identify mutable accounts and constraints</li>
+                    <li><strong>Constraint Detection</strong>: Recognizes protective patterns like <code>constraint = a.key() != b.key()</code>, <code>seeds</code>, and <code>bump</code> directives</li>
+                    <li><strong>Bidirectional Validation</strong>: Checks if fields are referenced in other fields' constraints, catching patterns where <code>field_a</code> is protected by a constraint on <code>field_b</code></li>
+                </ol>
+
+                <p>This multi-pass approach handles complex scenarios where constraints may appear on either field in a pair, ensuring the detector minimizes false positives.</p>
+
+                <p>The custom filter encapsulates domain-specific knowledge about Anchor's constraint system while remaining composable with generic DSL operations. The filter author focuses on the vulnerability logic, parsing attributes, validating constraints, counting references, while the DSL infrastructure handles AST traversal, result collection, and finding generation.</p>
+
+                <p>This separation of concerns enables writing sophisticated detectors without reimplementing boilerplate for every rule.</p>
+
+                <h2>Precise Source Locations</h2>
+
+                <p>A common frustration with static analyzers is vague error locations. "Vulnerability on line 50" is not helpful when the actual issue spans multiple lines or is buried in a nested expression. Eloizer provides precise source ranges for every finding.</p>
+
+                <p>This precision comes from <code>syn</code>'s span tracking. Every AST node carries a <code>Span</code> that records its exact position in the source: start line, start column, end line, end column. The <code>SpanExtractor</code> component converts these spans into actionable locations.</p>
+
+                <p>This enables IDE integration (highlighting the exact code range), accurate code snippets in reports, and unambiguous identification of issues when multiple vulnerabilities exist in the same file.</p>
+
+                <img src="../images/blog/Eloizer/location.png" alt="Precise source location example" style="max-width: 700px;">
+
+                <h2>CLI</h2>
+
+                <p>Eloizer provides three main commands:</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Command</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>analyze</code></td>
+                            <td>Run security analysis on a project or file</td>
+                        </tr>
+                        <tr>
+                            <td><code>list-rules</code></td>
+                            <td>Show all available detection rules</td>
+                        </tr>
+                        <tr>
+                            <td><code>rule-info</code></td>
+                            <td>Inspect a specific rule's details</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>Basic usage:</p>
+
+<pre><code class="language-shell"># Analyze a project
+eloizer analyze -p ./my-solana-project
+
+# List available rules
+eloizer list-rules
+
+# Export report to Markdown
+eloizer analyze -p . -o report.md</code></pre>
+
+                <p>The analyzer produces a summary with findings grouped by severity, plus detailed reports in terminal or Markdown format:</p>
+
+                <img src="../images/blog/Eloizer/cli_complete.png" alt="Eloizer CLI output" style="max-width: 700px;">
+
+                <h2>Example: Eloizer in Action</h2>
+
+                <p>Running Eloizer on a Solana program provides immediate feedback on potential vulnerabilities. Here's what the analysis output looks like:</p>
+
+                <img src="../images/blog/Eloizer/eloizer_in_action.png" alt="Eloizer in action" style="max-width: 700px;">
+
+                <p>Each finding includes:</p>
+
+                <ul>
+                    <li><strong>Severity classification</strong>: High/Medium/Low based on exploit risk</li>
+                    <li><strong>Precise location</strong>: Exact file path, line, and column</li>
+                    <li><strong>Code snippet</strong>: The vulnerable pattern with context</li>
+                    <li><strong>Actionable recommendations</strong>: Concrete fix suggestions</li>
+                </ul>
+
+                <p>The rapid execution enables integration into pre-commit hooks and editor extensions, providing instant feedback during development.</p>
+
+                <h2>What can Eloizer detect?</h2>
+
+                <p>Eloizer ships with a set of built-in detectors, but the real value is in the DSL's flexibility. The architecture supports writing rules for any pattern that can be expressed as an AST query.</p>
+
+                <p>Some categories of rules that fit naturally:</p>
+
+                <ul>
+                    <li><strong>Access control patterns</strong>: Missing signer checks, unauthorized account access, privilege escalation through unchecked ownership.</li>
+                    <li><strong>Arithmetic safety</strong>: Division without zero validation, overflow in unchecked contexts, precision loss in token calculations.</li>
+                    <li><strong>Account validation</strong>: Duplicate mutable references, missing ownership checks, PDA derivation with insufficient seeds.</li>
+                    <li><strong>Code quality</strong>: Unused error results, unreachable code paths, deprecated API usage.</li>
+                </ul>
+
+                <p>The DSL makes it straightforward to encode these patterns. If you can describe a vulnerability as "find X where Y is missing" or "find X that contains Y", you can write a rule for it. Future posts will show how to implement specific detectors and extend the rule set for your own needs.</p>
+
+                <h2>Limitations and Future Improvements</h2>
+
+                <p>Eloizer's design prioritizes speed and accessibility through source-level analysis. This approach enables near-instant execution and zero compilation overhead, but introduces architectural constraints that we're actively addressing.</p>
+
+                <h3>Current Scope</h3>
+
+                <h4>Per-File Analysis</h4>
+
+                <p>Currently, Eloizer analyzes each file independently. This is deliberate, it enables parallel processing and avoids the compilation dependency graph. However, some vulnerability patterns span multiple files:</p>
+
+<pre><code class="language-rust">// validation.rs
+pub fn validate_authority(account: &amp;AccountInfo, signer: &amp;Signer) -&gt; Result&lt;()&gt; {
+    require!(account.owner == signer.key(), ErrorCode::Unauthorized);
+    Ok(())
+}
+
+// transfer.rs
+use crate::validation::validate_authority;
+
+pub fn transfer(ctx: Context&lt;Transfer&gt;) -&gt; Result&lt;()&gt; {
+    validate_authority(&amp;ctx.accounts.from, &amp;ctx.accounts.authority)?;
+    // validation happens in another file
+    transfer_internal(...)?;
+    Ok(())
+}</code></pre>
+
+                <p>Eloizer's per-file analysis may flag <code>transfer</code> for missing owner checks because the validation logic lives in a separate module. Developers can suppress these findings or refactor validation inline.</p>
+
+                <h3>Ongoing Enhancements</h3>
+
+                <h4>Whole-Program Symbol Index</h4>
+
+                <p>We're implementing a global AST index that will unlock cross-file capabilities:</p>
+
+                <ul>
+                    <li><strong>Symbol resolution</strong>: Track function definitions and call sites across modules</li>
+                    <li><strong>Import analysis</strong>: Understand which validation functions are called from where</li>
+                    <li><strong>Cross-module patterns</strong>: Detect vulnerabilities that span file boundaries</li>
+                </ul>
+
+                <p>This enhancement will significantly reduce false positives for inter-procedural patterns while maintaining the speed advantage through incremental indexing. Files are only re-indexed when they change, preserving the fast feedback loop.</p>
+
+                <h4>Expanding Detection Coverage</h4>
+
+                <p>The current rule set targets the most critical vulnerability classes found in Solana audits. With ongoing development:</p>
+
+                <ul>
+                    <li><strong>New vulnerability patterns</strong>: Expanding detection for emerging attack vectors as the ecosystem evolves</li>
+                    <li><strong>Framework support</strong>: Adding detectors for Native Solana and other frameworks beyond Anchor</li>
+                    <li><strong>Protocol-specific rules</strong>: Enabling custom detectors for project-specific invariants</li>
+                </ul>
+
+                <p>Each new rule leverages the DSL infrastructure, meaning implementation effort focuses on detection logic rather than boilerplate. As we refine heuristics and add coverage, detection breadth increases without sacrificing analysis speed.</p>
+
+                <h3>Design Trade-offs</h3>
+
+                <p>The architectural decisions reflect deliberate priorities:</p>
+
+                <ul>
+                    <li><strong>Speed enables workflow integration</strong>: Near-instant analysis fits pre-commit hooks and editor extensions</li>
+                    <li><strong>No compilation dependency</strong>: Analysis works even when the project doesn't compile, catching issues earlier</li>
+                    <li><strong>Extensibility over built-in completeness</strong>: The DSL lets users encode project-specific patterns without forking the tool</li>
+                </ul>
+
+                <p>The ongoing enhancements, particularly the whole-program index will expand Eloizer's capabilities while preserving the properties that make it practical for daily use.</p>
+
+                <h3>Future Features</h3>
+
+                <p>Two significant architectural enhancements are planned for the short term future:</p>
+
+                <ul>
+                    <li><strong>Intermediate Representation (IR)</strong>: Building an IR layer between the AST and detection rules will enable dataflow and control-flow analysis. The IR would track variable lifetimes, ownership transfers, and value propagation across function boundaries.</li>
+                    <li><strong>Dylint Integration</strong>: <a href="https://github.com/trailofbits/dylint">Dylint</a> provides a framework for running custom lints as compiler plugins, giving access to the full type-checked HIR (High-level Intermediate Representation) and MIR (Mid-level Intermediate Representation) from rustc. Integration would allow Eloizer to operate in hybrid mode: using fast AST analysis by default, but leveraging compiler artifacts when available for deeper semantic analysis.</li>
+                </ul>
+
+                <h2>Conclusion</h2>
+
+                <p>Eloizer is our approach to making static analysis practical for Solana development. By parsing source files directly instead of requiring compilation, it runs fast enough to use during development, not just in CI. The DSL makes it straightforward to write new detection rules without dealing with low-level AST traversal.</p>
+
+                <p>The design priorities are intentional:</p>
+
+                <ul>
+                    <li><strong>Speed</strong>: Sub-second analysis enables integration into development workflows</li>
+                    <li><strong>Extensibility</strong>: The filter system lets users add detection capabilities without modifying core code</li>
+                    <li><strong>Precision</strong>: Exact source locations reduce the time from finding to fix</li>
+                </ul>
+
+                <p>Static analysis is one layer in a defense-in-depth strategy. It won't catch every vulnerability, and you still need dynamic analysis, fuzzing, and human review. But it catches common patterns instantly, surfacing issues when fixes are cheap.</p>
+
+                <p>Eloizer is <a href="https://github.com/Inversive-Labs/eloizer/">open source</a>. Future posts will dive into specific detectors and show how to write custom rules, aswell as introducing new features.</p>
+
+            </article>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800/50 py-8 px-6">
+        <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-gray-600 text-sm">&copy; 2026 Sergio Corrales</p>
+            <a href="../index.html" class="text-gray-500 hover:text-primary text-sm transition">Back to Portfolio</a>
+        </div>
+    </footer>
+
+    <!-- Scroll to Top -->
+    <button class="scroll-top" id="scroll-top" aria-label="Scroll to top">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+    </button>
+    <script>
+        hljs.highlightAll();
+        const scrollTopBtn = document.getElementById('scroll-top');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) scrollTopBtn.classList.add('visible');
+            else scrollTopBtn.classList.remove('visible');
+        });
+        scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    </script>
+</body>
+</html>
