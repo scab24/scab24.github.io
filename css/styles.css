@@ -82,15 +82,15 @@ body::before {
 .audit-table a:hover { color: #93c5fd; text-decoration: underline; }
 
 /* ========== Sub-tabs for Audits ========== */
-.sub-tab { cursor: pointer; padding: 8px 20px; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; transition: all 0.3s ease; border: 1px solid transparent; }
-.sub-tab:hover { background: rgba(59, 130, 246, 0.1); }
+.sub-tab { cursor: pointer; padding: 8px 20px; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.15); color: #94a3b8; background: transparent; }
+.sub-tab:hover { background: rgba(59, 130, 246, 0.1); border-color: rgba(59,130,246,0.4); }
 .sub-tab.active { background: #3b82f6; color: white; border-color: #3b82f6; }
 .audit-panel { display: none; }
 .audit-panel.active { display: block; }
 
 /* ========== Research Tabs ========== */
-.research-tab { cursor: pointer; padding: 8px 20px; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; transition: all 0.3s ease; border: 1px solid transparent; color: #94a3b8; background: transparent; }
-.research-tab:hover { background: rgba(59, 130, 246, 0.1); }
+.research-tab { cursor: pointer; padding: 8px 20px; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; transition: all 0.3s ease; border: 1px solid rgba(255,255,255,0.15); color: #94a3b8; background: transparent; }
+.research-tab:hover { background: rgba(59, 130, 246, 0.1); border-color: rgba(59,130,246,0.4); }
 .research-tab.active { background: #3b82f6; color: white; border-color: #3b82f6; }
 .research-panel { display: none; }
 .research-panel.active { display: block; }
