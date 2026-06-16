@@ -192,6 +192,27 @@
             <!-- Project Grid -->
             <div id="project-grid" class="project-grid grid md:grid-cols-2 lg:grid-cols-3 gap-5">
 
+                <!-- ILOLD (EVM + Non-EVM) -->
+                <div class="project-card fade-up border border-gray-800 rounded-xl p-6 transition-all" data-category="evm-tooling solana-tooling" style="background:#1a2436;">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 784 784" fill="none"><path fill="#60a5fa" d="M392.07 0L383.5 29.11v536.52l8.57 8.55 247.9-146.72z"/><path fill="#93c5fd" d="M392.07 0L144.17 427.46l247.9 146.72V311.52z"/><path fill="#3b82f6" d="M392.07 618.46l-4.82 5.87v190.25l4.82 14.09 248.09-349.5z"/><path fill="#93c5fd" d="M392.07 828.67V618.46L144.17 479.17z"/><path fill="#2563eb" d="M392.07 574.18l247.9-146.72-247.9-112.66z"/><path fill="#60a5fa" d="M144.17 427.46l247.9 146.72V314.82z"/></svg>
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 397.7 311.7" fill="none"><path fill="url(#sol-a)" d="M64.6 237.9c2.4-2.4 5.7-3.8 9.2-3.8h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1l62.7-62.7z"/><path fill="url(#sol-b)" d="M64.6 3.8C67.1 1.4 70.4 0 73.8 0h317.4c5.8 0 8.7 7 4.6 11.1l-62.7 62.7c-2.4 2.4-5.7 3.8-9.2 3.8H6.5c-5.8 0-8.7-7-4.6-11.1L64.6 3.8z"/><path fill="url(#sol-c)" d="M333.1 120.1c-2.4-2.4-5.7-3.8-9.2-3.8H6.5c-5.8 0-8.7 7-4.6 11.1l62.7 62.7c2.4 2.4 5.7 3.8 9.2 3.8h317.4c5.8 0 8.7-7 4.6-11.1l-62.7-62.7z"/></svg>
+                            <span class="tag tag-evm">EVM</span>
+                            <span class="tag tag-solana">SVM</span>
+                            <span class="tag tag-tooling">Tooling</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Own Project</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">iLold</h3>
+                    <p class="text-gray-400 text-sm mb-3">Interactive execution path tree analyzer for smart contracts. Maps dependencies, traces functions and slices data flow through a REPL + web canvas. Supports EVM and Non-EVM.</p>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <a href="https://ilold.xyz/" target="_blank" class="text-primary text-sm hover:text-accent transition">Website &rarr;</a>
+                        <a href="https://github.com/scab24/ilold-evm" target="_blank" class="text-gray-500 text-sm hover:text-gray-300 transition">GitHub EVM</a>
+                        <a href="https://github.com/scab24/ilold-svm" target="_blank" class="text-gray-500 text-sm hover:text-gray-300 transition">GitHub SVM</a>
+                    </div>
+                </div>
+
                 <!-- SOLANA / TOOLING -->
                 <div class="project-card fade-up border border-gray-800 rounded-xl p-6 transition-all" data-category="solana-tooling" style="background:#1a2436;">
                     <div class="flex items-center justify-between mb-3">
@@ -407,9 +428,39 @@
     <section id="tools" class="py-24 px-6">
         <div class="max-w-5xl mx-auto">
             <h2 class="text-3xl font-bold text-white mb-4 fade-up">Security Tools</h2>
-            <p class="text-gray-400 mb-10 fade-up">Tools developed at Inversive Labs for Solana smart contract security. Click to see full details.</p>
+            <p class="text-gray-400 mb-10 fade-up">Security tools built at Inversive Labs and independently for EVM and Non-EVM. Click to see full details.</p>
 
             <div class="grid md:grid-cols-3 gap-6">
+                <!-- iLold -->
+                <div class="tool-card fade-up bg-card border border-gray-800 rounded-xl overflow-hidden group relative hover:border-primary/50 transition-all">
+                    <a href="https://ilold.xyz/" target="_blank" class="block">
+                        <div class="aspect-video overflow-hidden bg-gray-900 border-b border-gray-800">
+                            <img src="images/ilold/diagram_solidity.png" alt="iLold Canvas" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        </div>
+                        <div class="p-6 pb-2">
+                            <div class="flex items-center gap-2 mb-3">
+                                <div class="w-2 h-2 bg-green-400 rounded-full"></div>
+                                <span class="text-gray-500 text-xs font-mono">Open Source</span>
+                            </div>
+                            <h3 class="text-white text-lg font-semibold mb-1">iLold</h3>
+                            <p class="text-gray-500 text-xs font-mono mb-3">Execution Path Analyzer</p>
+                            <p class="text-gray-400 text-sm mb-4">Interactive execution path tree analyzer for smart contracts. Maps dependencies, traces functions and slices data flow through a REPL + web canvas. Supports EVM and Non-EVM.</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="tag tag-tooling">Rust</span>
+                                <span class="tag tag-evm">EVM</span>
+                                <span class="tag tag-solana">SVM</span>
+                            </div>
+                        </div>
+                    </a>
+                    <div class="px-6 pb-6 pt-3 flex items-center justify-between">
+                        <a href="https://ilold.xyz/" target="_blank" class="text-primary text-sm font-medium hover:text-accent transition">Visit ilold.xyz &rarr;</a>
+                        <div class="flex items-center gap-3">
+                            <a href="https://github.com/scab24/ilold-evm" target="_blank" class="text-gray-500 text-xs hover:text-primary transition">GitHub EVM</a>
+                            <a href="https://github.com/scab24/ilold-svm" target="_blank" class="text-gray-500 text-xs hover:text-primary transition">GitHub SVM</a>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Eloizer -->
                 <div class="tool-card fade-up bg-card border border-gray-800 rounded-xl overflow-hidden group relative hover:border-primary/50 transition-all">
                     <a href="tools/eloizer.html" class="block">
@@ -496,6 +547,7 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
@@ -711,6 +763,7 @@
                     <table class="audit-table">
                         <thead><tr><th>Project</th><th>Description</th><th>Status</th><th>Link</th></tr></thead>
                         <tbody>
+                            <tr><td class="text-white">iLold</td><td>Interactive execution path tree analyzer for EVM and Non-EVM smart contracts. REPL + web canvas, dependency mapping, trace and slice analysis</td><td><span class="tag tag-tooling">Open Source</span></td><td><a href="https://ilold.xyz/" target="_blank">Website &rarr;</a> · <a href="https://github.com/scab24/ilold-evm" target="_blank" class="text-gray-500 hover:text-gray-300">GitHub EVM</a> · <a href="https://github.com/scab24/ilold-svm" target="_blank" class="text-gray-500 hover:text-gray-300">GitHub SVM</a></td></tr>
                             <tr><td class="text-white">Eloizer</td><td>Modular static analysis framework for Solana, 50+ detectors, AST-based, built from scratch in Rust</td><td><span class="tag tag-tooling">Open Source</span></td><td><a href="tools/eloizer.html">Details &rarr;</a> · <a href="https://github.com/Inversive-Labs/eloizer" target="_blank" class="text-gray-500 hover:text-gray-300">GitHub</a></td></tr>
                             <tr><td class="text-white">Tempo</td><td>Invariant testing framework for StablecoinDEX: property-based testing with proptest-state-machine, 8 invariants</td><td><span class="tag" style="border-color: rgba(234,179,8,0.3); color: #eab308;">Open PR</span></td><td><a href="https://github.com/tempoxyz/tempo/pull/3247" target="_blank">Pull Request &rarr;</a></td></tr>
                             <tr><td class="text-white">Tempo</td><td>StablecoinDEX liquidity monitoring for tempo-sidecar: metrics, Prometheus, Grafana dashboard</td><td><span class="tag" style="border-color: rgba(234,179,8,0.3); color: #eab308;">Open PR</span></td><td><a href="https://github.com/tempoxyz/tempo/pull/3249" target="_blank">Pull Request &rarr;</a></td></tr>
