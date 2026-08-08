@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Hypatia is a local orchestration runtime for LLM-led vulnerability hunts with persistent investigation memory, structured evidence, explicit transitions, lifecycle journals, and gated closure.">
+    <title>Hypatia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../css/styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6', accent: '#60a5fa', light: '#93c5fd',
+                        surface: '#0f172a', card: '#1e293b', cardHover: '#334155',
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-gray-300 font-sans antialiased">
+    <div id="scroll-progress"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
+            <a href="../index.html#tools" class="back-link">&larr; Back</a>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero -->
+        <section class="tool-page-hero pt-28 pb-16 px-6">
+            <div class="max-w-4xl mx-auto text-center">
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Hypatia</h1>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto mb-8">Hypatia is a local tool that guides an AI researcher through a security review of source code. It defines and previews the intended scope, saves the investigation and its evidence, controls each step, and closes the review after the final checks pass.</p>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <span class="tag tag-tooling">Runs locally</span>
+                    <span class="tag">AI-assisted security review</span>
+                    <span class="tag tag-tooling">Linked source evidence</span>
+                    <span class="tag">Persistent investigation memory</span>
+                </div>
+                <p class="text-gray-400 text-sm max-w-3xl mx-auto mt-6">Profiles support smart-contract, protocol, browser, native, and broader source-code reviews based on the target's language and build evidence.</p>
+            </div>
+        </section>
+
+        <div class="section-divider max-w-4xl mx-auto"></div>
+
+        <!-- How it works -->
+        <section id="how-it-works" class="py-20 px-6" aria-labelledby="how-it-works-title">
+            <div class="max-w-5xl mx-auto">
+                <div class="max-w-3xl mx-auto text-center mb-12">
+                    <h2 id="how-it-works-title" class="text-2xl font-bold text-white mb-4">Follow the four phases of a solo investigation</h2>
+                    <p class="text-gray-400 leading-relaxed">A vulnerability hunt is a structured search for security flaws. In solo mode, Hypatia uses four stages: understand the code, explore possible weaknesses, investigate promising cases, and try to disprove them.</p>
+                </div>
+
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <article class="step-card">
+                        <div class="step-number">01</div>
+                        <p class="font-mono text-xs tracking-wider text-light mb-2">CONTEXT-BUILD</p>
+                        <h3 class="text-white font-semibold mb-2">Map the target</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Understand the code: map the production files included in the review and write the investigation plan and source-derived model.</p>
+                    </article>
+                    <article class="step-card">
+                        <div class="step-number">02</div>
+                        <p class="font-mono text-xs tracking-wider text-light mb-2">EXPLORE</p>
+                        <h3 class="text-white font-semibold mb-2">Explore possible weaknesses</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Explore possible weaknesses: ask what-if questions, inspect exact source locations, and either reject unsupported ideas or create candidates for deeper review.</p>
+                    </article>
+                    <article class="step-card">
+                        <div class="step-number">03</div>
+                        <p class="font-mono text-xs tracking-wider text-light mb-2">DEEP-DIVE</p>
+                        <h3 class="text-white font-semibold mb-2">Investigate a promising case</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Investigate a promising case: trace it through the target code, test its assumptions, and reject it when the source evidence is insufficient.</p>
+                    </article>
+                    <article class="step-card">
+                        <div class="step-number">04</div>
+                        <p class="font-mono text-xs tracking-wider text-light mb-2">SCRUTINIZE</p>
+                        <h3 class="text-white font-semibold mb-2">Try to disprove the claim</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Try to disprove the remaining case. Record test results or evidence from the code structure, then write a confirmed report when that evidence supports it.</p>
+                    </article>
+                </div>
+
+                <div class="mt-10" aria-labelledby="coordination-closure-title">
+                    <div class="mb-5">
+                        <h3 id="coordination-closure-title" class="text-lg font-semibold text-white mb-1">Coordinate the team and close the run</h3>
+                        <p class="text-gray-400 text-sm">These operations sit around the research sequence rather than adding more research phases.</p>
+                    </div>
+                    <div class="border-y border-gray-800 md:grid md:grid-cols-2 md:divide-x md:divide-gray-800">
+                        <div class="py-6 md:pr-8">
+                            <p class="font-mono text-xs tracking-widest text-primary mb-3">TEAM MODE</p>
+                            <p class="text-gray-400 text-sm leading-relaxed">Team mode adds two coordination stages: <span class="font-mono text-light">TEAM-LEAD</span> assigns the work and <span class="font-mono text-light">TEAM-SYNTHESIS</span> combines the results.</p>
+                        </div>
+                        <div class="py-6 border-t border-gray-800 md:border-t-0 md:pl-8">
+                            <p class="font-mono text-xs tracking-widest text-primary mb-3">RUN CLOSURE</p>
+                            <p class="text-gray-400 text-sm leading-relaxed">Closure follows the four research stages as a runtime operation. From <span class="font-mono text-light">EXPLORE</span>, the researcher requests <span class="font-mono text-light">HUNT_EXHAUSTED</span>, which runs five automatic checks: memory, advisor, strict coverage, report, and consistency.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider max-w-4xl mx-auto"></div>
+
+        <!-- Responsibility split -->
+        <section id="controls" class="py-20 px-6" aria-labelledby="controls-title">
+            <div class="max-w-5xl mx-auto">
+                <div class="max-w-3xl mb-12">
+                    <h2 id="controls-title" class="text-2xl font-bold text-white mb-4">See how the researcher and runtime divide the work</h2>
+                    <p class="text-gray-400 leading-relaxed">The AI investigates and writes the analysis. The Hypatia software checks the rules, saves progress, and controls which workflow changes are valid.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <article class="feature-card">
+                        <h3 class="text-white text-lg font-semibold mb-4">What does the AI researcher investigate?</h3>
+                        <ul class="space-y-3 text-gray-400 text-sm leading-relaxed">
+                            <li class="flex gap-3"><span class="text-accent font-mono">01</span><span>Maps and inspects the target source.</span></li>
+                            <li class="flex gap-3"><span class="text-accent font-mono">02</span><span>Develops hypotheses and records why paths were explored or rejected.</span></li>
+                            <li class="flex gap-3"><span class="text-accent font-mono">03</span><span>Records exact source locations and observed test results or evidence from the code structure.</span></li>
+                            <li class="flex gap-3"><span class="text-accent font-mono">04</span><span>Writes investigation, candidate, proof, and report artifacts.</span></li>
+                        </ul>
+                    </article>
+                    <article class="feature-card">
+                        <h3 class="text-white text-lg font-semibold mb-4">What does the Hypatia runtime enforce?</h3>
+                        <ul class="space-y-3 text-gray-400 text-sm leading-relaxed">
+                            <li class="flex gap-3"><span class="text-accent font-mono">01</span><span>Validates the hunt configuration, called a profile, and selected prerequisites.</span></li>
+                            <li class="flex gap-3"><span class="text-accent font-mono">02</span><span>Shows the intended scope, including files planned for review and exclusion, before setup.</span></li>
+                            <li class="flex gap-3"><span class="text-accent font-mono">03</span><span>Enforces directives, legal transitions, and required artifact structure.</span></li>
+                            <li class="flex gap-3"><span class="text-accent font-mono">04</span><span>Maintains persistent system and investigation memory, validates links between records, journals lifecycle changes, and runs closure gates.</span></li>
+                        </ul>
+                    </article>
+                </div>
+
+                <p class="mt-6 text-gray-400 text-sm leading-relaxed">Operators review the scope preview before setup. Acceptance is a procedural operator decision.</p>
+            </div>
+        </section>
+
+        <div class="section-divider max-w-4xl mx-auto"></div>
+
+        <!-- Decision path -->
+        <section id="decision-path" class="py-20 px-6" aria-labelledby="decision-path-title">
+            <div class="max-w-5xl mx-auto">
+                <div class="max-w-3xl mb-12">
+                    <p class="font-mono text-xs uppercase tracking-widest text-primary mb-3">Follow the evidence</p>
+                    <h2 id="decision-path-title" class="text-2xl font-bold text-white mb-4">How does a possible flaw become a confirmed finding?</h2>
+                    <p class="text-gray-400 leading-relaxed">An idea about a possible flaw begins as a lead. It becomes a confirmed finding when inspection of the actual source code and supporting evidence sustain it.</p>
+                </div>
+
+                <div class="rounded-xl border border-gray-800 overflow-hidden">
+                    <div class="grid md:grid-cols-[12rem_1fr] gap-3 md:gap-8 p-6 bg-card/40 border-b border-gray-800">
+                        <p class="font-mono text-sm text-light">Investigate the hypothesis</p>
+                        <p class="text-gray-400 text-sm leading-relaxed">Inspect the target, record the reasoning path, and link the exact source locations that bear on the claim.</p>
+                    </div>
+                    <div class="grid md:grid-cols-[12rem_1fr] gap-3 md:gap-8 p-6 border-b border-gray-800">
+                        <p class="font-mono text-sm text-light">Reject unsupported paths</p>
+                        <p class="text-gray-400 text-sm leading-relaxed">Record the rejection reason and preserve the decision so future work can build on it.</p>
+                    </div>
+                    <div class="grid md:grid-cols-[12rem_1fr] gap-3 md:gap-8 p-6 bg-card/20">
+                        <p class="font-mono text-sm text-light">Advance supported candidates</p>
+                        <p class="text-gray-400 text-sm leading-relaxed">Advance through <span class="font-mono">DEEP-DIVE</span> and <span class="font-mono">SCRUTINIZE</span>. Produce a confirmed report when the source and its test results or structural evidence support the claim.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider max-w-4xl mx-auto"></div>
+
+        <!-- Persistent memory and evidence -->
+        <section id="evidence" class="py-20 px-6" aria-labelledby="evidence-title">
+            <div class="max-w-5xl mx-auto">
+                <div class="max-w-3xl mb-12">
+                    <h2 id="evidence-title" class="text-2xl font-bold text-white mb-4">Keep every decision connected to its evidence</h2>
+                    <p class="text-gray-400 leading-relaxed">Hypatia stores the system model, reasoning, evidence, decisions, coverage, issues, and next action in the local run. This gives a fresh researcher enough context to understand the completed work, review open questions, and continue from persisted state.</p>
+                </div>
+
+                <div class="divide-y divide-gray-800 border-y border-gray-800">
+                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
+                        <p class="font-mono text-sm text-light">Preserve the system model</p>
+                        <p class="text-gray-400 text-sm leading-relaxed">Preserves the system map, connected paths, assumptions, planned attack surfaces, current phase, and handoff state across sessions.</p>
+                    </div>
+                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
+                        <p class="font-mono text-sm text-light">Trace the investigation</p>
+                        <p class="text-gray-400 text-sm leading-relaxed">Records questions, what-if branches, code paths, decisions, evidence references, and follow-up questions.</p>
+                    </div>
+                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
+                        <p class="font-mono text-sm text-light">Track source coverage</p>
+                        <p class="text-gray-400 text-sm leading-relaxed">Tracks the exact source locations inspected, links them to the related reasoning, and shows which planned attack surfaces have source-backed coverage.</p>
+                    </div>
+                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
+                        <p class="font-mono text-sm text-light">Record the proof</p>
+                        <p class="text-gray-400 text-sm leading-relaxed">Records whether a possible flaw was demonstrated, disproved, informational, or left to human judgment, together with supporting source locations and test evidence.</p>
+                    </div>
+                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
+                        <p class="font-mono text-sm text-light">Write the finding</p>
+                        <p class="text-gray-400 text-sm leading-relaxed">Contain the final structured explanation and proof links. Hypatia checks their completeness and connections. Final security judgment stays grounded in target source and reviewed evidence.</p>
+                    </div>
+                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
+                        <p class="font-mono text-sm text-light">Attach supporting evidence</p>
+                        <p class="text-gray-400 text-sm leading-relaxed">Supporting proof may take the form of an executable proof of concept, focused test results, or evidence from the source-code structure.</p>
+                    </div>
+                </div>
+                <p class="mt-6 text-gray-400 text-sm leading-relaxed">Cross-round memory carries prior findings, rejections, coverage, and handoff summaries into later reviews for continuity and deduplication.</p>
+            </div>
+        </section>
+
+        <div class="section-divider max-w-4xl mx-auto"></div>
+
+        <!-- Operations and recovery -->
+        <section id="operations" class="py-20 px-6" aria-labelledby="operations-title">
+            <div class="max-w-5xl mx-auto">
+                <div class="max-w-3xl mb-12">
+                    <h2 id="operations-title" class="text-2xl font-bold text-white mb-4">Run, recover, and close every investigation safely</h2>
+                    <p class="text-gray-400 leading-relaxed">Starting, continuing, cancelling, restoring, and closing a hunt are recorded to provide a safe recovery path for interrupted changes. A local CLI and dashboard expose status, reasoning, evidence, candidates, coverage, reports, recovery, and human feedback.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="use-case-card">
+                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Start from a reviewed scope</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Validate the profile, render and review the scope preview, then run setup.</p>
+                    </div>
+                    <div class="use-case-card">
+                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Resume from persisted state</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Inspect status, review informational phase advice, and resume persisted state. Next-round drafts require human review and never auto-start.</p>
+                    </div>
+                    <div class="use-case-card">
+                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Cancel or restore safely</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Cancel publishes a restorable archive. Restore reactivates it. Resume, cancel, and restore journal their changes transactionally.</p>
+                    </div>
+                    <div class="use-case-card">
+                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Close only after the final checks</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Run checks for memory continuity, phase advice, strict coverage, report quality, and consistency from an <span class="font-mono">EXPLORE</span> closure request.</p>
+                    </div>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-6 mt-10">
+                    <div class="use-case-card">
+                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Record every lifecycle change</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Lifecycle updates move through prepared, staged, publishing, completed, rollback, or blocked states and leave a journal for recovery inspection.</p>
+                    </div>
+                    <div class="use-case-card">
+                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Diagnose the safest next action</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Recovery reports one of four outcomes: safe to resume, ready to finalize, complete, or needs repair before work continues.</p>
+                    </div>
+                </div>
+
+                <p class="mt-8 text-gray-400 text-sm leading-relaxed">Provenance auditing and recovery are available as operator workflows alongside automatic closure validation.</p>
+            </div>
+        </section>
+
+        <div class="section-divider max-w-4xl mx-auto"></div>
+
+        <!-- Context versus proof -->
+        <section id="authority" class="py-20 px-6" aria-labelledby="authority-title">
+            <div class="max-w-5xl mx-auto">
+                <div class="max-w-3xl mb-12">
+                    <h2 id="authority-title" class="text-2xl font-bold text-white mb-4">Use context to guide the search, then prove findings against the target</h2>
+                    <p class="text-gray-400 leading-relaxed">Context helps focus the research. Findings depend on the current target and evidence tied to it.</p>
+                </div>
+
+                <div class="rounded-xl border border-gray-800 overflow-hidden">
+                    <div class="grid md:grid-cols-[14rem_1fr] gap-3 md:gap-8 p-6 bg-card/40 border-b border-gray-800">
+                        <h3 class="text-white font-semibold">Guide the search with human and external intelligence</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Human guidance and optional vulnerability intelligence supply hypotheses and priorities. Feedback is saved as a signal for subsequent research.</p>
+                    </div>
+                    <div class="grid md:grid-cols-[14rem_1fr] gap-3 md:gap-8 p-6 border-b border-gray-800">
+                        <h3 class="text-white font-semibold">Map Solidity projects with ilold</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">ilold is an optional source-code mapper for Solidity projects using the Foundry toolchain. Its project, map, and dependency-graph output seeds hypotheses for verification against the target source.</p>
+                    </div>
+                    <div class="grid md:grid-cols-[14rem_1fr] gap-3 md:gap-8 p-6 bg-card/20">
+                        <h3 class="text-white font-semibold">Prove each finding against the target</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">The target source plus observed test results or evidence from the source-code structure supports a finding. Hypatia validates report state, structure, and links. Final security judgment stays grounded in source-backed, reviewed evidence.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-800/50 py-8 px-6">
+        <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-gray-400 text-sm">&copy; 2026 Sergio Corrales</p>
+            <a href="../index.html" class="text-gray-400 hover:text-accent text-sm transition">Back to Portfolio</a>
+        </div>
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>
