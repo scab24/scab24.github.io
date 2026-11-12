@@ -51,6 +51,8 @@ body::before {
 .project-card[data-category="solana-tooling"]::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, #9945FF, #10b981); z-index: 1; }
 .project-card[data-category="evm-tooling"] { border-left: none; position: relative; }
 .project-card[data-category="evm-tooling"]::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, #3b82f6, #10b981); z-index: 1; }
+.project-card[data-category="stellar-tooling"] { border-left: none; position: relative; }
+.project-card[data-category="stellar-tooling"]::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, #fbbf24, #10b981); z-index: 1; }
 
 /* ========== Timeline ========== */
 .timeline-dot { width: 12px; height: 12px; background: #3b82f6; border-radius: 50%; box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
@@ -128,6 +130,7 @@ body::before {
 /* ========== Tooling Card Variants ========== */
 .tooling-solana { background: linear-gradient(135deg, rgba(120, 60, 200, 0.08) 0%, #141c2b 60%) !important; border-left: 2px solid rgba(168, 85, 247, 0.35) !important; box-shadow: inset 3px 0 12px -4px rgba(168, 85, 247, 0.15); }
 .tooling-evm { background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, #141c2b 60%) !important; border-left: 2px solid rgba(59, 130, 246, 0.35) !important; box-shadow: inset 3px 0 12px -4px rgba(59, 130, 246, 0.15); }
+.tooling-stellar { background: linear-gradient(135deg, rgba(251, 191, 36, 0.07) 0%, #141c2b 60%) !important; border-left: 2px solid rgba(251, 191, 36, 0.35) !important; box-shadow: inset 3px 0 12px -4px rgba(251, 191, 36, 0.15); }
 
 /* ========== Nav Dropdown (Security) ========== */
 .nav-dropdown-menu { opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease; pointer-events: none; }
