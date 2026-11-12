@@ -113,7 +113,7 @@
                 I'm Sergio Corrales, security research, tooling development, and protocol development across EVM and Non-EVM ecosystems.
             </p>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-                <div class="fade-up"><p class="stat-number text-4xl font-bold font-mono" data-target="28">0</p><p class="text-gray-500 text-sm mt-1">Private Audits</p></div>
+                <div class="fade-up"><p class="stat-number text-4xl font-bold font-mono" data-target="31">0</p><p class="text-gray-500 text-sm mt-1">Private Audits</p></div>
                 <div class="fade-up"><p class="stat-number text-4xl font-bold font-mono" data-target="245">0</p><p class="text-gray-500 text-sm mt-1">Vulnerabilities Found</p></div>
                 <div class="fade-up"><p class="stat-number text-4xl font-bold font-mono" data-target="5">0</p><p class="text-gray-500 text-sm mt-1">Security Tools Built</p></div>
                 <div class="fade-up"><p class="stat-number text-4xl font-bold font-mono" data-target="12">0</p><p class="text-gray-500 text-sm mt-1">Protocols Developed</p></div>
@@ -139,10 +139,10 @@
                 <div>
                     <h3 class="text-xl font-semibold text-white mb-4">Background</h3>
                     <p class="text-gray-400 leading-relaxed mb-4">
-                        Security researcher and protocol developer specializing in smart contract security, tooling development, and blockchain protocol engineering across EVM and Non-EVM ecosystems. Conducted 25+ private security audits, discovering over 170 vulnerabilities across EVM and Non-EVM protocols.
+                        Head of Security at Kenomic and security researcher working across smart contract security, protocol engineering and security tooling for EVM and Non-EVM ecosystems. Conducted 31+ private security audits, discovering over 245 vulnerabilities.
                     </p>
                     <p class="text-gray-400 leading-relaxed">
-                        Built three security tools for Solana at Inversive Labs: <span class="text-white font-medium">Eloizer</span> (static analyzer), <span class="text-white font-medium">Solaris</span> (coverage-guided fuzzer) and <span class="text-white font-medium">Radiant</span> (concolic execution engine).
+                        Author of <span class="text-white font-medium">iLold</span> (execution path analyzer), <span class="text-white font-medium">Hypatia</span> (agentic vulnerability research system) and <span class="text-white font-medium">Eloizer</span> (Solana static analyzer). Co-author of <span class="text-white font-medium">Solaris</span> (coverage-guided fuzzer) and <span class="text-white font-medium">Radiant</span> (concolic execution engine) at Inversive Labs. Speaker at r2con 2025.
                     </p>
                 </div>
 
@@ -150,6 +150,12 @@
                 <div>
                     <h3 class="text-xl font-semibold text-white mb-6">Timeline</h3>
                     <div class="space-y-8 border-l-2 border-gray-800 pl-8 relative">
+                        <div class="relative">
+                            <div class="timeline-dot absolute -left-[41px] top-1"></div>
+                            <p class="font-mono text-primary text-sm mb-1">Apr 2026 &ndash; Present</p>
+                            <p class="text-white font-semibold">Head of Security, Kenomic</p>
+                            <p class="text-gray-400 text-sm mt-1">Tokenomics and token-launch platform. Lead platform security and core development of smart contracts, backend and internal tooling.</p>
+                        </div>
                         <div class="relative">
                             <div class="timeline-dot absolute -left-[41px] top-1"></div>
                             <p class="font-mono text-primary text-sm mb-1">Mar 2026 &ndash; Present</p>
@@ -187,6 +193,7 @@
                 <button class="filter-btn active px-4 py-2 rounded-full text-sm border border-gray-700 text-gray-400 hover:border-primary hover:text-white transition" data-filter="all">All</button>
                 <button class="filter-btn px-4 py-2 rounded-full text-sm border border-gray-700 text-gray-400 hover:border-primary hover:text-white transition" data-filter="solana">Solana</button>
                 <button class="filter-btn px-4 py-2 rounded-full text-sm border border-gray-700 text-gray-400 hover:border-primary hover:text-white transition" data-filter="evm">EVM</button>
+                <button class="filter-btn px-4 py-2 rounded-full text-sm border border-gray-700 text-gray-400 hover:border-primary hover:text-white transition" data-filter="stellar">Stellar</button>
             </div>
 
             <!-- Project Grid -->
@@ -309,6 +316,37 @@
                     <h3 class="text-white font-semibold mb-2">r55 Contribution</h3>
                     <p class="text-gray-400 text-sm mb-3">Contribution to r55, an experimental RISC-V Ethereum Execution Environment integrating RISC-V smart contracts alongside EVM.</p>
                     <a href="https://github.com/r55-eth/r55/pull/14" target="_blank" class="text-primary text-sm hover:text-accent transition">Pull Request &rarr;</a>
+                </div>
+
+                <!-- STELLAR -->
+                <div class="project-card fade-up border border-gray-800 rounded-xl p-6 transition-all" data-category="stellar">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="#fcd34d" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="7.5"/><path d="M2.5 15.5L21.5 7"/><path d="M2.5 17.5L21.5 9"/></svg>
+                            <span class="tag tag-stellar">Stellar</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Sep&ndash;Oct 2026</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Fuul: Soroban Migration</h3>
+                    <p class="text-gray-400 text-sm mb-3">Ported Fuul's EVM/SVM rewards protocol to Soroban with full cross-chain parity.</p>
+                    <a href="https://github.com/fuul-protocol/protocol-contracts-stellar" target="_blank" class="text-primary text-sm hover:text-accent transition">GitHub &rarr;</a>
+                </div>
+
+                <div class="project-card fade-up border border-gray-800 rounded-xl p-6 transition-all" data-category="stellar-tooling" style="background:#1a2436;">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-5 h-5 opacity-70" viewBox="0 0 24 24" fill="none" stroke="#fcd34d" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="7.5"/><path d="M2.5 15.5L21.5 7"/><path d="M2.5 17.5L21.5 9"/></svg>
+                            <span class="tag tag-stellar">Stellar</span>
+                            <span class="tag tag-tooling">Tooling</span>
+                        </div>
+                        <span class="text-gray-600 text-xs font-mono">Aug&ndash;Oct 2026</span>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Soroban Upgrades</h3>
+                    <p class="text-gray-400 text-sm mb-3">Pre-upgrade safety checks for Soroban: WASM-level ABI, host-interface and storage-schema diffing.</p>
+                    <div class="flex items-center gap-3">
+                        <a href="https://github.com/bielcarpi/soroban-upgrades" target="_blank" class="text-primary text-sm hover:text-accent transition">GitHub &rarr;</a>
+                        <a href="https://crates.io/crates/soroban-upgrades-cli" target="_blank" class="text-gray-500 text-sm hover:text-gray-300 transition">crates.io</a>
+                    </div>
                 </div>
 
                 <!-- SOLANA -->
@@ -625,9 +663,10 @@
                     <table class="audit-table">
                         <thead><tr><th>Client</th><th>Type</th><th>Chain</th><th>Date</th><th>Report</th></tr></thead>
                         <tbody>
-                            <tr style="background: rgba(59, 130, 246, 0.05);">
-                                <td colspan="5" class="text-center py-6 text-white">Coming Soon</td>
-                            </tr>
+                            <tr><td class="text-white">Bonding Curve Launchpad <span class="text-gray-600 text-xs">In-house</span></td><td>Security Assessment &amp; Custom Tooling</td><td><span class="tag tag-evm">EVM</span></td><td class="font-mono text-xs">Nov 2026</td><td><span class="text-gray-600">Private</span></td></tr>
+                            <tr><td class="text-white">Token Treasury Suite <span class="text-gray-600 text-xs">In-house</span></td><td>Security Assessment &amp; Custom Tooling</td><td><span class="tag tag-evm">EVM</span></td><td class="font-mono text-xs">Sep 2026</td><td><span class="text-gray-600">Private</span></td></tr>
+                            <tr><td class="text-white">Tokenomics &amp; Staking Protocol <span class="text-gray-600 text-xs">In-house</span></td><td>Security Assessment &amp; Custom Tooling</td><td><span class="tag tag-evm">EVM</span></td><td class="font-mono text-xs">Jul 2026</td><td><span class="text-gray-600">Private</span></td></tr>
+                            <tr><td class="text-white">Provably Fair Draw Protocol <span class="text-gray-600 text-xs">In-house</span></td><td>Security Assessment &amp; Custom Tooling</td><td><span class="tag tag-evm">EVM</span></td><td class="font-mono text-xs">Jun 2026</td><td><span class="text-gray-600">Private</span></td></tr>
                         </tbody>
                     </table>
                 </div>
