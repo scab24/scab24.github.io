@@ -41,6 +41,7 @@ body::before {
 .tag-evm { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); color: #93c5fd; }
 .tag-tooling { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #6ee7b7; }
 .tag-near { background: rgba(0, 200, 150, 0.1); border-color: rgba(0, 200, 150, 0.3); color: #5eead4; }
+.tag-stellar { background: rgba(251, 191, 36, 0.1); border-color: rgba(251, 191, 36, 0.3); color: #fcd34d; }
 
 /* Category color accents for project cards */
 .project-card[data-category="solana"] { border-left: 3px solid rgba(153, 69, 255, 0.5); }
