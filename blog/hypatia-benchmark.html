@@ -163,9 +163,11 @@ figcaption b { color: var(--ink); font-weight: 600; }
   .table-wrap.wide table { min-width: calc(var(--cols, 7) * 82px); font-size: 12px; }
   thead th, tbody td { padding-right: 12px; }
   figure { margin: 26px -20px; }
-  figure a { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 20px; }
-  figure img { width: 660px; max-width: none; }
-  figcaption { padding: 0 20px; font-size: 12.5px; }
+  /* A figure fills the width of the screen. Touching it opens the full image. */
+  figure a { display: block; }
+  figure img { width: 100%; border-radius: 0; border-left: 0; border-right: 0; }
+  figcaption { padding: 0 20px; font-size: 13px; line-height: 1.5; }
+  figcaption::after { content: " Touch the figure to enlarge it."; color: var(--ink2); opacity: .8; }
   header.title { margin: 44px auto 36px; }
   header.title h1 { font-size: 27px; line-height: 1.18; }
   header.title h1, header.title .sub { text-wrap: balance; }
