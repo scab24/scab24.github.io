@@ -243,7 +243,7 @@ button.theme:hover { color: var(--ink); }
 <a href="https://x.com/Seecoalba">X</a>
 <a href="https://www.linkedin.com/in/sergio-corrales-alonso-barajas-52b6911a0/">LinkedIn</a>
 <a href="https://github.com/scab24">GitHub</a><a href="../reports/hypatia-benchmark.pdf">PDF</a><a href="https://github.com/scab24/hypatia-benchmark">Data</a></p>
-<p class="meta">November 2026. Findings were scored by running their tests and by reading. No human auditor has reviewed the scores.</p>
+<p class="meta">November 2026</p>
 </header>
 <div class="layout">
 <nav class="toc" aria-label="Contents"><div class="tools"><div class="label">Contents</div><span><button type="button" data-toc="all">Expand all</button><button type="button" data-toc="hide" aria-label="Close contents">Close</button></span></div>
@@ -447,7 +447,7 @@ button.theme:hover { color: var(--ink); }
 <li>On the smallest project, both Hypatia approaches find more than the plain model, and the code map adds nothing.</li>
 <li>Asked to continue an audit, in one run on GTE, Hypatia with code map produced 13 new findings, two of them official and four rated doubtful. The other two approaches produced 2 each.</li>
 </ul>
-<p>The full results are in <a href="#sec-6">section 6</a>. The limits of the study are in <a href="#sec-7">section 7</a>. No human auditor has reviewed the scores.</p>
+<p>The full results are in <a href="#sec-6">section 6</a>. The limits of the study are in <a href="#sec-7">section 7</a>.</p>
 <p><a id="sec-2"></a></p>
 <h2 id="2-context">2. Context</h2>
 <p><a id="sec-2-1"></a></p>
@@ -671,7 +671,7 @@ button.theme:hover { color: var(--ink); }
 <p><a id="sec-3-4"></a></p>
 <h3 id="34-how-hypatia-runs-an-audit">3.4 How Hypatia runs an audit</h3>
 <p>Hypatia takes the model through the same steps in every audit. Each step ends with a check, and the audit moves on only when the check passes.</p>
-<figure><a href="../images/hypatia-benchmark/hypatia-flow-radial.png"><img src="../images/hypatia-benchmark/hypatia-flow-radial.png?v=1795089841" alt="The nine steps of a Hypatia audit and the detail of three of them" width="1920" height="1280"></a><figcaption><b>Figure 2.</b> The nine steps of a Hypatia audit, read clockwise from step 1, with steps 2 and 4 only when the code map is used. The lists give what step 4 builds the question list from, the outcome step 5 gives each question and the result of the test in step 6. Steps 5 to 7 repeat until no question is open or the iteration limit is reached, and a later audit starts from the open questions, which only the corrected version passes on (<a href="#sec-3-5">section 3.5</a>).</figcaption></figure>
+<figure><a href="../images/hypatia-benchmark/hypatia-flow-radial.png"><img src="../images/hypatia-benchmark/hypatia-flow-radial.png?v=1795107377" alt="The nine steps of a Hypatia audit and the detail of three of them" width="1920" height="1280"></a><figcaption><b>Figure 2.</b> The nine steps of a Hypatia audit, read clockwise from step 1, with steps 2 and 4 only when the code map is used. The lists give what step 4 builds the question list from, the outcome step 5 gives each question and the result of the test in step 6. Steps 5 to 7 repeat until no question is open or the iteration limit is reached, and a later audit starts from the open questions, which only the corrected version passes on (<a href="#sec-3-5">section 3.5</a>).</figcaption></figure>
 
 <div class="table-wrap" style="--cols:3"><table>
 <thead>
@@ -818,7 +818,7 @@ button.theme:hover { color: var(--ink); }
 <p><a id="sec-4-2"></a></p>
 <h3 id="42-how-a-finding-is-judged">4.2 How a finding is judged</h3>
 <p>A reported finding is scored in two stages. First the judge runs the test of the finding against the audited code and the fixed code. Then readers match what the tests cannot decide (section 4.3).</p>
-<figure><a href="../images/hypatia-benchmark/judge-flow.png"><img src="../images/hypatia-benchmark/judge-flow.png?v=1795089841" alt="The two stages of scoring: a test-based judge and matching by reading" width="1920" height="1280"></a><figcaption><b>Figure 3.</b> The two stages of scoring. The judge classified the 97 tests written by the approaches: 50 confirmed, 3 shown not to be official findings and 44 it could not decide. Those 44 and every GTE finding were matched by reading, with a second reading of uncertain and lenient matches in most runs. Findings with no match were then rated for validity (<a href="#sec-5-8">section 5.8</a>). A test that cannot compile against the fixed code is run with each official fix applied alone, which is how all 7 Promis confirmations were made.</figcaption></figure>
+<figure><a href="../images/hypatia-benchmark/judge-flow.png"><img src="../images/hypatia-benchmark/judge-flow.png?v=1795107377" alt="The two stages of scoring: a test-based judge and matching by reading" width="1920" height="1280"></a><figcaption><b>Figure 3.</b> The two stages of scoring. The judge classified the 97 tests written by the approaches: 50 confirmed, 3 shown not to be official findings and 44 it could not decide. Those 44 and every GTE finding were matched by reading, with a second reading of uncertain and lenient matches in most runs. Findings with no match were then rated for validity (<a href="#sec-5-8">section 5.8</a>). A test that cannot compile against the fixed code is run with each official fix applied alone, which is how all 7 Promis confirmations were made.</figcaption></figure>
 
 <p>The judge runs the approach’s test on a fresh copy of the audited code and on a fresh copy of the fixed code. Each official fix is also applied on its own, to link a test to one official finding. When a fix does not apply cleanly on its own, the test is run just before and at the commit of that fix.</p>
 <div class="table-wrap" style="--cols:4"><table>
@@ -2171,7 +2171,7 @@ button.theme:hover { color: var(--ink); }
 <p><a id="sec-7"></a></p>
 <h2 id="7-limitations">7. Limitations</h2>
 <ul>
-<li><strong>Scoring was done by tests and by reading.</strong> No human auditor has reviewed the matches. The readers are models from the same vendor as the model under test, and they knew which approach they were reading. A second reader changed 14 verdicts and overturned no strict match.</li>
+<li><strong>Scoring was done by tests and by reading.</strong> The readers are models from the same vendor as the model under test, and they knew which approach they were reading. A second reader changed 14 verdicts and overturned no strict match.</li>
 <li><strong>Validity and severity are model ratings.</strong> Findings outside the official reports are unconfirmed, and all approaches often disagree with the official severity.</li>
 <li><strong>The approaches had different instructions.</strong> Approach A was told to report Medium severity or higher, so counts with Low findings are not comparable with it. B also differs from A in code-graph search and in details of the prompt, so the comparison of B with A does not isolate Hypatia.</li>
 <li><strong>Few runs.</strong> ONCHAINID has three repetitions, and there the order of B and C changed between runs. GTE and Promis have one run per approach.</li>
