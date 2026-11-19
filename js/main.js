@@ -194,30 +194,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const navHeight = document.querySelector('nav') ? document.querySelector('nav').offsetHeight : 70;
 
-            /* Articles nav link: scroll to research section & switch to articles tab */
-            if (href === '#articles-nav') {
-                e.preventDefault();
-                const researchSection = document.getElementById('research');
-                if (researchSection) {
-                    const y = researchSection.getBoundingClientRect().top + window.pageYOffset - navHeight - 10;
-                    window.scrollTo({ top: y, behavior: 'smooth' });
-                }
-                const articlesTab = document.querySelector('.research-tab[data-rtab="articles-panel"]');
-                if (articlesTab) articlesTab.click();
-                return;
-            }
-            /* Research nav link: scroll to research section & switch to talks tab */
-            if (href === '#research') {
-                e.preventDefault();
-                const researchSection = document.getElementById('research');
-                if (researchSection) {
-                    const y = researchSection.getBoundingClientRect().top + window.pageYOffset - navHeight - 10;
-                    window.scrollTo({ top: y, behavior: 'smooth' });
-                }
-                const talksTab = document.querySelector('.research-tab[data-rtab="talks-panel"]');
-                if (talksTab) talksTab.click();
-                return;
-            }
             const target = document.querySelector(href);
             if (target) {
                 e.preventDefault();
@@ -226,18 +202,4 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    /* Handle hash on page load */
-    const hash = window.location.hash;
-    if (hash === '#articles-nav') {
-        setTimeout(() => {
-            const navHeight = document.querySelector('nav') ? document.querySelector('nav').offsetHeight : 70;
-            const researchSection = document.getElementById('research');
-            if (researchSection) {
-                const y = researchSection.getBoundingClientRect().top + window.pageYOffset - navHeight - 10;
-                window.scrollTo({ top: y, behavior: 'smooth' });
-            }
-            const articlesTab = document.querySelector('.research-tab[data-rtab="articles-panel"]');
-            if (articlesTab) articlesTab.click();
-        }, 300);
-    }
 });
