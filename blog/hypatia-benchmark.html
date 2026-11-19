@@ -149,6 +149,26 @@ figcaption b { color: var(--ink); font-weight: 600; }
   header.title h1 { font-size: 32px; }
   body { font-size: 17px; }
 }
+@media (max-width: 720px) {
+  /* A table or a figure wider than the screen scrolls sideways inside its own box. */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-left: -20px;
+    margin-right: -20px; padding: 0 20px; }
+  .table-wrap table { min-width: calc(var(--cols, 3) * 96px); font-size: 12.5px; }
+  .table-wrap.wide table { min-width: calc(var(--cols, 7) * 82px); font-size: 12px; }
+  thead th, tbody td { padding-right: 12px; }
+  figure { margin: 26px -20px; }
+  figure a { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 20px; }
+  figure img { width: 660px; max-width: none; }
+  figcaption { padding: 0 20px; font-size: 12.5px; }
+  header.title { margin: 44px auto 36px; }
+  header.title h1 { font-size: 27px; line-height: 1.18; }
+  header.title .sub { font-size: 16px; }
+  body { font-size: 16.5px; }
+  h2 { font-size: 23px; }
+  h3 { font-size: 18.5px; }
+  p.concl { padding: 14px 16px; }
+  pre { font-size: 12px; }
+}
 @media print { nav.toc { display: none; } .layout { display: block; }
   figure { margin-right: 0; break-inside: avoid; } }
 :root[data-theme="dark"] { --bg: #171614; --ink: #ece9e1; --ink2: #a3a097; --rule: #383631;
@@ -278,7 +298,7 @@ button.theme:hover { color: var(--ink); }
 <p>The study asks whether this combination finds more of the vulnerabilities that professional audits reported than the model alone, and whether it allows an audit to continue from where it stopped.</p>
 <h3 id="the-three-approaches-compared">The three approaches compared</h3>
 <p>The same model audits the same code in three ways.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th></th>
@@ -306,7 +326,7 @@ button.theme:hover { color: var(--ink); }
 </table></div>
 <h3 id="study-design">Study design</h3>
 <p>The study has three tests. Each uses a different project and a different way of running the audit, and each answers one question. The three approaches are run in every test.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:5"><table>
 <thead>
 <tr>
 <th>Test</th>
@@ -342,7 +362,7 @@ button.theme:hover { color: var(--ink); }
 </table></div>
 <p>The official audit report of each project is the reference in the three tests. Details are in <a href="#sec-3">section 3</a> and <a href="#sec-4">section 4</a>.</p>
 <h3 id="what-is-measured-and-why">What is measured and why</h3>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Parameter</th>
@@ -435,7 +455,7 @@ button.theme:hover { color: var(--ink); }
 <p><a id="sec-2-2"></a></p>
 <h3 id="22-why-three-approaches">2.2 Why three approaches</h3>
 <p>Each comparison between two approaches answers one question.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Comparison</th>
@@ -471,7 +491,7 @@ button.theme:hover { color: var(--ink); }
 <h2 id="3-what-was-tested">3. What was tested</h2>
 <p><a id="sec-3-1"></a></p>
 <h3 id="31-model-and-common-settings">3.1 Model and common settings</h3>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:2"><table>
 <thead>
 <tr>
 <th>Setting</th>
@@ -512,7 +532,7 @@ button.theme:hover { color: var(--ink); }
 <p>The operator’s environment record gives June 2026 as the model’s knowledge cutoff. No vendor statement of that date is stored with the benchmark. This date decides which reports the model could have seen during training.</p>
 <p><a id="sec-3-2"></a></p>
 <h3 id="32-the-three-approaches">3.2 The three approaches</h3>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:6"><table>
 <thead>
 <tr>
 <th></th>
@@ -561,7 +581,7 @@ button.theme:hover { color: var(--ink); }
 <p><a id="sec-3-3"></a></p>
 <h3 id="33-the-projects-audited">3.3 The projects audited</h3>
 <p>Each project has a public audit report and a known audited version of the code. The test each project is used for is in the <a href="#study-design">study design</a>.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:5"><table>
 <thead>
 <tr>
 <th>Project</th>
@@ -596,7 +616,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p>Official findings, and which of them are compared:</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:4"><table>
 <thead>
 <tr>
 <th>Project</th>
@@ -642,7 +662,7 @@ button.theme:hover { color: var(--ink); }
 <p>Hypatia takes the model through the same steps in every audit. Each step ends with a check, and the audit moves on only when the check passes.</p>
 <figure><a href="../images/hypatia-benchmark/hypatia-flow-radial.png"><img src="../images/hypatia-benchmark/hypatia-flow-radial.png?v=1795089841" alt="The nine steps of a Hypatia audit and the detail of three of them" width="1920" height="1280"></a><figcaption><b>Figure 2.</b> The nine steps of a Hypatia audit, read clockwise from step 1, with steps 2 and 4 only when the code map is used. The lists give what step 4 builds the question list from, the outcome step 5 gives each question and the result of the test in step 6. Steps 5 to 7 repeat until no question is open or the iteration limit is reached, and a later audit starts from the open questions, which only the corrected version passes on (<a href="#sec-3-5">section 3.5</a>).</figcaption></figure>
 
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Step</th>
@@ -702,7 +722,7 @@ button.theme:hover { color: var(--ink); }
 <p>Hypatia was corrected during the study. The corrections are listed in section 5.6 and the version of each run in section 9.</p>
 <p><a id="sec-3-5"></a></p>
 <h3 id="35-what-the-code-map-adds">3.5 What the code map adds</h3>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th></th>
@@ -746,7 +766,7 @@ button.theme:hover { color: var(--ink); }
 <li>The findings are scored afterwards (sections 4.2 and 4.3).</li>
 </ol>
 <p>A second round continues in the workspace of its first round. The repeated second round started from a restored copy of the first-round state. The other runs start from scratch.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Measure</th>
@@ -790,7 +810,7 @@ button.theme:hover { color: var(--ink); }
 <figure><a href="../images/hypatia-benchmark/judge-flow.png"><img src="../images/hypatia-benchmark/judge-flow.png?v=1795089841" alt="The two stages of scoring: a test-based judge and matching by reading" width="1920" height="1280"></a><figcaption><b>Figure 3.</b> The two stages of scoring. The judge classified the 97 tests written by the approaches: 50 confirmed, 3 shown not to be official findings and 44 it could not decide. Those 44 and every GTE finding were matched by reading, with a second reading of uncertain and lenient matches in most runs. Findings with no match were then rated for validity (<a href="#sec-5-8">section 5.8</a>). A test that cannot compile against the fixed code is run with each official fix applied alone, which is how all 7 Promis confirmations were made.</figcaption></figure>
 
 <p>The judge runs the approach’s test on a fresh copy of the audited code and on a fresh copy of the fixed code. Each official fix is also applied on its own, to link a test to one official finding. When a fix does not apply cleanly on its own, the test is run just before and at the commit of that fix.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:4"><table>
 <thead>
 <tr>
 <th>On the audited code</th>
@@ -833,7 +853,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p>All 97 judged tests pass on the audited code.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:5"><table>
 <thead>
 <tr>
 <th>Project</th>
@@ -872,7 +892,7 @@ button.theme:hover { color: var(--ink); }
 <p><a id="sec-4-3"></a></p>
 <h3 id="43-matching-by-reading">4.3 Matching by reading</h3>
 <p>When the judge cannot decide, a reader compares the reported finding with the official report. In this study every reader is a model, not a person.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:2"><table>
 <thead>
 <tr>
 <th>Match</th>
@@ -895,7 +915,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p>The numbers in this report are strict matches unless stated otherwise.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Runs</th>
@@ -936,7 +956,7 @@ button.theme:hover { color: var(--ink); }
 </tr>
 </tbody>
 </table></div>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:2"><table>
 <thead>
 <tr>
 <th>Second reading</th>
@@ -967,7 +987,7 @@ button.theme:hover { color: var(--ink); }
 <h3 id="44-what-is-measured">4.4 What is measured</h3>
 <p>The metrics follow those of Anthropic’s security evaluations where an equivalent exists.</p>
 <p><strong>Results</strong></p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Metric</th>
@@ -999,7 +1019,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p><strong>Quality</strong></p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Metric</th>
@@ -1021,7 +1041,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p><strong>Effort</strong></p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Metric</th>
@@ -1065,7 +1085,7 @@ button.theme:hover { color: var(--ink); }
 <p><a id="sec-5"></a></p>
 <h2 id="5-experiments">5. Experiments</h2>
 <p>Each experiment is reported in the same order: the question it answers, the method, the results, a reading of them and a one-line conclusion.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:5"><table>
 <thead>
 <tr>
 <th>Experiment</th>
@@ -1147,7 +1167,7 @@ button.theme:hover { color: var(--ink); }
 <p class="part"><strong>Method.</strong> Three independent repetitions of the three approaches on ONCHAINID, with the first version of Hypatia. Each starts from a fresh workspace, and no session referred to another run.</p>
 <p>Of the 77 reports, 43 were confirmed by the judge, 3 were shown not to be official findings and 31 were matched by reading.</p>
 <p class="part"><strong>Results.</strong> Main result, on the comparable basis of 12 official Critical, High and Medium findings:</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:5"><table>
 <thead>
 <tr>
 <th>Approach</th>
@@ -1182,7 +1202,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p>All severities, out of 39. Row A is not comparable with B and C (section 4.5).</p>
-<div class="table-wrap wide"><table>
+<div class="table-wrap wide" style="--cols:7"><table>
 <thead>
 <tr>
 <th>Approach</th>
@@ -1236,7 +1256,7 @@ button.theme:hover { color: var(--ink); }
 <p class="q"><strong>Question.</strong> Do the differences hold on a larger project with more High and Medium findings?</p>
 <p class="part"><strong>Method.</strong> One run of the three approaches on GTE, with the first version of Hypatia. No fixed version exists, so all matches were made by reading.</p>
 <p class="part"><strong>Results.</strong></p>
-<div class="table-wrap wide"><table>
+<div class="table-wrap wide" style="--cols:10"><table>
 <thead>
 <tr>
 <th>Approach</th>
@@ -1314,7 +1334,7 @@ button.theme:hover { color: var(--ink); }
 <p class="part"><strong>Method.</strong> The 20 missed findings are real vulnerabilities of the official report. Each was traced through the first round’s records: the function records, the question list, the rejections and the reports. The tracing was done by a reader.</p>
 <p>Each finding is assigned to the step of the audit where it was lost. “Wrongly rejected” means that Hypatia asked a question that covered the finding and closed it as not a vulnerability.</p>
 <p class="part"><strong>Results.</strong></p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:2"><table>
 <thead>
 <tr>
 <th>Lost at</th>
@@ -1359,7 +1379,7 @@ button.theme:hover { color: var(--ink); }
 </ul>
 <p>All matches were made by reading.</p>
 <p class="part"><strong>Results.</strong></p>
-<div class="table-wrap wide"><table>
+<div class="table-wrap wide" style="--cols:8"><table>
 <thead>
 <tr>
 <th>Approach</th>
@@ -1417,7 +1437,7 @@ button.theme:hover { color: var(--ink); }
 <h3 id="56-experiment-6-the-second-round-after-correcting-hypatia">5.6 Experiment 6: the second round after correcting Hypatia</h3>
 <p class="q"><strong>Question.</strong> If the losses of section 5.4 are corrected, does the second round improve?</p>
 <p class="part"><strong>Method.</strong> Four corrections were made as one group, each tied to a measured loss.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:2"><table>
 <thead>
 <tr>
 <th>Correction</th>
@@ -1449,7 +1469,7 @@ button.theme:hover { color: var(--ink); }
 <p>The second round was then repeated for B and C from the saved first-round state, with an iteration limit of 40. The C run was interrupted by a network failure at iteration 33 and resumed. The Plain model was not repeated, since it does not use Hypatia.</p>
 <p>All matches of the repeated round were made by one reader in one pass.</p>
 <p class="part"><strong>Results.</strong></p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Approach C, second round</th>
@@ -1515,7 +1535,7 @@ button.theme:hover { color: var(--ink); }
 <figure><a href="../images/hypatia-benchmark/gte-two-rounds.png"><img src="../images/hypatia-benchmark/gte-two-rounds.png?v=1795089838" alt="Official findings on GTE after one and two rounds" width="1920" height="1080"></a><figcaption><b>Figure 8.</b> Official findings of GTE matched strictly after the first round and after the second, out of 35, for each approach and for the corrected version of Hypatia with code map. One run per approach and version, on the project Hypatia was corrected on, and the corrected run also used twice as many iterations.</figcaption></figure>
 
 <p>What happened in the corrected round to the 20 findings missed in the first round:</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:2"><table>
 <thead>
 <tr>
 <th>Outcome in the corrected round</th>
@@ -1546,7 +1566,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p>Question list of the corrected round, 804 questions:</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:2"><table>
 <thead>
 <tr>
 <th>Status</th>
@@ -1587,7 +1607,7 @@ button.theme:hover { color: var(--ink); }
 <figure><a href="../images/hypatia-benchmark/promis.png"><img src="../images/hypatia-benchmark/promis.png?v=1795089838" alt="Official High and Medium findings found on Promis" width="1920" height="1080"></a><figcaption><b>Figure 10.</b> Official High and Medium findings of Promis found by each approach, by severity and in total. One run per approach, and the Mediums are the four inside the audited files.</figcaption></figure>
 
 <p>Finding by finding, with the step where approach C lost each one it missed:</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:5"><table>
 <thead>
 <tr>
 <th>Finding</th>
@@ -1678,7 +1698,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p>Other counts, which include Low findings and are not comparable with A (section 4.5):</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:5"><table>
 <thead>
 <tr>
 <th>Approach</th>
@@ -1726,7 +1746,7 @@ button.theme:hover { color: var(--ink); }
 <p class="q"><strong>Question.</strong> Do the approaches find valid vulnerabilities that the official reports do not contain?</p>
 <p class="part"><strong>Method.</strong> Validity was rated by readers. No auditor has confirmed any of these findings. Findings claimed High or Medium in the first and second round on GTE and the three ONCHAINID findings still present in the fixed version were checked by a second reader against the code. The others were rated once. Findings that are not in a public report are described by class.</p>
 <p class="part"><strong>Results.</strong></p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:5"><table>
 <thead>
 <tr>
 <th>Project</th>
@@ -1783,7 +1803,7 @@ button.theme:hover { color: var(--ink); }
 <p>Valid findings include Low findings and findings outside the reports.</p>
 <p>The column of official Critical, High and Medium findings gives the comparable basis. In second rounds it counts new ones.</p>
 <p class="part"><strong>Results.</strong></p>
-<div class="table-wrap wide"><table>
+<div class="table-wrap wide" style="--cols:8"><table>
 <thead>
 <tr>
 <th>Project, run</th>
@@ -2026,7 +2046,7 @@ button.theme:hover { color: var(--ink); }
 <p><a id="sec-6-1"></a></p>
 <h3 id="61-results-by-approach">6.1 Results by approach</h3>
 <p>Findings are official Critical, High and Medium findings, the basis on which the three approaches are comparable. Low findings and Notes are in sections 5.1 and 5.7.</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:5"><table>
 <thead>
 <tr>
 <th>Measure</th>
@@ -2176,7 +2196,7 @@ button.theme:hover { color: var(--ink); }
 <h2 id="9-reproducibility">9. Reproducibility</h2>
 <p>The results of each run, the official findings matched, the reference lists, the prompt of approach A and the judge are published at <a href="https://github.com/scab24/hypatia-benchmark">github.com/scab24/hypatia-benchmark</a>.</p>
 <p>Software:</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Component</th>
@@ -2223,7 +2243,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p>Projects:</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Project</th>
@@ -2250,7 +2270,7 @@ button.theme:hover { color: var(--ink); }
 </tbody>
 </table></div>
 <p>Hypatia version of each run:</p>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:3"><table>
 <thead>
 <tr>
 <th>Version</th>
@@ -2285,7 +2305,7 @@ button.theme:hover { color: var(--ink); }
 <p>Hypatia’s source code and internal architecture are not included.</p>
 <p><a id="sec-10"></a></p>
 <h2 id="10-related-work-and-references">10. Related work and references</h2>
-<div class="table-wrap"><table>
+<div class="table-wrap" style="--cols:2"><table>
 <thead>
 <tr>
 <th>Source</th>
