@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Hypatia is a local orchestration runtime for LLM-led vulnerability hunts with persistent investigation memory, structured evidence, explicit transitions, lifecycle journals, and gated closure.">
-    <title>Hypatia</title>
+    <meta name="description" content="Hypatia guides an AI model through a security audit in steps: questions derived from a map of the code, findings proven by a test, and a record of what stayed open.">
+    <title>Hypatia - AI-guided security audits | Sergio Corrales</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/styles.css">
@@ -24,6 +24,196 @@
             }
         }
     </script>
+    <!-- Link previews and indexing -->
+    <link rel="canonical" href="https://scab24.github.io/tools/hypatia.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Sergio Corrales">
+    <meta property="og:title" content="Hypatia - AI-guided security audits | Sergio Corrales">
+    <meta property="og:description" content="Hypatia guides an AI model through a security audit in steps: questions derived from a map of the code, findings proven by a test, and a record of what stayed open.">
+    <meta property="og:url" content="https://scab24.github.io/tools/hypatia.html">
+    <meta property="og:image" content="https://scab24.github.io/images/hypatia/02-stateful-what-if-tree.png">
+    <meta property="og:image:width" content="1672">
+    <meta property="og:image:height" content="941">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@Seecoalba">
+    <meta name="twitter:creator" content="@Seecoalba">
+    <meta name="twitter:title" content="Hypatia - AI-guided security audits | Sergio Corrales">
+    <meta name="twitter:description" content="Hypatia guides an AI model through a security audit in steps: questions derived from a map of the code, findings proven by a test, and a record of what stayed open.">
+    <meta name="twitter:image" content="https://scab24.github.io/images/hypatia/02-stateful-what-if-tree.png">
+
+    <style id="hypatia-page">
+    .hy-panel { border: 1px solid rgba(59,130,246,.14); background: rgba(15,23,42,.6); border-radius: 22px; }
+    .hy-steps { counter-reset: s; }
+    .hy-step { border-bottom: 1px solid rgba(148,163,184,.14); position: relative; }
+    .hy-step:last-child { border-bottom: 0; }
+    .hy-step button { all: unset; cursor: pointer; display: grid; grid-template-columns: 2.6rem 1fr; align-items: baseline;
+      width: 100%; padding: .85rem 0; box-sizing: border-box; }
+    .hy-step .n { font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: #475569; transition: color .3s; }
+    .hy-step .t { font-size: 1.3rem; color: #64748b; transition: color .3s; }
+    .hy-step .map { font-family: 'JetBrains Mono', monospace; font-size: .6rem; letter-spacing: .08em; color: #60a5fa;
+      border: 1px solid rgba(96,165,250,.35); border-radius: 999px; padding: .1rem .5rem; margin-left: .6rem; vertical-align: middle; }
+    .hy-step .d { grid-column: 2; max-height: 0; overflow: hidden; opacity: 0; color: #94a3b8; font-size: .95rem; line-height: 1.6;
+      transition: max-height .45s ease, opacity .35s ease, padding .35s ease; }
+    .hy-step.on .n { color: #60a5fa; } .hy-step.on .t { color: #fff; }
+    .hy-step.on .d { max-height: 15rem; opacity: 1; padding: .45rem 0 .5rem; }
+    .hy-step .bar { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: #60a5fa; }
+    .hy-step.on .bar { animation: hy-bar var(--dur, 6s) linear forwards; }
+    .hy-paused .hy-step.on .bar { animation-play-state: paused; }
+    @keyframes hy-bar { to { width: 100%; } }
+    .hy-stage { position: relative; min-height: 30rem; border: 1px solid rgba(59,130,246,.14); border-radius: 18px; overflow: hidden;
+      background: radial-gradient(120% 90% at 50% 0%, rgba(59,130,246,.10), rgba(2,6,23,0) 60%), #060b18; }
+    .hy-scene { display: none; position: absolute; inset: 0; padding: 2rem; }
+    .hy-scene.on { display: block; }
+    .hy-head { font-size: 1.05rem; color: #e2e8f0; margin-bottom: 1.6rem; }
+    .hy-head b { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: #60a5fa; font-size: 1.45rem; margin-right: .5rem; }
+    .hy-mono { font-family: 'JetBrains Mono', monospace; font-size: .8rem; }
+    @keyframes hy-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @keyframes hy-pop { from { opacity: 0; } to { opacity: 1; } }
+    .hy-row { display: flex; align-items: center; justify-content: space-between; border: 1px solid rgba(148,163,184,.14);
+      border-radius: 10px; padding: .62rem .9rem; margin-bottom: .55rem; color: #cbd5e1; opacity: 0; animation: hy-in .45s ease forwards; }
+    .hy-row.out { color: #475569; } .hy-chip { font-size: .68rem; border-radius: 999px; padding: .12rem .6rem; }
+    .hy-chip.in { color: #93c5fd; border: 1px solid rgba(96,165,250,.45); } .hy-chip.ex { color: #64748b; border: 1px solid rgba(100,116,139,.4); }
+    .hy-chip.ok { color: #6ee7b7; border: 1px solid rgba(52,211,153,.45); } .hy-chip.no { color: #fca5a5; border: 1px solid rgba(248,113,113,.4); }
+    .hy-chip.un { color: #fcd34d; border: 1px solid rgba(251,191,36,.4); }
+    .hy-graph line { stroke: rgba(96,165,250,.55); stroke-width: 1.2; stroke-dasharray: 300; stroke-dashoffset: 300; animation: hy-draw 1s ease forwards; }
+    .hy-graph rect { fill: #0b1326; stroke: rgba(148,163,184,.35); opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-graph rect.k { stroke: #60a5fa; } .hy-graph text { fill: #94a3b8; font: 10px 'JetBrains Mono', monospace; opacity: 0; animation: hy-pop .4s ease forwards; }
+    @keyframes hy-draw { to { stroke-dashoffset: 0; } }
+    .hy-card { border: 1px solid rgba(148,163,184,.14); border-radius: 12px; padding: .9rem 1rem; opacity: 0; animation: hy-in .45s ease forwards; }
+    .hy-line { height: 6px; border-radius: 3px; background: rgba(148,163,184,.22); margin-top: .5rem; width: 0; animation: hy-grow .7s ease forwards; }
+    @keyframes hy-grow { to { width: var(--w, 80%); } }
+    .hy-grid { display: grid; grid-template-columns: repeat(14, 1fr); gap: 7px; }
+    .hy-cell { aspect-ratio: 1; border-radius: 5px; border: 1px solid rgba(148,163,184,.18); background: rgba(15,23,42,.9); }
+    .hy-cell.q { animation: hy-q .5s ease forwards; }
+    @keyframes hy-q { to { border-color: rgba(96,165,250,.8); background: rgba(59,130,246,.22); } }
+    .hy-cell.c0 { animation: hy-c0 .5s ease forwards; } .hy-cell.c1 { animation: hy-c1 .5s ease forwards; }
+    .hy-cell.c2 { animation: hy-c2 .5s ease forwards; } .hy-cell.c3 { animation: hy-c3 .5s ease forwards; }
+    @keyframes hy-c0 { to { background: rgba(71,85,105,.55); border-color: rgba(100,116,139,.6); } }
+    @keyframes hy-c1 { to { background: rgba(59,130,246,.28); border-color: rgba(96,165,250,.7); } }
+    @keyframes hy-c2 { to { background: rgba(34,211,238,.25); border-color: rgba(34,211,238,.7); } }
+    @keyframes hy-c3 { to { background: rgba(251,191,36,.3); border-color: rgba(251,191,36,.85); } }
+    .hy-cell.done { background: rgba(71,85,105,.4); border-color: rgba(100,116,139,.45); }
+    .hy-cell.open { border-color: rgba(96,165,250,.9); animation: hy-pulse 1.6s ease-in-out infinite; }
+    @keyframes hy-pulse { 50% { background: rgba(59,130,246,.38); } }
+    .hy-legend { display: flex; flex-wrap: wrap; gap: 1.1rem; margin-top: 1.4rem; font-size: .8rem; color: #94a3b8; }
+    .hy-legend i { display: inline-block; width: .7rem; height: .7rem; border-radius: 3px; margin-right: .4rem; vertical-align: -1px; }
+    .hy-term { border: 1px solid rgba(148,163,184,.16); border-radius: 12px; background: #030712; padding: 1rem 1.1rem; }
+    .hy-term p { opacity: 0; animation: hy-pop .3s ease forwards; color: #94a3b8; margin: .28rem 0; }
+    .hy-term .cmd { color: #e2e8f0; }
+    .hy-bars { display: grid; gap: 1.5rem; }
+    .hy-bar-row { display: grid; grid-template-columns: 11rem 1fr 4.5rem; align-items: center; gap: .9rem; font-size: .85rem; color: #94a3b8; margin-top: .45rem; }
+    .hy-track { height: 12px; border-radius: 6px; background: rgba(148,163,184,.12); overflow: hidden; }
+    .hy-fill { height: 100%; border-radius: 6px; width: 0; transition: width 1.1s cubic-bezier(.2,.7,.2,1); }
+    .hy-seen .hy-fill { width: var(--v); }
+    .hy-fill.a { background: #64748b; } .hy-fill.b { background: #3b82f6; } .hy-fill.c { background: #f87171; }
+    .hy-bar-row .v { color: #e2e8f0; font-family: 'JetBrains Mono', monospace; font-size: .8rem; text-align: right; }
+    .hy-tree path { fill: none; stroke: rgba(96,165,250,.6); stroke-width: 1.3; stroke-dasharray: 260; stroke-dashoffset: 260; animation: hy-draw .8s ease forwards; }
+    .hy-tree path.no { stroke: rgba(248,113,113,.55); }
+    .hy-tree rect { fill: #0b1326; stroke: rgba(148,163,184,.35); opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-tree rect.root { stroke: #60a5fa; } .hy-tree rect.stop { stroke: rgba(248,113,113,.7); } .hy-tree rect.end { stroke: rgba(52,211,153,.7); }
+    .hy-tree text { fill: #cbd5e1; font: 12px 'JetBrains Mono', monospace; opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-tree text.lab { fill: #64748b; font-size: 10px; }
+    .hy-layer { display: grid; grid-template-columns: 5.5rem 1fr; align-items: center; gap: .9rem; border: 1px solid rgba(148,163,184,.14);
+      border-radius: 12px; padding: .75rem .9rem; margin-bottom: .6rem; opacity: 0; animation: hy-in .5s ease forwards; }
+    .hy-layer > span { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #64748b; }
+    .hy-layer div { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .hy-pill { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: #cbd5e1; border: 1px solid rgba(148,163,184,.25); border-radius: 999px; padding: .15rem .6rem; }
+    .hy-fam rect { fill: #0b1326; stroke: rgba(148,163,184,.3); opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-fam rect.hub { stroke: #60a5fa; fill: rgba(59,130,246,.16); } .hy-fam rect.p { stroke: rgba(34,211,238,.6); }
+    .hy-fam text { fill: #cbd5e1; font: 10px 'JetBrains Mono', monospace; opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-fam text.big { fill: #93c5fd; font-size: 15px; } .hy-fam text.lab { fill: #64748b; font-size: 9px; }
+    .hy-fam path { fill: none; stroke: rgba(96,165,250,.5); stroke-width: 1.2; stroke-dasharray: 300; stroke-dashoffset: 300; animation: hy-draw .9s ease forwards; }
+    .hy-fam path.p { stroke: rgba(34,211,238,.55); }
+    /* restrained look: one accent, neutrals, no coloured chips */
+    .hy-stage::before { content: ""; position: absolute; left: 50%; top: 58%; width: 135%; aspect-ratio: 1; transform: translate(-50%,-50%);
+      border-radius: 50%; border: 1px solid rgba(96,165,250,.35); box-shadow: 0 0 60px 6px rgba(59,130,246,.18), inset 0 0 80px 10px rgba(59,130,246,.08); pointer-events: none; }
+    .hy-scene.on { display: flex; flex-direction: column; }
+    .hy-scene > svg, .hy-scene > .hy-body { margin-block: auto; position: relative; }
+    .hy-head { position: relative; margin-bottom: 0; font-size: 1.1rem; }
+    .hy-head b.w { font-family: inherit; font-weight: 600; color: #fff; font-size: 1.1rem; margin-right: .35rem; }
+    .hy-chip, .hy-chip.in, .hy-chip.ok, .hy-chip.ex, .hy-chip.no, .hy-chip.un { font-family: 'JetBrains Mono', monospace; font-size: .68rem; border-radius: 4px;
+      padding: .12rem .5rem; color: #94a3b8; border: 1px solid rgba(148,163,184,.3); }
+    .hy-chip.in, .hy-chip.ok { color: #bfdbfe; border-color: rgba(96,165,250,.6); }
+    .hy-chip.un { color: #0b1326; background: #60a5fa; border-color: #60a5fa; }
+    .hy-row, .hy-card, .hy-layer, .hy-term { border-radius: 6px; background: rgba(6,11,24,.72); }
+    .hy-pill { border-radius: 4px; }
+    .hy-tree rect, .hy-fam rect, .hy-graph rect { rx: 4; }
+    .hy-tree path.no { stroke: rgba(148,163,184,.45); stroke-dasharray: 4 4; stroke-dashoffset: 0; animation: hy-pop .5s ease forwards; opacity: 0; }
+    .hy-tree rect.stop { stroke: rgba(148,163,184,.45); stroke-dasharray: 4 3; }
+    .hy-tree rect.end { stroke: #60a5fa; fill: rgba(59,130,246,.2); }
+    .hy-fam rect.p, .hy-fam path.p { stroke: rgba(96,165,250,.7); }
+    .hy-cell { border-radius: 3px; }
+    @keyframes hy-c0 { to { background: rgba(30,41,59,.9); border-color: rgba(100,116,139,.35); } }
+    @keyframes hy-c1 { to { background: rgba(59,130,246,.16); border-color: rgba(96,165,250,.4); } }
+    @keyframes hy-c2 { to { background: rgba(59,130,246,.42); border-color: rgba(96,165,250,.75); } }
+    @keyframes hy-c3 { to { background: #60a5fa; border-color: #93c5fd; } }
+    .hy-legend { position: relative; margin-top: 1.2rem; font-family: 'JetBrains Mono', monospace; font-size: .7rem; color: #64748b; }
+    .hy-legend i { border-radius: 2px; }
+    .hy-fill.a { background: #475569; } .hy-fill.b { background: #2b5cc4; } .hy-fill.c { background: #60a5fa; }
+    .hy-track { height: 8px; border-radius: 2px; } .hy-fill { border-radius: 2px; }
+    .hy-panel { border-radius: 14px; } .hy-stage { border-radius: 10px; }
+    .hy-step .map { border-radius: 3px; }
+    /* scenes, second pass */
+    .hy-scene svg text { font-family: 'JetBrains Mono', monospace; }
+    .hy-files { position: relative; font-family: 'JetBrains Mono', monospace; font-size: .92rem; }
+    .hy-file { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: .62rem .9rem .62rem 1.1rem; border-left: 2px solid rgba(148,163,184,.18);
+      color: #64748b; opacity: 0; animation: hy-in .4s ease forwards; }
+    .hy-file.dir { color: #94a3b8; } .hy-file.l1 { padding-left: 2.3rem; } .hy-file.l2 { padding-left: 3.5rem; }
+    .hy-file.in { animation: hy-in .4s ease forwards, hy-file-in .5s ease forwards; animation-delay: var(--d), calc(var(--d) + .9s); }
+    @keyframes hy-file-in { to { color: #f1f5f9; border-left-color: #60a5fa; background: linear-gradient(90deg, rgba(59,130,246,.16), rgba(59,130,246,0) 70%); } }
+    .hy-file.ex span:first-child { text-decoration: line-through; text-decoration-color: rgba(100,116,139,.6); }
+    .hy-file em { font-style: normal; font-size: .7rem; color: #64748b; }
+    .hy-file.in em { color: #93c5fd; }
+    .hy-sum { display: flex; justify-content: space-between; align-items: center; margin-top: 1.1rem; padding-top: .9rem; border-top: 1px solid rgba(148,163,184,.16);
+      font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: #94a3b8; opacity: 0; animation: hy-in .5s ease forwards; }
+    .hy-sum b { color: #60a5fa; font-weight: 500; }
+    .hy-u .band { fill: rgba(148,163,184,.05); stroke: rgba(148,163,184,.12); }
+    .hy-u .lbl { fill: #64748b; font-size: 9.5px; letter-spacing: .08em; }
+    .hy-u rect.n { fill: #0b1326; stroke: rgba(148,163,184,.35); opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-u rect.m { fill: rgba(59,130,246,.10); stroke: rgba(96,165,250,.55); opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-u rect.gap { fill: #60a5fa; stroke: #93c5fd; opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-u text.t { fill: #cbd5e1; font-size: 10.5px; opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-u text.dk { fill: #0b1326; }
+    .hy-u path.e { fill: none; stroke: rgba(148,163,184,.3); stroke-width: 1; stroke-dasharray: 200; stroke-dashoffset: 200; animation: hy-draw .7s ease forwards; }
+    .hy-u path.flow { fill: none; stroke: #60a5fa; stroke-width: 1.6; stroke-dasharray: 700; stroke-dashoffset: 700; animation: hy-draw 1.6s ease forwards; }
+    .hy-u circle.dot { fill: #bfdbfe; opacity: 0; animation: hy-pop .3s ease forwards; }
+    .hy-blk { border: 1px solid rgba(148,163,184,.16); border-left: 2px solid rgba(148,163,184,.3); background: rgba(3,7,18,.78); border-radius: 6px;
+      padding: .8rem 1rem; margin-bottom: .7rem; font-family: 'JetBrains Mono', monospace; font-size: .82rem; opacity: 0; animation: hy-in .45s ease forwards; }
+    .hy-blk.hit { border-left-color: #60a5fa; }
+    .hy-blk .top { display: flex; justify-content: space-between; align-items: center; color: #e2e8f0; }
+    .hy-blk .top i { font-style: normal; color: #60a5fa; margin-right: .6rem; }
+    .hy-blk .meta { color: #475569; font-size: .7rem; }
+    .hy-blk .out { color: #94a3b8; margin-top: .45rem; }
+    .hy-blk .res { margin-top: .55rem; opacity: 0; animation: hy-pop .4s ease forwards; }
+    .hy-doc { border: 1px solid rgba(148,163,184,.2); background: rgba(6,11,24,.8); border-radius: 6px; padding: 1.3rem 1.5rem; }
+    .hy-doc h4 { color: #f1f5f9; font-size: 1.05rem; font-weight: 600; margin: 0 0 .7rem; }
+    .hy-doc .kv { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .hy-doc .sec { font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: .08em; text-transform: uppercase; color: #64748b; margin-top: .95rem; }
+    .hy-doc pre { font-family: 'JetBrains Mono', monospace; font-size: .72rem; color: #93c5fd; background: rgba(59,130,246,.08); border-left: 2px solid #60a5fa;
+      padding: .5rem .7rem; margin: .5rem 0 0; opacity: 0; animation: hy-in .5s ease forwards; white-space: pre; overflow: hidden; }
+    .hy-chk { display: grid; grid-template-columns: 1.6rem 1fr auto; align-items: center; padding: .7rem 0; border-bottom: 1px solid rgba(148,163,184,.12);
+      color: #cbd5e1; font-size: .95rem; opacity: 0; animation: hy-in .4s ease forwards; }
+    .hy-chk svg { width: 16px; height: 16px; } .hy-chk svg path { fill: none; stroke: #60a5fa; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+      stroke-dasharray: 24; stroke-dashoffset: 24; animation: hy-draw .4s ease forwards; }
+    .hy-chk span.m { font-family: 'JetBrains Mono', monospace; font-size: .68rem; color: #475569; }
+    .hy-seal { margin-top: 1.1rem; font-family: 'JetBrains Mono', monospace; font-size: .76rem; color: #94a3b8; border: 1px solid rgba(96,165,250,.45);
+      background: rgba(59,130,246,.10); border-radius: 6px; padding: .7rem .9rem; display: flex; justify-content: space-between; opacity: 0; animation: hy-in .5s ease forwards; }
+    .hy-seal b { color: #bfdbfe; font-weight: 500; }
+    .hy-rounds { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.1rem; }
+    .hy-rounds h5 { font-family: 'JetBrains Mono', monospace; font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: #64748b; margin: 0 0 .7rem; font-weight: 400; }
+    .hy-rounds .hy-grid { grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .hy-rounds .arrow { color: #60a5fa; font-size: 1.4rem; }
+    .hy-cell.found { animation: hy-c3 .5s ease forwards; }
+    .hy-cell.kept { background: rgba(30,41,59,.9); border-color: rgba(100,116,139,.35); }
+    .hy-flowline { margin-top: 1.1rem; font-family: 'JetBrains Mono', monospace; font-size: .74rem; color: #94a3b8; display: flex; align-items: center; gap: .6rem; opacity: 0; animation: hy-in .5s ease forwards; }
+    .hy-flowline i { display: inline-block; width: .7rem; height: .7rem; background: #60a5fa; border-radius: 2px; }
+    .hy-stage { min-height: 34rem; }
+    .hy-scene > svg { max-height: calc(100% - 6.5rem); }
+    .hy-scene > .hy-legend { margin-top: .6rem; }
+    .hy-u text.t { font-size: 12px; } .hy-u .lbl { font-size: 10.5px; }
+    @media (max-width: 900px) { .hy-stage { min-height: 24rem; } .hy-grid { grid-template-columns: repeat(10, 1fr); } .hy-bar-row { grid-template-columns: 7.5rem 1fr 4rem; } }
+    @media (prefers-reduced-motion: reduce) { .hy-step.on .bar { animation: none; width: 100%; } }
+    </style>
 </head>
 <body class="bg-surface text-gray-300 font-sans antialiased">
     <div id="scroll-progress"></div>
@@ -32,7 +222,10 @@
     <nav class="fixed top-0 w-full bg-surface/80 backdrop-blur-xl border-b border-gray-800/50 z-50">
         <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
             <a href="../index.html" class="font-mono text-lg font-bold text-white">SC<span class="text-primary">.</span></a>
-            <a href="../index.html#tools" class="back-link">&larr; Back</a>
+            <div class="flex items-center gap-4">
+                <a href="../blog/hypatia-benchmark.html" class="text-sm text-gray-400 hover:text-primary transition">Read the study</a>
+                <a href="../index.html#tools" class="back-link">&larr; Back</a>
+            </div>
         </div>
     </nav>
 
@@ -40,245 +233,224 @@
         <!-- Hero -->
         <section class="tool-page-hero pt-28 pb-16 px-6">
             <div class="max-w-4xl mx-auto text-center">
-                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Hypatia</h1>
-                <p class="text-xl text-gray-400 max-w-3xl mx-auto mb-8">Hypatia is a local tool that guides an AI researcher through a security review of source code. It defines and previews the intended scope, saves the investigation and its evidence, controls each step, and closes the review after the final checks pass.</p>
-                <div class="flex flex-wrap justify-center gap-3">
-                    <span class="tag tag-tooling">Runs locally</span>
-                    <span class="tag">AI-assisted security review</span>
-                    <span class="tag tag-tooling">Linked source evidence</span>
-                    <span class="tag">Persistent investigation memory</span>
+                <div class="inline-flex items-center gap-2 bg-card border border-gray-800 rounded-full px-4 py-2 mb-6">
+                    <span class="w-2 h-2 bg-yellow-400 rounded-full"></span>
+                    <span class="text-gray-400 text-sm">Private. Evaluated on three professional audits</span>
                 </div>
-                <p class="text-gray-400 text-sm max-w-3xl mx-auto mt-6">Profiles support smart-contract, protocol, browser, native, and broader source-code reviews based on the target's language and build evidence.</p>
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-4">Hypatia</h1>
+                <p class="text-xl text-gray-400 max-w-2xl mx-auto mb-8">A structured process that guides an AI model through a security audit: questions derived from the code, findings proven by a test, and a record of what was left to examine.</p>
+                <div class="flex flex-wrap justify-center gap-3 mb-8">
+                    <a href="../blog/hypatia-benchmark.html" class="rounded-full bg-primary hover:bg-accent text-white text-sm font-semibold px-6 py-3 transition">Read the study</a>
+                    <a href="#how-it-works" class="rounded-full border border-gray-700 hover:border-primary text-gray-200 text-sm font-semibold px-6 py-3 transition">See how it works</a>
+                </div>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <span class="tag tag-evm">Solidity</span>
+                    <span class="tag tag-tooling">Runs locally</span>
+                    <span class="tag tag-tooling">ilold code map</span>
+                    <span class="tag">Language-agnostic process</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Why -->
+        <section id="why" class="methodology-section py-16 px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-2xl font-bold text-white mb-4">An audit from one prompt leaves no account of itself</h2>
+                <p class="text-gray-400 leading-relaxed">Asked to audit a codebase, a capable model finds real vulnerabilities. It does not say which paths it examined, which it skipped, or why it dropped an idea. Run it again and it finds a different subset. Hypatia keeps the model and replaces the single prompt with a process that can be checked at each step.</p>
             </div>
         </section>
 
         <div class="section-divider max-w-4xl mx-auto"></div>
 
         <!-- How it works -->
-        <section id="how-it-works" class="py-20 px-6" aria-labelledby="how-it-works-title">
+        <section id="how-it-works" class="py-20 px-6" aria-labelledby="how-title">
+            <div class="max-w-6xl mx-auto">
+                <div class="max-w-3xl mx-auto text-center mb-12">
+                    <h2 id="how-title" class="text-2xl font-bold text-white mb-4">From scope to proven finding</h2>
+                    <p class="text-gray-400 leading-relaxed">Every audit goes through the same nine steps. Each one ends with a check, and the audit moves on only when the check passes.</p>
+                </div>
+                <div class="hy-panel p-6 md:p-10 grid lg:grid-cols-[1fr_1.15fr] gap-8 lg:gap-12" id="hy-stepper">
+                    <ol class="hy-steps list-none p-0 m-0">
+                        <li class="hy-step on" data-i="0">
+                            <button type="button" aria-expanded="true">
+                                <span class="n">01</span>
+                                <span class="t">Scope.</span>
+                                <span class="d">Hypatia fixes the files to audit and shows them before anything runs. The audit starts only when that scope is accepted.</span>
+                            </button>
+                            <span class="bar"></span>
+                        </li>
+                        <li class="hy-step" data-i="1">
+                            <button type="button" aria-expanded="false">
+                                <span class="n">02</span>
+                                <span class="t">Map.<span class="map">CODE MAP</span></span>
+                                <span class="d">A path analyser reads the contracts and records every path through them: the calls each function makes, the data it reads and writes, and the checks that can stop it. It reports facts about the code. It does not look for vulnerabilities.</span>
+                            </button>
+                            <span class="bar"></span>
+                        </li>
+                        <li class="hy-step" data-i="2">
+                            <button type="button" aria-expanded="false">
+                                <span class="n">03</span>
+                                <span class="t">Understand.</span>
+                                <span class="d">The model describes the code in layers: each function, the modules they form, the business flows that cross them, the phases and actors of the system, and the rules the code really enforces.</span>
+                            </button>
+                            <span class="bar"></span>
+                        </li>
+                        <li class="hy-step" data-i="3">
+                            <button type="button" aria-expanded="false">
+                                <span class="n">04</span>
+                                <span class="t">Ask.<span class="map">CODE MAP</span></span>
+                                <span class="d">What-if questions are derived from the map and from that understanding, in several families: state two flows share, calls whose effect depends on the phase, value that moves while a lock is held, rules nothing enforces, and every ordered pair of calls over shared state. Pairs grow into longer paths.</span>
+                            </button>
+                            <span class="bar"></span>
+                        </li>
+                        <li class="hy-step" data-i="4">
+                            <button type="button" aria-expanded="false">
+                                <span class="n">05</span>
+                                <span class="t">Decide.</span>
+                                <span class="d">Each question gets one outcome: impossible, argued, expanded into longer paths, or candidate finding. An impossible outcome has to cite the check that stops it.</span>
+                            </button>
+                            <span class="bar"></span>
+                        </li>
+                        <li class="hy-step" data-i="5">
+                            <button type="button" aria-expanded="false">
+                                <span class="n">06</span>
+                                <span class="t">Prove.</span>
+                                <span class="d">A test is written and run for each candidate. The candidate is proven, rejected or left undecided. Without a test there is no finding.</span>
+                            </button>
+                            <span class="bar"></span>
+                        </li>
+                        <li class="hy-step" data-i="6">
+                            <button type="button" aria-expanded="false">
+                                <span class="n">07</span>
+                                <span class="t">Report.</span>
+                                <span class="d">Each proven finding gets a report with its root cause, its test and a severity that follows from impact and likelihood.</span>
+                            </button>
+                            <span class="bar"></span>
+                        </li>
+                        <li class="hy-step" data-i="7">
+                            <button type="button" aria-expanded="false">
+                                <span class="n">08</span>
+                                <span class="t">Close.</span>
+                                <span class="d">The run is frozen and final checks are run over it. What was decided and what stayed open is recorded.</span>
+                            </button>
+                            <span class="bar"></span>
+                        </li>
+                        <li class="hy-step" data-i="8">
+                            <button type="button" aria-expanded="false">
+                                <span class="n">09</span>
+                                <span class="t">Next round.</span>
+                                <span class="d">A later audit of the same code starts from the open questions of the previous one, and goes deeper where the first stopped.</span>
+                            </button>
+                            <span class="bar"></span>
+                        </li>
+                    </ol>
+                    <div class="hy-stage" aria-live="polite"><div class="hy-scene on" data-i="0"><p class="hy-head"><b class="w">Scope</b> accepted before anything runs</p><div class="hy-body"><div class="hy-files"><div class="hy-file dir" style="--d:0.00s;animation-delay:0.00s"><span>contracts/</span><em></em></div><div class="hy-file l1 in" style="--d:0.10s;animation-delay:0.10s, 1.00s"><span>Vault.sol</span><em>412 lines</em></div><div class="hy-file l1 in" style="--d:0.20s;animation-delay:0.20s, 1.10s"><span>Router.sol</span><em>268 lines</em></div><div class="hy-file l1 in" style="--d:0.30s;animation-delay:0.30s, 1.20s"><span>Oracle.sol</span><em>154 lines</em></div><div class="hy-file l1 in" style="--d:0.40s;animation-delay:0.40s, 1.30s"><span>libraries/Math.sol</span><em>96 lines</em></div><div class="hy-file dir ex" style="--d:0.50s;animation-delay:0.50s"><span>test/</span><em>excluded</em></div><div class="hy-file dir ex" style="--d:0.60s;animation-delay:0.60s"><span>script/</span><em>excluded</em></div><div class="hy-file dir ex" style="--d:0.70s;animation-delay:0.70s"><span>node_modules/</span><em>excluded</em></div></div><div class="hy-sum" style="animation-delay:2s"><span><b>4</b> files in scope &nbsp;·&nbsp; <b>930</b> lines &nbsp;·&nbsp; 3 paths excluded</span><span class="hy-chip un">accepted</span></div></div></div><div class="hy-scene" data-i="1"><p class="hy-head"><b>676</b>pairs of calls mapped in one 5,260-line project</p><svg class="hy-tree" viewBox="0 0 640 430" width="100%" role="img" aria-label="One entry point expanded into every path through it: the checks that stop it, the calls it makes and what each path changes"><rect class="root" x="6" y="200" width="104" height="30" rx="4" style="animation-delay:0.00s"/><text x="58.0" y="219.5" text-anchor="middle" style="animation-delay:0.00s">withdraw()</text><path class="" d="M110,215 C140.0,215 140.0,75 170,75" style="animation-delay:0.30s"/><rect class="" x="170" y="60" width="150" height="30" rx="4" style="animation-delay:0.50s"/><text x="245.0" y="79.5" text-anchor="middle" style="animation-delay:0.50s">amount ≤ balance?</text><path class="no" d="M320,75 C346.0,75 346.0,38 372,38" style="animation-delay:0.80s"/><text class="lab" x="350" y="32" style="animation-delay:1.10s">no</text><rect class="stop" x="372" y="23" width="84" height="30" rx="4" style="animation-delay:0.90s"/><text x="414.0" y="42.5" text-anchor="middle" style="animation-delay:0.90s">revert</text><path class="" d="M320,75 C346.0,75 346.0,112 372,112" style="animation-delay:0.90s"/><text class="lab" x="350" y="106" style="animation-delay:1.20s">yes</text><rect class="" x="372" y="97" width="108" height="30" rx="4" style="animation-delay:1.10s"/><text x="426.0" y="116.5" text-anchor="middle" style="animation-delay:1.10s">_update()</text><path class="" d="M480,112 C496.0,112 496.0,112 512,112" style="animation-delay:1.40s"/><rect class="end" x="512" y="97" width="122" height="30" rx="4" style="animation-delay:1.60s"/><text x="573.0" y="116.5" text-anchor="middle" style="animation-delay:1.60s">writes balance</text><path class="" d="M110,215 C140.0,215 140.0,215 170,215" style="animation-delay:0.65s"/><rect class="" x="170" y="200" width="150" height="30" rx="4" style="animation-delay:0.85s"/><text x="245.0" y="219.5" text-anchor="middle" style="animation-delay:0.85s">not paused?</text><path class="no" d="M320,215 C346.0,215 346.0,178 372,178" style="animation-delay:1.15s"/><text class="lab" x="350" y="172" style="animation-delay:1.45s">no</text><rect class="stop" x="372" y="163" width="84" height="30" rx="4" style="animation-delay:1.25s"/><text x="414.0" y="182.5" text-anchor="middle" style="animation-delay:1.25s">revert</text><path class="" d="M320,215 C346.0,215 346.0,252 372,252" style="animation-delay:1.25s"/><text class="lab" x="350" y="246" style="animation-delay:1.55s">yes</text><rect class="" x="372" y="237" width="108" height="30" rx="4" style="animation-delay:1.45s"/><text x="426.0" y="256.5" text-anchor="middle" style="animation-delay:1.45s">transfer()</text><path class="" d="M480,252 C496.0,252 496.0,252 512,252" style="animation-delay:1.75s"/><rect class="end" x="512" y="237" width="122" height="30" rx="4" style="animation-delay:1.95s"/><text x="573.0" y="256.5" text-anchor="middle" style="animation-delay:1.95s">sends value</text><path class="" d="M110,215 C140.0,215 140.0,355 170,355" style="animation-delay:1.00s"/><rect class="" x="170" y="340" width="150" height="30" rx="4" style="animation-delay:1.20s"/><text x="245.0" y="359.5" text-anchor="middle" style="animation-delay:1.20s">caller is owner?</text><path class="no" d="M320,355 C346.0,355 346.0,318 372,318" style="animation-delay:1.50s"/><text class="lab" x="350" y="312" style="animation-delay:1.80s">no</text><rect class="stop" x="372" y="303" width="84" height="30" rx="4" style="animation-delay:1.60s"/><text x="414.0" y="322.5" text-anchor="middle" style="animation-delay:1.60s">revert</text><path class="" d="M320,355 C346.0,355 346.0,392 372,392" style="animation-delay:1.60s"/><text class="lab" x="350" y="386" style="animation-delay:1.90s">yes</text><rect class="" x="372" y="377" width="108" height="30" rx="4" style="animation-delay:1.80s"/><text x="426.0" y="396.5" text-anchor="middle" style="animation-delay:1.80s">setFee()</text><path class="" d="M480,392 C496.0,392 496.0,392 512,392" style="animation-delay:2.10s"/><rect class="end" x="512" y="377" width="122" height="30" rx="4" style="animation-delay:2.30s"/><text x="573.0" y="396.5" text-anchor="middle" style="animation-delay:2.30s">writes fee</text></svg><div class="hy-legend"><span><i style="border:1px solid #60a5fa"></i>entry point</span><span><i style="border:1px dashed rgba(148,163,184,.7)"></i>a check stops the path</span><span><i style="background:rgba(59,130,246,.3);border:1px solid #60a5fa"></i>what the path changes</span></div></div><div class="hy-scene" data-i="2"><p class="hy-head"><b class="w">Layer by layer,</b> from one function to the rules of the system</p><svg class="hy-u" viewBox="0 0 640 430" width="100%" role="img" aria-label="The code described in layers: functions grouped into modules, a business flow traced across them, and the rules checked against the code"><rect class="band" x="0" y="340" width="640" height="70" rx="4"/><text class="lbl" x="12" y="356">FUNCTIONS</text><rect class="band" x="0" y="240" width="640" height="70" rx="4"/><text class="lbl" x="12" y="256">MODULES</text><rect class="band" x="0" y="140" width="640" height="70" rx="4"/><text class="lbl" x="12" y="156">FLOWS</text><rect class="band" x="0" y="40" width="640" height="70" rx="4"/><text class="lbl" x="12" y="56">RULES</text><rect class="n" x="56" y="362" width="80" height="26" rx="4" style="animation-delay:0.00s"/><text class="t" x="96" y="379" text-anchor="middle" style="animation-delay:0.00s">deposit()</text><rect class="n" x="146" y="362" width="80" height="26" rx="4" style="animation-delay:0.08s"/><text class="t" x="186" y="379" text-anchor="middle" style="animation-delay:0.08s">mint()</text><rect class="n" x="236" y="362" width="80" height="26" rx="4" style="animation-delay:0.16s"/><text class="t" x="276" y="379" text-anchor="middle" style="animation-delay:0.16s">borrow()</text><rect class="n" x="326" y="362" width="80" height="26" rx="4" style="animation-delay:0.24s"/><text class="t" x="366" y="379" text-anchor="middle" style="animation-delay:0.24s">liquidate()</text><rect class="n" x="430" y="362" width="80" height="26" rx="4" style="animation-delay:0.32s"/><text class="t" x="470" y="379" text-anchor="middle" style="animation-delay:0.32s">settle()</text><rect class="n" x="516" y="362" width="80" height="26" rx="4" style="animation-delay:0.40s"/><text class="t" x="556" y="379" text-anchor="middle" style="animation-delay:0.40s">price()</text><path class="e" d="M96,362 C96,330 120,320 120,292" style="animation-delay:0.70s"/><path class="e" d="M186,362 C186,330 120,320 120,292" style="animation-delay:0.80s"/><rect class="m" x="62" y="262" width="116" height="30" rx="4" style="animation-delay:1.20s"/><text class="t" x="120" y="281" text-anchor="middle" style="animation-delay:1.20s">Vault</text><path class="e" d="M276,362 C276,330 300,320 300,292" style="animation-delay:0.90s"/><path class="e" d="M366,362 C366,330 300,320 300,292" style="animation-delay:1.00s"/><path class="e" d="M470,362 C470,330 300,320 300,292" style="animation-delay:1.10s"/><rect class="m" x="242" y="262" width="116" height="30" rx="4" style="animation-delay:1.32s"/><text class="t" x="300" y="281" text-anchor="middle" style="animation-delay:1.32s">Lending</text><path class="e" d="M556,362 C556,330 520,320 520,292" style="animation-delay:1.20s"/><rect class="m" x="462" y="262" width="116" height="30" rx="4" style="animation-delay:1.44s"/><text class="t" x="520" y="281" text-anchor="middle" style="animation-delay:1.44s">Oracle</text><path id="hy-flow" class="flow" d="M120,262 C120,200 180,176 240,176 L300,176 C380,176 440,176 520,176 C560,176 560,230 520,262" style="animation-delay:1.9s"/><circle class="dot" r="4.5" style="animation-delay:2.6s"><animateMotion dur="3.2s" begin="2.6s" repeatCount="indefinite" path="M120,262 C120,200 180,176 240,176 L300,176 C380,176 440,176 520,176 C560,176 560,230 520,262"/></circle><text class="t" x="300" y="166" text-anchor="middle" style="animation-delay:2.2s">borrow → price → liquidate</text><rect class="m" x="98" y="62" width="144" height="28" rx="4" style="animation-delay:3.00s"/><text class="t" x="170" y="80" text-anchor="middle" style="animation-delay:3.00s">enforced at a line</text><rect class="m" x="268" y="62" width="144" height="28" rx="4" style="animation-delay:3.20s"/><text class="t" x="340" y="80" text-anchor="middle" style="animation-delay:3.20s">enforced at a line</text><rect class="gap" x="438" y="62" width="144" height="28" rx="4" style="animation-delay:3.40s"/><text class="t dk" x="510" y="80" text-anchor="middle" style="animation-delay:3.40s">nothing enforces it</text></svg></div><div class="hy-scene" data-i="3"><p class="hy-head"><b>804</b>what-if questions derived for that project</p><svg class="hy-fam" viewBox="0 0 560 320" width="100%" role="img" aria-label="Families of what-if questions converge into one list, and pairs of calls grow into longer paths"><path d="M178,21 C230,21 222,160 270,160" style="animation-delay:0.50s"/><rect x="4" y="8" width="174" height="26" rx="7" style="animation-delay:0.00s"/><text x="91" y="25" text-anchor="middle" style="animation-delay:0.00s">state two flows share</text><path d="M178,73 C230,73 222,160 270,160" style="animation-delay:0.62s"/><rect x="4" y="60" width="174" height="26" rx="7" style="animation-delay:0.12s"/><text x="91" y="77" text-anchor="middle" style="animation-delay:0.12s">phase-dependent calls</text><path d="M178,125 C230,125 222,160 270,160" style="animation-delay:0.74s"/><rect x="4" y="112" width="174" height="26" rx="7" style="animation-delay:0.24s"/><text x="91" y="129" text-anchor="middle" style="animation-delay:0.24s">value moved under a lock</text><path d="M178,177 C230,177 222,160 270,160" style="animation-delay:0.86s"/><rect x="4" y="164" width="174" height="26" rx="7" style="animation-delay:0.36s"/><text x="91" y="181" text-anchor="middle" style="animation-delay:0.36s">rules nothing enforces</text><path d="M178,229 C230,229 222,160 270,160" style="animation-delay:0.98s"/><rect x="4" y="216" width="174" height="26" rx="7" style="animation-delay:0.48s"/><text x="91" y="233" text-anchor="middle" style="animation-delay:0.48s">doubts a function leaves</text><path d="M178,281 C230,281 222,160 270,160" style="animation-delay:1.10s"/><rect x="4" y="268" width="174" height="26" rx="7" style="animation-delay:0.60s"/><text x="91" y="285" text-anchor="middle" style="animation-delay:0.60s">ordered pairs of calls</text><rect class="hub" x="270" y="132" width="96" height="56" rx="10" style="animation-delay:1.2s"/><text class="big" x="318" y="158" text-anchor="middle" style="animation-delay:1.3s">804</text><text class="lab" x="318" y="175" text-anchor="middle" style="animation-delay:1.3s">questions</text><path class="p" d="M366,160 C410,160 400,57 440,57" style="animation-delay:1.60s"/><rect class="p" x="440" y="44" width="114" height="26" rx="7" style="animation-delay:1.80s"/><text x="497" y="61" text-anchor="middle" style="animation-delay:1.80s">A → B</text><path class="p" d="M366,160 C410,160 400,160 440,160" style="animation-delay:1.85s"/><rect class="p" x="440" y="147" width="114" height="26" rx="7" style="animation-delay:2.05s"/><text x="497" y="164" text-anchor="middle" style="animation-delay:2.05s">A → B → C</text><path class="p" d="M366,160 C410,160 400,263 440,263" style="animation-delay:2.10s"/><rect class="p" x="440" y="250" width="114" height="26" rx="7" style="animation-delay:2.30s"/><text x="497" y="267" text-anchor="middle" style="animation-delay:2.30s">A → B → C → D</text><text class="lab" x="554" y="300" text-anchor="end" style="animation-delay:2.6s">a pair grows into a longer path</text></svg></div><div class="hy-scene" data-i="4"><p class="hy-head"><b class="w">One outcome</b> for every question</p><div class="hy-body"><div class="hy-grid" data-grid="decide"></div><div class="hy-legend"><span><i style="background:rgba(30,41,59,1);border:1px solid rgba(100,116,139,.5)"></i>impossible</span><span><i style="background:rgba(59,130,246,.2);border:1px solid rgba(96,165,250,.4)"></i>argued</span><span><i style="background:rgba(59,130,246,.5)"></i>expanded</span><span><i style="background:#60a5fa"></i>candidate</span></div><div class="hy-flowline" style="animation-delay:2.4s"><i></i>every candidate goes to a test in the next step</div></div></div><div class="hy-scene" data-i="5"><p class="hy-head"><b class="w">No test,</b> no finding</p><div class="hy-body"><div class="hy-blk hit" style="animation-delay:0.00s"><div class="top"><span><i>❯</i>test candidate-017</span><span class="meta">2.1s</span></div><div class="meta" style="margin-top:.3rem">withdraw, then liquidate in the same block</div><div class="out">the attacker ends with more than they put in</div><div class="res" style="animation-delay:0.50s"><span class="hy-chip un">proven</span></div></div><div class="hy-blk " style="animation-delay:0.70s"><div class="top"><span><i>❯</i>test candidate-018</span><span class="meta">1.4s</span></div><div class="meta" style="margin-top:.3rem">deposit, then setFee</div><div class="out">the rule holds under every order tried</div><div class="res" style="animation-delay:1.20s"><span class="hy-chip ex">rejected</span></div></div><div class="hy-blk " style="animation-delay:1.40s"><div class="top"><span><i>❯</i>test candidate-019</span><span class="meta">3.0s</span></div><div class="meta" style="margin-top:.3rem">borrow, then price</div><div class="out">no proof either way</div><div class="res" style="animation-delay:1.90s"><span class="hy-chip ex">undecided, left for review</span></div></div></div></div><div class="hy-scene" data-i="6"><p class="hy-head"><b class="w">One report</b> per proven finding</p><div class="hy-body"><div class="hy-doc"><h4>Withdrawal after liquidation drains the vault</h4><div class="kv"><span class="hy-chip un">High</span><span class="hy-chip">impact high</span><span class="hy-chip">likelihood medium</span><span class="hy-chip in">proven by test</span></div><div class="sec">Root cause</div><div class="hy-line" style="--w:94%;animation-delay:0.30s"></div><div class="hy-line" style="--w:71%;animation-delay:0.40s"></div><div class="sec">Exploitation path</div><div class="hy-line" style="--w:88%;animation-delay:0.55s"></div><div class="hy-line" style="--w:60%;animation-delay:0.65s"></div><div class="sec">Test</div><pre style="animation-delay:1.1s">test_withdraw_after_liquidation()   passed</pre><div class="sec">Recommendation</div><div class="hy-line" style="--w:82%;animation-delay:1.5s"></div></div></div></div><div class="hy-scene" data-i="7"><p class="hy-head"><b class="w">Frozen</b> and checked before it closes</p><div class="hy-body"><div class="hy-chk" style="animation-delay:0.00s"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 5" style="animation-delay:0.30s"/></svg><span>Every question has an outcome</span><span class="m">check 1</span></div><div class="hy-chk" style="animation-delay:0.30s"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 5" style="animation-delay:0.60s"/></svg><span>Every finding has a test that still passes</span><span class="m">check 2</span></div><div class="hy-chk" style="animation-delay:0.60s"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 5" style="animation-delay:0.90s"/></svg><span>Every report is complete</span><span class="m">check 3</span></div><div class="hy-chk" style="animation-delay:0.90s"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 5" style="animation-delay:1.20s"/></svg><span>Counts and files agree</span><span class="m">check 4</span></div><div class="hy-chk" style="animation-delay:1.20s"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 5" style="animation-delay:1.50s"/></svg><span>A later audit can read the record</span><span class="m">check 5</span></div><div class="hy-seal" style="animation-delay:2s"><span>run sealed</span><b>sha256 9f3c…a41e</b></div></div></div><div class="hy-scene" data-i="8"><p class="hy-head"><b>13</b>new findings when one audit was continued</p><div class="hy-body"><div class="hy-rounds"><div><h5>First audit</h5><div class="hy-grid" data-grid="r1"></div></div><div class="arrow">→</div><div><h5>Second audit</h5><div class="hy-grid" data-grid="r2"></div></div></div><div class="hy-legend"><span><i style="background:rgba(30,41,59,1);border:1px solid rgba(100,116,139,.5)"></i>decided</span><span><i style="border:1px solid #60a5fa"></i>left open</span><span><i style="background:#60a5fa"></i>new finding</span></div></div></div></div>
+                </div>
+                <p class="text-gray-500 text-sm text-center mt-6">Steps marked CODE MAP need a map of the code. Steps 5 to 7 repeat until no question is open.</p>
+            </div>
+        </section>
+
+        <div class="section-divider max-w-4xl mx-auto"></div>
+
+        <!-- Principles -->
+        <section id="principles" class="py-20 px-6" aria-labelledby="principles-title">
             <div class="max-w-5xl mx-auto">
                 <div class="max-w-3xl mx-auto text-center mb-12">
-                    <h2 id="how-it-works-title" class="text-2xl font-bold text-white mb-4">Follow the four phases of a solo investigation</h2>
-                    <p class="text-gray-400 leading-relaxed">A vulnerability hunt is a structured search for security flaws. In solo mode, Hypatia uses four stages: understand the code, explore possible weaknesses, investigate promising cases, and try to disprove them.</p>
+                    <h2 id="principles-title" class="text-2xl font-bold text-white mb-4">Four rules the process enforces</h2>
                 </div>
-
-                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <article class="step-card">
-                        <div class="step-number">01</div>
-                        <p class="font-mono text-xs tracking-wider text-light mb-2">CONTEXT-BUILD</p>
-                        <h3 class="text-white font-semibold mb-2">Map the target</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Understand the code: map the production files included in the review and write the investigation plan and source-derived model.</p>
-                    </article>
-                    <article class="step-card">
-                        <div class="step-number">02</div>
-                        <p class="font-mono text-xs tracking-wider text-light mb-2">EXPLORE</p>
-                        <h3 class="text-white font-semibold mb-2">Explore possible weaknesses</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Explore possible weaknesses: ask what-if questions, inspect exact source locations, and either reject unsupported ideas or create candidates for deeper review.</p>
-                    </article>
-                    <article class="step-card">
-                        <div class="step-number">03</div>
-                        <p class="font-mono text-xs tracking-wider text-light mb-2">DEEP-DIVE</p>
-                        <h3 class="text-white font-semibold mb-2">Investigate a promising case</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Investigate a promising case: trace it through the target code, test its assumptions, and reject it when the source evidence is insufficient.</p>
-                    </article>
-                    <article class="step-card">
-                        <div class="step-number">04</div>
-                        <p class="font-mono text-xs tracking-wider text-light mb-2">SCRUTINIZE</p>
-                        <h3 class="text-white font-semibold mb-2">Try to disprove the claim</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Try to disprove the remaining case. Record test results or evidence from the code structure, then write a confirmed report when that evidence supports it.</p>
-                    </article>
-                </div>
-
-                <div class="mt-10" aria-labelledby="coordination-closure-title">
-                    <div class="mb-5">
-                        <h3 id="coordination-closure-title" class="text-lg font-semibold text-white mb-1">Coordinate the team and close the run</h3>
-                        <p class="text-gray-400 text-sm">These operations sit around the research sequence rather than adding more research phases.</p>
-                    </div>
-                    <div class="border-y border-gray-800 md:grid md:grid-cols-2 md:divide-x md:divide-gray-800">
-                        <div class="py-6 md:pr-8">
-                            <p class="font-mono text-xs tracking-widest text-primary mb-3">TEAM MODE</p>
-                            <p class="text-gray-400 text-sm leading-relaxed">Team mode adds two coordination stages: <span class="font-mono text-light">TEAM-LEAD</span> assigns the work and <span class="font-mono text-light">TEAM-SYNTHESIS</span> combines the results.</p>
-                        </div>
-                        <div class="py-6 border-t border-gray-800 md:border-t-0 md:pl-8">
-                            <p class="font-mono text-xs tracking-widest text-primary mb-3">RUN CLOSURE</p>
-                            <p class="text-gray-400 text-sm leading-relaxed">Closure follows the four research stages as a runtime operation. From <span class="font-mono text-light">EXPLORE</span>, the researcher requests <span class="font-mono text-light">HUNT_EXHAUSTED</span>, which runs five automatic checks: memory, advisor, strict coverage, report, and consistency.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <div class="section-divider max-w-4xl mx-auto"></div>
-
-        <!-- Responsibility split -->
-        <section id="controls" class="py-20 px-6" aria-labelledby="controls-title">
-            <div class="max-w-5xl mx-auto">
-                <div class="max-w-3xl mb-12">
-                    <h2 id="controls-title" class="text-2xl font-bold text-white mb-4">See how the researcher and runtime divide the work</h2>
-                    <p class="text-gray-400 leading-relaxed">The AI investigates and writes the analysis. The Hypatia software checks the rules, saves progress, and controls which workflow changes are valid.</p>
-                </div>
-
                 <div class="grid md:grid-cols-2 gap-6">
-                    <article class="feature-card">
-                        <h3 class="text-white text-lg font-semibold mb-4">What does the AI researcher investigate?</h3>
-                        <ul class="space-y-3 text-gray-400 text-sm leading-relaxed">
-                            <li class="flex gap-3"><span class="text-accent font-mono">01</span><span>Maps and inspects the target source.</span></li>
-                            <li class="flex gap-3"><span class="text-accent font-mono">02</span><span>Develops hypotheses and records why paths were explored or rejected.</span></li>
-                            <li class="flex gap-3"><span class="text-accent font-mono">03</span><span>Records exact source locations and observed test results or evidence from the code structure.</span></li>
-                            <li class="flex gap-3"><span class="text-accent font-mono">04</span><span>Writes investigation, candidate, proof, and report artifacts.</span></li>
+                    <div class="feature-card">
+                        <h3 class="text-white font-semibold text-lg mb-3">Questions come from the code</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">What to investigate is derived from a map of the functions, their calls and the state they share. It does not depend on what the model happens to think of.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3 class="text-white font-semibold text-lg mb-3">A finding needs a test</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">A candidate becomes a finding only when a test shows the harm. Rejecting a candidate also needs a test, and a second reader tries to break that rejection.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3 class="text-white font-semibold text-lg mb-3">Nothing closes by assertion</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">A question marked impossible has to cite the check in the code that stops it. The audit cannot close while questions are undecided and budget remains.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3 class="text-white font-semibold text-lg mb-3">Open work is recorded</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Every audit ends with its list of questions and the status of each. A later audit of the same code starts from that list.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="section-divider max-w-4xl mx-auto"></div>
+
+        <!-- Measured -->
+        <section id="measured" class="py-20 px-6" aria-labelledby="measured-title">
+            <div class="max-w-5xl mx-auto">
+                <div class="max-w-3xl mx-auto text-center mb-12">
+                    <h2 id="measured-title" class="text-2xl font-bold text-white mb-4">Measured against three professional audits</h2>
+                    <p class="text-gray-400 leading-relaxed">The same model audited three smart-contract projects in three ways: from one prompt, with Hypatia, and with Hypatia and a code map. The reference is the list of Critical, High and Medium vulnerabilities each project's auditors reported.</p>
+                </div>
+                <div class="hy-panel p-6 md:p-10 hy-bars" id="hy-bars">
+<div><div class="flex items-baseline justify-between"><h3 class="text-white font-semibold">ONCHAINID</h3><span class="text-gray-500 text-xs">2,058 lines. Mean of three runs</span></div><div class="hy-bar-row"><span>Model alone</span><div class="hy-track"><div class="hy-fill a" style="--v:27.5%"></div></div><span class="v">3.3 of 12</span></div><div class="hy-bar-row"><span>Hypatia</span><div class="hy-track"><div class="hy-fill b" style="--v:41.7%"></div></div><span class="v">5 of 12</span></div><div class="hy-bar-row"><span>Hypatia with code map</span><div class="hy-track"><div class="hy-fill c" style="--v:41.7%"></div></div><span class="v">5 of 12</span></div></div>
+<div><div class="flex items-baseline justify-between"><h3 class="text-white font-semibold">Promis</h3><span class="text-gray-500 text-xs">3,921 lines. One run</span></div><div class="hy-bar-row"><span>Model alone</span><div class="hy-track"><div class="hy-fill a" style="--v:22.2%"></div></div><span class="v">2 of 9</span></div><div class="hy-bar-row"><span>Hypatia</span><div class="hy-track"><div class="hy-fill b" style="--v:22.2%"></div></div><span class="v">2 of 9</span></div><div class="hy-bar-row"><span>Hypatia with code map</span><div class="hy-track"><div class="hy-fill c" style="--v:44.4%"></div></div><span class="v">4 of 9</span></div></div>
+<div><div class="flex items-baseline justify-between"><h3 class="text-white font-semibold">GTE</h3><span class="text-gray-500 text-xs">5,260 lines. One run</span></div><div class="hy-bar-row"><span>Model alone</span><div class="hy-track"><div class="hy-fill a" style="--v:22.9%"></div></div><span class="v">8 of 35</span></div><div class="hy-bar-row"><span>Hypatia</span><div class="hy-track"><div class="hy-fill b" style="--v:28.6%"></div></div><span class="v">10 of 35</span></div><div class="hy-bar-row"><span>Hypatia with code map</span><div class="hy-track"><div class="hy-fill c" style="--v:42.9%"></div></div><span class="v">15 of 35</span></div></div>
+                </div>
+                <div class="hy-panel p-6 md:p-10 hy-bars mt-6" id="hy-bars-2">
+                    <div><div class="flex items-baseline justify-between"><h3 class="text-white font-semibold">When the audit was continued</h3><span class="text-gray-500 text-xs">GTE, second round. One run</span></div><div class="hy-bar-row"><span>Model alone</span><div class="hy-track"><div class="hy-fill a" style="--v:15.4%"></div></div><span class="v">2 new</span></div><div class="hy-bar-row"><span>Hypatia</span><div class="hy-track"><div class="hy-fill b" style="--v:15.4%"></div></div><span class="v">2 new</span></div><div class="hy-bar-row"><span>Hypatia with code map</span><div class="hy-track"><div class="hy-fill c" style="--v:100.0%"></div></div><span class="v">13 new</span></div>
+                    <p class="text-gray-500 text-xs mt-4">New findings when each approach was asked to continue its own audit. Of the 13, two are in the official report and four were rated doubtful.</p></div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-6 mt-8">
+                    <div class="feature-card">
+                        <h3 class="text-white font-semibold text-lg mb-3">What the study shows</h3>
+                        <ul class="space-y-3 text-gray-400 text-sm leading-relaxed list-disc pl-5">
+                            <li>On the two larger projects, Hypatia with a code map found the most reported vulnerabilities.</li>
+                            <li>On those projects the gain appears with the code map, not with the structured steps alone.</li>
+                            <li>When one audit was continued, it produced 13 new findings. The model alone produced 2.</li>
                         </ul>
-                    </article>
-                    <article class="feature-card">
-                        <h3 class="text-white text-lg font-semibold mb-4">What does the Hypatia runtime enforce?</h3>
-                        <ul class="space-y-3 text-gray-400 text-sm leading-relaxed">
-                            <li class="flex gap-3"><span class="text-accent font-mono">01</span><span>Validates the hunt configuration, called a profile, and selected prerequisites.</span></li>
-                            <li class="flex gap-3"><span class="text-accent font-mono">02</span><span>Shows the intended scope, including files planned for review and exclusion, before setup.</span></li>
-                            <li class="flex gap-3"><span class="text-accent font-mono">03</span><span>Enforces directives, legal transitions, and required artifact structure.</span></li>
-                            <li class="flex gap-3"><span class="text-accent font-mono">04</span><span>Maintains persistent system and investigation memory, validates links between records, journals lifecycle changes, and runs closure gates.</span></li>
+                    </div>
+                    <div class="feature-card">
+                        <h3 class="text-white font-semibold text-lg mb-3">What it costs and where it fails</h3>
+                        <ul class="space-y-3 text-gray-400 text-sm leading-relaxed list-disc pl-5">
+                            <li>A first audit with the code map used 2.3 to 10.2 times the output tokens of the model alone.</li>
+                            <li>On the largest project it rejected 8 real vulnerabilities it had asked about.</li>
+                            <li>Scores come from running tests and from reading. No human auditor has reviewed them.</li>
                         </ul>
-                    </article>
+                    </div>
                 </div>
-
-                <p class="mt-6 text-gray-400 text-sm leading-relaxed">Operators review the scope preview before setup. Acceptance is a procedural operator decision.</p>
+                <p class="text-center mt-10"><a href="../blog/hypatia-benchmark.html" class="rounded-full bg-primary hover:bg-accent text-white text-sm font-semibold px-6 py-3 transition inline-block">Read the full study</a></p>
             </div>
         </section>
 
         <div class="section-divider max-w-4xl mx-auto"></div>
 
-        <!-- Decision path -->
-        <section id="decision-path" class="py-20 px-6" aria-labelledby="decision-path-title">
+        <!-- Scope -->
+        <section id="where-it-applies" class="py-20 px-6" aria-labelledby="scope-title">
             <div class="max-w-5xl mx-auto">
-                <div class="max-w-3xl mb-12">
-                    <p class="font-mono text-xs uppercase tracking-widest text-primary mb-3">Follow the evidence</p>
-                    <h2 id="decision-path-title" class="text-2xl font-bold text-white mb-4">How does a possible flaw become a confirmed finding?</h2>
-                    <p class="text-gray-400 leading-relaxed">An idea about a possible flaw begins as a lead. It becomes a confirmed finding when inspection of the actual source code and supporting evidence sustain it.</p>
+                <div class="max-w-3xl mx-auto text-center mb-12">
+                    <h2 id="scope-title" class="text-2xl font-bold text-white mb-4">Where it applies</h2>
                 </div>
-
-                <div class="rounded-xl border border-gray-800 overflow-hidden">
-                    <div class="grid md:grid-cols-[12rem_1fr] gap-3 md:gap-8 p-6 bg-card/40 border-b border-gray-800">
-                        <p class="font-mono text-sm text-light">Investigate the hypothesis</p>
-                        <p class="text-gray-400 text-sm leading-relaxed">Inspect the target, record the reasoning path, and link the exact source locations that bear on the claim.</p>
-                    </div>
-                    <div class="grid md:grid-cols-[12rem_1fr] gap-3 md:gap-8 p-6 border-b border-gray-800">
-                        <p class="font-mono text-sm text-light">Reject unsupported paths</p>
-                        <p class="text-gray-400 text-sm leading-relaxed">Record the rejection reason and preserve the decision so future work can build on it.</p>
-                    </div>
-                    <div class="grid md:grid-cols-[12rem_1fr] gap-3 md:gap-8 p-6 bg-card/20">
-                        <p class="font-mono text-sm text-light">Advance supported candidates</p>
-                        <p class="text-gray-400 text-sm leading-relaxed">Advance through <span class="font-mono">DEEP-DIVE</span> and <span class="font-mono">SCRUTINIZE</span>. Produce a confirmed report when the source and its test results or structural evidence support the claim.</p>
-                    </div>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="use-case-card"><h4>Any source code</h4><p class="text-gray-400 text-sm leading-relaxed">The steps, the tests and the record of open work do not depend on the language of the target.</p></div>
+                    <div class="use-case-card"><h4>Solidity, with a code map</h4><p class="text-gray-400 text-sm leading-relaxed">The derived question list needs a map of the code. For Solidity it is built by <a href="https://github.com/scab24/ilold-evm" target="_blank" rel="noopener" class="text-primary hover:text-accent">ilold</a>, an open-source path analyser.</p></div>
+                    <div class="use-case-card"><h4>Audits that continue</h4><p class="text-gray-400 text-sm leading-relaxed">A second audit starts from the questions the first left open, in place of starting again.</p></div>
                 </div>
             </div>
         </section>
 
-        <div class="section-divider max-w-4xl mx-auto"></div>
-
-        <!-- Persistent memory and evidence -->
-        <section id="evidence" class="py-20 px-6" aria-labelledby="evidence-title">
-            <div class="max-w-5xl mx-auto">
-                <div class="max-w-3xl mb-12">
-                    <h2 id="evidence-title" class="text-2xl font-bold text-white mb-4">Keep every decision connected to its evidence</h2>
-                    <p class="text-gray-400 leading-relaxed">Hypatia stores the system model, reasoning, evidence, decisions, coverage, issues, and next action in the local run. This gives a fresh researcher enough context to understand the completed work, review open questions, and continue from persisted state.</p>
+        <!-- Closing -->
+        <section class="py-20 px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-2xl font-bold text-white mb-4">Read the method, the results and the limits</h2>
+                <p class="text-gray-400 leading-relaxed mb-8">The study describes the three approaches, the nine experiments and everything that did not work. Hypatia is developed by Sergio Corrales and its source is not public. ilold is open source.</p>
+                <div class="flex flex-wrap justify-center gap-3 mb-8">
+                    <a href="../blog/hypatia-benchmark.html" class="rounded-full bg-primary hover:bg-accent text-white text-sm font-semibold px-6 py-3 transition">Read the study</a>
+                    <a href="../reports/hypatia-benchmark.pdf" target="_blank" class="rounded-full border border-gray-700 hover:border-primary text-gray-200 text-sm font-semibold px-6 py-3 transition">Download the PDF</a>
+                    <a href="https://github.com/scab24/hypatia-benchmark" target="_blank" class="rounded-full border border-gray-700 hover:border-primary text-gray-200 text-sm font-semibold px-6 py-3 transition">Data and method</a>
+                    <a href="https://github.com/scab24/ilold-evm" target="_blank" rel="noopener" class="rounded-full border border-gray-700 hover:border-primary text-gray-200 text-sm font-semibold px-6 py-3 transition">ilold on GitHub</a>
                 </div>
-
-                <div class="divide-y divide-gray-800 border-y border-gray-800">
-                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
-                        <p class="font-mono text-sm text-light">Preserve the system model</p>
-                        <p class="text-gray-400 text-sm leading-relaxed">Preserves the system map, connected paths, assumptions, planned attack surfaces, current phase, and handoff state across sessions.</p>
-                    </div>
-                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
-                        <p class="font-mono text-sm text-light">Trace the investigation</p>
-                        <p class="text-gray-400 text-sm leading-relaxed">Records questions, what-if branches, code paths, decisions, evidence references, and follow-up questions.</p>
-                    </div>
-                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
-                        <p class="font-mono text-sm text-light">Track source coverage</p>
-                        <p class="text-gray-400 text-sm leading-relaxed">Tracks the exact source locations inspected, links them to the related reasoning, and shows which planned attack surfaces have source-backed coverage.</p>
-                    </div>
-                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
-                        <p class="font-mono text-sm text-light">Record the proof</p>
-                        <p class="text-gray-400 text-sm leading-relaxed">Records whether a possible flaw was demonstrated, disproved, informational, or left to human judgment, together with supporting source locations and test evidence.</p>
-                    </div>
-                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
-                        <p class="font-mono text-sm text-light">Write the finding</p>
-                        <p class="text-gray-400 text-sm leading-relaxed">Contain the final structured explanation and proof links. Hypatia checks their completeness and connections. Final security judgment stays grounded in target source and reviewed evidence.</p>
-                    </div>
-                    <div class="grid md:grid-cols-[15rem_1fr] gap-3 md:gap-8 py-6">
-                        <p class="font-mono text-sm text-light">Attach supporting evidence</p>
-                        <p class="text-gray-400 text-sm leading-relaxed">Supporting proof may take the form of an executable proof of concept, focused test results, or evidence from the source-code structure.</p>
-                    </div>
-                </div>
-                <p class="mt-6 text-gray-400 text-sm leading-relaxed">Cross-round memory carries prior findings, rejections, coverage, and handoff summaries into later reviews for continuity and deduplication.</p>
-            </div>
-        </section>
-
-        <div class="section-divider max-w-4xl mx-auto"></div>
-
-        <!-- Operations and recovery -->
-        <section id="operations" class="py-20 px-6" aria-labelledby="operations-title">
-            <div class="max-w-5xl mx-auto">
-                <div class="max-w-3xl mb-12">
-                    <h2 id="operations-title" class="text-2xl font-bold text-white mb-4">Run, recover, and close every investigation safely</h2>
-                    <p class="text-gray-400 leading-relaxed">Starting, continuing, cancelling, restoring, and closing a hunt are recorded to provide a safe recovery path for interrupted changes. A local CLI and dashboard expose status, reasoning, evidence, candidates, coverage, reports, recovery, and human feedback.</p>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="use-case-card">
-                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Start from a reviewed scope</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Validate the profile, render and review the scope preview, then run setup.</p>
-                    </div>
-                    <div class="use-case-card">
-                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Resume from persisted state</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Inspect status, review informational phase advice, and resume persisted state. Next-round drafts require human review and never auto-start.</p>
-                    </div>
-                    <div class="use-case-card">
-                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Cancel or restore safely</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Cancel publishes a restorable archive. Restore reactivates it. Resume, cancel, and restore journal their changes transactionally.</p>
-                    </div>
-                    <div class="use-case-card">
-                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Close only after the final checks</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Run checks for memory continuity, phase advice, strict coverage, report quality, and consistency from an <span class="font-mono">EXPLORE</span> closure request.</p>
-                    </div>
-                </div>
-
-                <div class="grid lg:grid-cols-2 gap-6 mt-10">
-                    <div class="use-case-card">
-                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Record every lifecycle change</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Lifecycle updates move through prepared, staged, publishing, completed, rollback, or blocked states and leave a journal for recovery inspection.</p>
-                    </div>
-                    <div class="use-case-card">
-                        <h3 class="text-white font-semibold text-[1.1rem] mb-3">Diagnose the safest next action</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Recovery reports one of four outcomes: safe to resume, ready to finalize, complete, or needs repair before work continues.</p>
-                    </div>
-                </div>
-
-                <p class="mt-8 text-gray-400 text-sm leading-relaxed">Provenance auditing and recovery are available as operator workflows alongside automatic closure validation.</p>
-            </div>
-        </section>
-
-        <div class="section-divider max-w-4xl mx-auto"></div>
-
-        <!-- Context versus proof -->
-        <section id="authority" class="py-20 px-6" aria-labelledby="authority-title">
-            <div class="max-w-5xl mx-auto">
-                <div class="max-w-3xl mb-12">
-                    <h2 id="authority-title" class="text-2xl font-bold text-white mb-4">Use context to guide the search, then prove findings against the target</h2>
-                    <p class="text-gray-400 leading-relaxed">Context helps focus the research. Findings depend on the current target and evidence tied to it.</p>
-                </div>
-
-                <div class="rounded-xl border border-gray-800 overflow-hidden">
-                    <div class="grid md:grid-cols-[14rem_1fr] gap-3 md:gap-8 p-6 bg-card/40 border-b border-gray-800">
-                        <h3 class="text-white font-semibold">Guide the search with human and external intelligence</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">Human guidance and optional vulnerability intelligence supply hypotheses and priorities. Feedback is saved as a signal for subsequent research.</p>
-                    </div>
-                    <div class="grid md:grid-cols-[14rem_1fr] gap-3 md:gap-8 p-6 border-b border-gray-800">
-                        <h3 class="text-white font-semibold">Map Solidity projects with ilold</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">ilold is an optional source-code mapper for Solidity projects using the Foundry toolchain. Its project, map, and dependency-graph output seeds hypotheses for verification against the target source.</p>
-                    </div>
-                    <div class="grid md:grid-cols-[14rem_1fr] gap-3 md:gap-8 p-6 bg-card/20">
-                        <h3 class="text-white font-semibold">Prove each finding against the target</h3>
-                        <p class="text-gray-400 text-sm leading-relaxed">The target source plus observed test results or evidence from the source-code structure supports a finding. Hypatia validates report state, structure, and links. Final security judgment stays grounded in source-backed, reviewed evidence.</p>
-                    </div>
-                </div>
+                <p class="text-gray-500 text-sm">
+                    <a href="mailto:git.seco@protonmail.com" class="hover:text-accent transition mx-3">git.seco@protonmail.com</a>
+                    <a href="https://x.com/Seecoalba" target="_blank" rel="noopener" class="hover:text-accent transition mx-3">X</a>
+                    <a href="https://www.linkedin.com/in/sergio-corrales-alonso-barajas-52b6911a0/" target="_blank" rel="noopener" class="hover:text-accent transition mx-3">LinkedIn</a>
+                </p>
             </div>
         </section>
     </main>
@@ -291,6 +463,49 @@
         </div>
     </footer>
 
+    <script id="hypatia-stepper">
+    (function () {
+      var root = document.getElementById('hy-stepper'); if (!root) return;
+      var steps = [].slice.call(root.querySelectorAll('.hy-step')), scenes = [].slice.call(root.querySelectorAll('.hy-scene'));
+      var DUR = 6000, timer = null, cur = 0, reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      root.style.setProperty('--dur', DUR + 'ms');
+      function seed(n) { var x = n; return function () { x = (x * 9301 + 49297) % 233280; return x / 233280; }; }
+      function grid(el) {
+        var kind = el.getAttribute('data-grid'), r = seed(7), r2 = seed(31), html = '';
+        var n = (kind === 'r1' || kind === 'r2') ? 49 : 126;
+        for (var i = 0; i < n; i++) {
+          var v = r(), w = r2(), d = (i * 0.014 + r() * 0.25).toFixed(2), cls = 'hy-cell';
+          if (kind === 'ask') cls += ' q';
+          if (kind === 'decide') cls += ' c' + (v < 0.42 ? 0 : v < 0.8 ? 1 : v < 0.93 ? 2 : 3);
+          if (kind === 'next') cls += v < 0.55 ? ' done' : ' open';
+          if (kind === 'r1') cls += v < 0.6 ? ' kept' : ' open';
+          if (kind === 'r2') { cls += v < 0.6 ? ' kept' : (w < 0.4 ? ' found' : ' kept'); d = (1.2 + i * 0.03).toFixed(2); }
+          html += '<span class="' + cls + '" style="animation-delay:' + d + 's"></span>';
+        }
+        el.innerHTML = html;
+      }
+      function show(i, user) {
+        cur = i;
+        steps.forEach(function (s, k) { s.classList.toggle('on', k === i); s.querySelector('button').setAttribute('aria-expanded', k === i); });
+        scenes.forEach(function (s, k) {
+          s.classList.toggle('on', k === i);
+          if (k === i) { [].forEach.call(s.querySelectorAll('[data-grid]'), grid); }
+        });
+        clearTimeout(timer);
+        if (!reduce && !root.classList.contains('hy-paused')) { timer = setTimeout(function () { show((cur + 1) % steps.length); }, DUR); }
+      }
+      steps.forEach(function (s, k) { s.querySelector('button').addEventListener('click', function () { show(k, true); }); });
+      root.addEventListener('mouseenter', function () { root.classList.add('hy-paused'); clearTimeout(timer); });
+      root.addEventListener('mouseleave', function () { root.classList.remove('hy-paused'); show(cur); });
+      var started = false;
+      new IntersectionObserver(function (e) { if (e[0].isIntersecting && !started) { started = true; show(0); } }, { threshold: 0.25 }).observe(root);
+      ['hy-bars', 'hy-bars-2'].forEach(function (id) {
+        var bars = document.getElementById(id);
+        if (bars) { new IntersectionObserver(function (e, o) { if (e[0].isIntersecting) { bars.classList.add('hy-seen'); o.disconnect(); } }, { threshold: 0.3 }).observe(bars); }
+      });
+    })();
+    </script>
     <script src="../js/main.js"></script>
+    <script src="../js/anchors.js" defer></script>
 </body>
 </html>

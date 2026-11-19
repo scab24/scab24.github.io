@@ -68,6 +68,23 @@
         @media (max-width: 480px) { .canvas-visualization { height: 400px; } }
         .canvas-visualization canvas { display: block; width: 100%; height: 100%; }
     </style>
+    <!-- Link previews and indexing -->
+    <meta name="description" content="By tracking execution state across transaction sequences, understanding program structure, and using bytecode-level coverage feedback, Solaris...">
+    <link rel="canonical" href="https://scab24.github.io/blog/solaris.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Sergio Corrales">
+    <meta property="og:title" content="Solaris: Coverage-Guided Fuzzing for Solana | Sergio Corrales">
+    <meta property="og:description" content="By tracking execution state across transaction sequences, understanding program structure, and using bytecode-level coverage feedback, Solaris...">
+    <meta property="og:url" content="https://scab24.github.io/blog/solaris.html">
+    <meta property="og:image" content="https://scab24.github.io/images/blog/solaris.jpg">
+    <meta property="og:image:width" content="1536">
+    <meta property="og:image:height" content="1024">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@Seecoalba">
+    <meta name="twitter:creator" content="@Seecoalba">
+    <meta name="twitter:title" content="Solaris: Coverage-Guided Fuzzing for Solana | Sergio Corrales">
+    <meta name="twitter:description" content="By tracking execution state across transaction sequences, understanding program structure, and using bytecode-level coverage feedback, Solaris...">
+    <meta name="twitter:image" content="https://scab24.github.io/images/blog/solaris.jpg">
 </head>
 <body class="bg-surface text-gray-300 font-sans antialiased">
 
@@ -797,5 +814,6 @@ let vault_pda = example2_state.get_vault(msg.vault_index as usize)?;</code></pre
         });
         scrollTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
     </script>
+    <script src="../js/anchors.js" defer></script>
 </body>
 </html>

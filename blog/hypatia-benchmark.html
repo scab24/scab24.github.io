@@ -1,0 +1,2421 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Can a structured process and a code map improve AI smart-contract audits? An evaluation of Hypatia on three professionally audited projects</title>
+<style>
+:root {
+  --bg: #faf9f5; --ink: #1a1a1a; --ink2: #5e5d59; --rule: #dedbd0; --soft: #f0eee6;
+  --accent: #b5524d; --hair: #e9e6dd;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+main h2, main h3, main h4, main a[id] { scroll-margin-top: 20px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--serif);
+  font-size: 16.5px; line-height: 1.62; -webkit-font-smoothing: antialiased; }
+.page { display: grid; grid-template-columns: minmax(0, 1fr); max-width: 1100px;
+  margin: 0 auto; padding: 0 24px 120px; }
+header.title { max-width: 820px; margin: 96px auto 56px; text-align: center; }
+header.title .kicker { font-family: var(--sans); font-size: 13px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--ink2); margin-bottom: 20px; }
+header.title h1 { font-family: var(--sans); font-weight: 500; font-size: 36px; line-height: 1.14;
+  letter-spacing: -0.015em; margin: 0 0 18px; text-wrap: balance; }
+header.title .sub { font-family: var(--sans); font-size: 18px; line-height: 1.4;
+  color: var(--ink2); margin: 0 auto 26px; max-width: 660px; text-wrap: balance; }
+header.title .author { font-family: var(--sans); font-size: 17px; margin: 0 0 14px; }
+header.title .contact { font-family: var(--sans); font-size: 14px; margin: 0 0 18px; }
+header.title .contact a { color: var(--ink2); text-decoration: none; margin: 0 9px;
+  border-bottom: 1px solid var(--rule); }
+header.title .contact a:hover { color: var(--ink); }
+header.title .meta { font-family: var(--sans); font-size: 14px; color: var(--ink2);
+  max-width: 620px; margin: 0 auto; line-height: 1.5; }
+.layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 64px;
+  align-items: start; }
+nav.toc { position: sticky; top: 32px; max-height: calc(100vh - 64px); overflow-y: auto;
+  font-family: var(--sans); font-size: 13px; line-height: 1.35; padding: 2px 6px 24px 0;
+  scrollbar-width: thin; scrollbar-color: var(--rule) transparent; }
+nav.toc .label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink2); margin: 0 0 14px 14px; }
+nav.toc ul { list-style: none; margin: 0; padding: 0; }
+nav.toc > ul { border-left: 1px solid var(--rule); }
+nav.toc li { margin: 0; }
+nav.toc a { display: block; padding: 6px 0 6px 14px; margin-left: -1px; color: var(--ink2);
+  text-decoration: none; border-left: 1px solid transparent; transition: color .15s; }
+nav.toc > ul > li > a { font-weight: 500; }
+nav.toc a:hover { color: var(--ink); }
+nav.toc a.active { color: var(--ink); border-left-color: var(--accent); }
+nav.toc ul ul { max-height: 0; overflow: hidden; opacity: 0;
+  transition: max-height .28s ease, opacity .2s ease; }
+nav.toc li.open > ul { max-height: 34rem; opacity: 1; padding: 2px 0 8px; }
+nav.toc > ul > li { position: relative; }
+nav.toc > ul > li > a { padding-right: 30px; }
+nav.toc button.chev { all: unset; position: absolute; right: 0; top: 2px; width: 26px; height: 26px;
+  display: grid; place-items: center; cursor: pointer; color: var(--ink2); border-radius: 6px; }
+nav.toc button.chev:hover { background: var(--soft); color: var(--ink); }
+nav.toc button.chev:focus-visible { outline: 2px solid var(--accent); }
+nav.toc button.chev svg { width: 10px; height: 10px; transition: transform .2s ease; }
+nav.toc li.open > button.chev svg { transform: rotate(90deg); }
+nav.toc .tools { display: flex; align-items: center; justify-content: space-between;
+  margin: 0 0 12px 14px; }
+nav.toc .tools .label { margin: 0; }
+nav.toc .tools button, button.toc-open { all: unset; cursor: pointer; font-family: var(--sans);
+  font-size: 11.5px; color: var(--ink2); padding: 3px 8px; border-radius: 6px; }
+nav.toc .tools button:hover, button.toc-open:hover { background: var(--soft); color: var(--ink); }
+button.toc-open { position: fixed; top: 18px; left: 20px; z-index: 12; display: none;
+  border: 1px solid var(--rule); background: var(--bg); border-radius: 999px; padding: 7px 14px;
+  font-size: 13px; }
+body.toc-hidden nav.toc { display: none; }
+body.toc-hidden button.toc-open { display: block; }
+body.toc-hidden .layout { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+body.toc-hidden main { width: 100%; }
+nav.toc .tools button[data-toc="hide"] { display: none; }
+@media (max-width: 960px) { nav.toc .tools button[data-toc="hide"] { display: inline-block; } }
+@media (min-width: 961px) { body.toc-hidden nav.toc { display: block; } body.toc-hidden button.toc-open { display: none; }
+  body.toc-hidden .layout { grid-template-columns: 232px minmax(0, 1fr); justify-items: stretch; } }
+@media print { button.toc-open { display: none !important; } }
+nav.toc ul ul a { padding: 4px 0 4px 26px; font-size: 12.5px; font-weight: 400; }
+#progress { position: fixed; top: 0; left: 0; height: 2px; width: 0; background: var(--accent);
+  z-index: 20; }
+@media print { #progress { display: none; } }
+main { max-width: 700px; min-width: 0; }
+main h2 { font-family: var(--sans); font-weight: 500; font-size: 25px; line-height: 1.2;
+  letter-spacing: -0.01em; margin: 72px 0 18px; padding-top: 28px;
+  border-top: 1px solid var(--rule); }
+main h2:first-of-type { margin-top: 0; }
+main h3 { font-family: var(--sans); font-weight: 500; font-size: 18.5px; line-height: 1.3;
+  margin: 44px 0 12px; }
+main h4 { font-family: var(--sans); font-weight: 600; font-size: 15.5px; margin: 30px 0 8px; }
+main p { margin: 0 0 18px; }
+main ul, main ol { margin: 0 0 18px; padding-left: 24px; }
+main li { margin-bottom: 6px; }
+main a { color: var(--ink); text-decoration: underline; text-decoration-color: #b9b6aa;
+  text-underline-offset: 3px; }
+main a:hover { text-decoration-color: var(--ink); }
+main strong { font-weight: 600; }
+code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: .86em;
+  background: var(--soft); padding: 1px 5px; border-radius: 4px; }
+pre { background: var(--soft); padding: 14px 16px; border-radius: 8px; overflow-x: auto;
+  font-size: 14px; line-height: 1.5; }
+pre code { background: none; padding: 0; }
+p.q { font-family: var(--sans); font-size: 17px; line-height: 1.45; margin: 4px 0 22px; }
+p.q strong, p.concl strong, p.part strong { font-family: var(--sans); font-size: 12px;
+  font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink2);
+  display: block; margin-bottom: 4px; }
+p.part { margin-top: 26px; }
+p.concl { background: var(--soft); border-radius: 10px; padding: 16px 20px; margin: 26px 0 8px;
+  font-family: var(--sans); font-size: 15px; line-height: 1.5; }
+section.card { border: 1px solid var(--rule); border-radius: 12px; padding: 18px 22px 8px;
+  margin: 0 0 16px; border-left-width: 4px; }
+section.card h4 { margin: 0 0 10px; font-size: 12px; letter-spacing: .08em;
+  text-transform: uppercase; font-weight: 600; color: var(--ink2); }
+section.card ul { font-family: var(--sans); font-size: 15.5px; line-height: 1.5;
+  padding-left: 18px; margin-bottom: 10px; }
+section.card.good { border-left-color: #40668c; }
+section.card.bad { border-left-color: var(--accent); }
+section.card.note { border-left-color: #b4b1a6; }
+.table-wrap { margin: 10px 0 30px; }
+.table-wrap.wide table { font-size: 12px; }
+.table-wrap.wide thead th, .table-wrap.wide tbody td { padding-right: 10px; }
+@media (min-width: 1100px) { .table-wrap.wide { margin-right: -70px; } }
+table th, table td { overflow-wrap: break-word; hyphens: manual; }
+table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 13.5px;
+  line-height: 1.45; font-variant-numeric: tabular-nums; border-top: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink); }
+thead th { text-align: left; font-weight: 600; padding: 10px 18px 9px 0;
+  border-bottom: 0.75px solid var(--ink); vertical-align: bottom; }
+tbody td { padding: 9px 18px 9px 0; border-bottom: 1px solid var(--hair); vertical-align: top; }
+tbody tr:first-child td { padding-top: 11px; }
+tbody tr:last-child td { border-bottom: 0; padding-bottom: 11px; }
+thead th:last-child, tbody td:last-child { padding-right: 0; }
+td.num, th.num { text-align: right; }
+td.num { white-space: nowrap; }
+td.dash { color: var(--ink2); }
+figure { margin: 34px 0 34px; }
+figure img { display: block; width: 100%; height: auto; border: 1px solid var(--rule);
+  border-radius: 10px; }
+figcaption { font-family: var(--sans); font-size: 13px; line-height: 1.5; color: var(--ink2);
+  margin-top: 12px; }
+figcaption b { color: var(--ink); font-weight: 600; }
+@media (min-width: 1100px) { figure { margin-right: -70px; } }
+@media (max-width: 960px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  nav.toc { position: fixed; inset: 0 auto 0 0; width: min(86vw, 320px); max-height: none; z-index: 15;
+    background: var(--bg); border-right: 1px solid var(--rule); padding: 64px 14px 24px 10px;
+    box-shadow: 0 0 40px rgba(0,0,0,.18); top: 0; }
+  header.title { margin-top: 56px; }
+  header.title h1 { font-size: 32px; }
+  body { font-size: 17px; }
+}
+@media print { nav.toc { display: none; } .layout { display: block; }
+  figure { margin-right: 0; break-inside: avoid; } }
+:root[data-theme="dark"] { --bg: #171614; --ink: #ece9e1; --ink2: #a3a097; --rule: #383631;
+  --soft: #24231f; --accent: #e0655f; --hair: #2e2c28; }
+:root[data-theme="dark"] main a { text-decoration-color: #6a675f; }
+:root[data-theme="dark"] figure img { filter: invert(0.91) hue-rotate(180deg) saturate(1.15);
+  border-color: #c9c6bb; }
+nav.site { position: fixed; top: 0; left: 0; width: 100%; z-index: 11; background: color-mix(in srgb, var(--bg) 55%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid color-mix(in srgb, var(--rule) 45%, transparent); font-family: var(--sans); transition: transform .28s ease; }
+nav.site.away { transform: translateY(-100%); }
+nav.site .inner { max-width: 72rem; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+nav.site .right { display: flex; align-items: center; gap: 18px; }
+nav.site a { font-size: 14px; color: var(--ink2); text-decoration: none; opacity: .8; transition: opacity .2s, color .2s; }
+nav.site a:hover { opacity: 1; color: var(--ink); }
+nav.site a.logo { font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace; font-weight: 700; font-size: 18px; color: var(--ink); opacity: .75; }
+nav.site a.logo span { color: #3b82f6; }
+nav.site a.back { color: #3b82f6; }
+:root[data-theme='dark'] nav.site a.back, :root[data-theme='dark'] nav.site a.logo span { color: #60a5fa; }
+nav.site button.theme { position: static; background: transparent; padding: 5px 12px; font-size: 12.5px; opacity: .8; }
+body { padding-top: 56px; }
+#progress { top: 0; z-index: 12; }
+nav.toc { top: 84px; max-height: calc(100vh - 112px); }
+main h2, main h3, main h4, main a[id] { scroll-margin-top: 76px; }
+button.toc-open { top: 66px !important; }
+@media (max-width: 960px) { nav.site .right a:first-child { display: none; } nav.toc { top: 0; max-height: none; } }
+@media print { nav.site { display: none; } body { padding-top: 0; } }
+button.theme { position: fixed; top: 18px; right: 20px; z-index: 10; font-family: var(--sans);
+  font-size: 13px; color: var(--ink2); background: var(--bg); border: 1px solid var(--rule);
+  border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+button.theme:hover { color: var(--ink); }
+@media print { button.theme { display: none; } }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<meta name="description" content="Three ways of auditing the same smart contracts with the same AI model, measured against three professional audits: the model alone, Hypatia, and Hypatia with a code map.">
+<link rel="canonical" href="https://scab24.github.io/blog/hypatia-benchmark.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Sergio Corrales">
+<meta property="og:title" content="Can a structured process and a code map improve AI smart-contract audits? An evaluation of Hypatia on three professionally audited projects">
+<meta property="og:description" content="Three ways of auditing the same smart contracts with the same AI model, measured against three professional audits: the model alone, Hypatia, and Hypatia with a code map.">
+<meta property="og:url" content="https://scab24.github.io/blog/hypatia-benchmark.html">
+<meta property="og:image" content="https://scab24.github.io/images/hypatia-benchmark/cover.png">
+<meta property="og:image:width" content="1600">
+<meta property="og:image:height" content="900">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@Seecoalba">
+<meta name="twitter:creator" content="@Seecoalba">
+<meta name="twitter:title" content="Can a structured process and a code map improve AI smart-contract audits? An evaluation of Hypatia on three professionally audited projects">
+<meta name="twitter:description" content="Three ways of auditing the same smart contracts with the same AI model, measured against three professional audits: the model alone, Hypatia, and Hypatia with a code map.">
+<meta name="twitter:image" content="https://scab24.github.io/images/hypatia-benchmark/cover.png">
+</head>
+<body>
+<div id="progress"></div>
+<button class="toc-open" type="button" aria-label="Show contents">Contents</button>
+<nav class="site"><div class="inner"><a class="logo" href="../index.html">SC<span>.</span></a><div class="right"><a href="../tools/hypatia.html">Hypatia</a><button class="theme" type="button">Dark</button><a class="back" href="../index.html#articles-nav">&larr; Back</a></div></div></nav>
+<div class="page">
+<header class="title">
+<div class="kicker">Research report</div>
+<h1>Can a structured process and a code map improve AI smart-contract audits?</h1>
+<p class="sub">An evaluation of Hypatia on three professionally audited projects</p>
+<p class="author">Sergio Corrales Alonso-Barajas</p>
+<p class="contact"><a href="mailto:git.seco@protonmail.com">git.seco@protonmail.com</a>
+<a href="https://x.com/Seecoalba">X</a>
+<a href="https://www.linkedin.com/in/sergio-corrales-alonso-barajas-52b6911a0/">LinkedIn</a>
+<a href="https://github.com/scab24">GitHub</a><a href="../reports/hypatia-benchmark.pdf">PDF</a><a href="https://github.com/scab24/hypatia-benchmark">Data</a></p>
+<p class="meta">November 2026. Findings were scored by running their tests and by reading. No human auditor has reviewed the scores.</p>
+</header>
+<div class="layout">
+<nav class="toc" aria-label="Contents"><div class="tools"><div class="label">Contents</div><span><button type="button" data-toc="all">Expand all</button><button type="button" data-toc="hide" aria-label="Close contents">Close</button></span></div>
+<ul>
+<li><a href="#1-executive-summary" id="toc-1-executive-summary">1. Executive summary</a>
+<ul>
+<li><a href="#the-three-approaches-compared" id="toc-the-three-approaches-compared">The three approaches compared</a></li>
+<li><a href="#study-design" id="toc-study-design">Study design</a></li>
+<li><a href="#what-is-measured-and-why" id="toc-what-is-measured-and-why">What is measured and why</a></li>
+<li><a href="#main-result" id="toc-main-result">Main result</a></li>
+</ul></li>
+<li><a href="#2-context" id="toc-2-context">2. Context</a>
+<ul>
+<li><a href="#21-the-question" id="toc-21-the-question">2.1 The question</a></li>
+<li><a href="#22-why-three-approaches" id="toc-22-why-three-approaches">2.2 Why three approaches</a></li>
+<li><a href="#23-what-counts-as-a-result" id="toc-23-what-counts-as-a-result">2.3 What counts as a result</a></li>
+</ul></li>
+<li><a href="#3-what-was-tested" id="toc-3-what-was-tested">3. What was tested</a>
+<ul>
+<li><a href="#31-model-and-common-settings" id="toc-31-model-and-common-settings">3.1 Model and common settings</a></li>
+<li><a href="#32-the-three-approaches" id="toc-32-the-three-approaches">3.2 The three approaches</a></li>
+<li><a href="#33-the-projects-audited" id="toc-33-the-projects-audited">3.3 The projects audited</a></li>
+<li><a href="#34-how-hypatia-runs-an-audit" id="toc-34-how-hypatia-runs-an-audit">3.4 How Hypatia runs an audit</a></li>
+<li><a href="#35-what-the-code-map-adds" id="toc-35-what-the-code-map-adds">3.5 What the code map adds</a></li>
+</ul></li>
+<li><a href="#4-methodology" id="toc-4-methodology">4. Methodology</a>
+<ul>
+<li><a href="#41-how-a-run-is-executed" id="toc-41-how-a-run-is-executed">4.1 How a run is executed</a></li>
+<li><a href="#42-how-a-finding-is-judged" id="toc-42-how-a-finding-is-judged">4.2 How a finding is judged</a></li>
+<li><a href="#43-matching-by-reading" id="toc-43-matching-by-reading">4.3 Matching by reading</a></li>
+<li><a href="#44-what-is-measured" id="toc-44-what-is-measured">4.4 What is measured</a></li>
+<li><a href="#45-counting-rules" id="toc-45-counting-rules">4.5 Counting rules</a></li>
+</ul></li>
+<li><a href="#5-experiments" id="toc-5-experiments">5. Experiments</a>
+<ul>
+<li><a href="#51-experiment-1-findings-found-across-three-independent-runs" id="toc-51-experiment-1-findings-found-across-three-independent-runs">5.1 Experiment 1: findings found across three independent runs</a></li>
+<li><a href="#52-experiment-2-findings-found-on-a-larger-project" id="toc-52-experiment-2-findings-found-on-a-larger-project">5.2 Experiment 2: findings found on a larger project</a></li>
+<li><a href="#53-experiment-3-what-the-model-recalls-of-a-public-report" id="toc-53-experiment-3-what-the-model-recalls-of-a-public-report">5.3 Experiment 3: what the model recalls of a public report</a></li>
+<li><a href="#54-experiment-4-the-step-where-hypatia-lost-each-official-finding-it-missed" id="toc-54-experiment-4-the-step-where-hypatia-lost-each-official-finding-it-missed">5.4 Experiment 4: the step where Hypatia lost each official finding it missed</a></li>
+<li><a href="#55-experiment-5-new-findings-when-an-audit-is-continued" id="toc-55-experiment-5-new-findings-when-an-audit-is-continued">5.5 Experiment 5: new findings when an audit is continued</a></li>
+<li><a href="#56-experiment-6-the-second-round-after-correcting-hypatia" id="toc-56-experiment-6-the-second-round-after-correcting-hypatia">5.6 Experiment 6: the second round after correcting Hypatia</a></li>
+<li><a href="#57-experiment-7-findings-found-on-a-project-the-model-had-not-seen" id="toc-57-experiment-7-findings-found-on-a-project-the-model-had-not-seen">5.7 Experiment 7: findings found on a project the model had not seen</a></li>
+<li><a href="#58-experiment-8-validity-of-findings-outside-the-official-reports" id="toc-58-experiment-8-validity-of-findings-outside-the-official-reports">5.8 Experiment 8: validity of findings outside the official reports</a></li>
+<li><a href="#59-experiment-9-time-and-tokens-per-valid-finding" id="toc-59-experiment-9-time-and-tokens-per-valid-finding">5.9 Experiment 9: time and tokens per valid finding</a></li>
+</ul></li>
+<li><a href="#6-synthesis" id="toc-6-synthesis">6. Synthesis</a>
+<ul>
+<li><a href="#61-results-by-approach" id="toc-61-results-by-approach">6.1 Results by approach</a></li>
+<li><a href="#62-contribution-of-hypatia-and-of-the-code-map" id="toc-62-contribution-of-hypatia-and-of-the-code-map">6.2 Contribution of Hypatia and of the code map</a></li>
+<li><a href="#63-the-question-list" id="toc-63-the-question-list">6.3 The question list</a></li>
+</ul></li>
+<li><a href="#7-limitations" id="toc-7-limitations">7. Limitations</a></li>
+<li><a href="#8-conclusion" id="toc-8-conclusion">8. Conclusion</a></li>
+<li><a href="#9-reproducibility" id="toc-9-reproducibility">9. Reproducibility</a></li>
+<li><a href="#10-related-work-and-references" id="toc-10-related-work-and-references">10. Related work and references</a></li>
+</ul>
+</nav>
+<main>
+<p><a id="sec-1"></a></p>
+<h2 id="1-executive-summary">1. Executive summary</h2>
+<p>Hypatia is a tool that guides an AI model through a security audit in phases, in place of a single prompt. It is not tied to one programming language. It is written by the author of this report and its source is not public.</p>
+<p>This study evaluates it on EVM smart contracts, where it can be combined with <a href="https://github.com/scab24/ilold-evm">ilold</a>, an open-source path analyser for Solidity code by the same author. ilold gives Hypatia a map of the code: its functions, the calls between them and the data they read and write. Hypatia derives from that map a list of questions to investigate.</p>
+<p>The study asks whether this combination finds more of the vulnerabilities that professional audits reported than the model alone, and whether it allows an audit to continue from where it stopped.</p>
+<h3 id="the-three-approaches-compared">The three approaches compared</h3>
+<p>The same model audits the same code in three ways.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Approach</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>Plain model</td>
+<td>The model with one audit prompt</td>
+</tr>
+<tr>
+<td>B</td>
+<td>Hypatia</td>
+<td>The model guided by Hypatia, without ilold. A general code-search tool is available</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Hypatia with code map</td>
+<td>Hypatia combined with ilold. The same code-search tool is available</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="study-design">Study design</h3>
+<p>The study has three tests. Each uses a different project and a different way of running the audit, and each answers one question. The three approaches are run in every test.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Test</th>
+<th>Procedure</th>
+<th>Runs per approach</th>
+<th>Project</th>
+<th>Question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1. Repeated audit</strong></td>
+<td>Three runs, each from scratch</td>
+<td>3 independent runs</td>
+<td>ONCHAINID, 2,058 lines</td>
+<td>Does the result repeat from run to run?</td>
+</tr>
+<tr>
+<td><strong>2. Continued audit</strong></td>
+<td>One run, then a second round that continues it</td>
+<td>1 run and 1 continuation</td>
+<td>GTE, 5,260 lines</td>
+<td>Can an audit continue and find more?</td>
+</tr>
+<tr>
+<td><strong>3. Single audit</strong></td>
+<td>One run, on a report published after the model’s knowledge cutoff</td>
+<td>1 run</td>
+<td>Promis, 3,921 lines</td>
+<td>Does the result hold on a project the model had not seen?</td>
+</tr>
+</tbody>
+</table></div>
+<p>The official audit report of each project is the reference in the three tests. Details are in <a href="#sec-3">section 3</a> and <a href="#sec-4">section 4</a>.</p>
+<h3 id="what-is-measured-and-why">What is measured and why</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Purpose</th>
+<th>Section</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Detection</td>
+<td>How many officially reported vulnerabilities each approach finds</td>
+<td><a href="#sec-5-1">5.1</a>, <a href="#sec-5-2">5.2</a>, <a href="#sec-5-7">5.7</a></td>
+</tr>
+<tr>
+<td>Repeatability</td>
+<td>Whether the result holds from run to run</td>
+<td><a href="#sec-5-1">5.1</a></td>
+</tr>
+<tr>
+<td>Role of the code map</td>
+<td>What Hypatia adds to the model, and what the code map adds to Hypatia</td>
+<td><a href="#sec-5-1">5.1</a>, <a href="#sec-5-2">5.2</a>, <a href="#sec-5-7">5.7</a></td>
+</tr>
+<tr>
+<td>Precision</td>
+<td>How many reported findings are valid, and whether their severity is right</td>
+<td><a href="#sec-5-2">5.2</a>, <a href="#sec-5-7">5.7</a>, <a href="#sec-5-8">5.8</a></td>
+</tr>
+<tr>
+<td>Memorisation</td>
+<td>Whether the model could be reciting a report seen in training</td>
+<td><a href="#sec-5-3">5.3</a></td>
+</tr>
+<tr>
+<td>Losses</td>
+<td>At which step Hypatia loses the vulnerabilities it misses</td>
+<td><a href="#sec-5-4">5.4</a></td>
+</tr>
+<tr>
+<td>Continuation</td>
+<td>What each approach finds when asked to continue its own audit</td>
+<td><a href="#sec-5-5">5.5</a></td>
+</tr>
+<tr>
+<td>Correction</td>
+<td>Whether changing Hypatia on that evidence improves the result</td>
+<td><a href="#sec-5-6">5.6</a></td>
+</tr>
+<tr>
+<td>Coverage</td>
+<td>How many questions were decided and how many stayed open</td>
+<td><a href="#sec-5-6">5.6</a>, <a href="#sec-5-7">5.7</a></td>
+</tr>
+<tr>
+<td>Findings beyond the reports</td>
+<td>Whether findings outside the official reports are valid</td>
+<td><a href="#sec-5-8">5.8</a></td>
+</tr>
+<tr>
+<td>Effort</td>
+<td>The time and tokens each run and each finding takes</td>
+<td><a href="#sec-5-9">5.9</a></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="main-result">Main result</h3>
+<figure><a href="../images/hypatia-benchmark/summary.png"><img src="../images/hypatia-benchmark/summary.png?v=1795089838" alt="Share of the official Critical, High and Medium findings found by each approach on three projects" width="1920" height="1080"></a><figcaption><b>Figure 1.</b> Official Critical, High and Medium findings found by each approach. The number on each bar is the count found and the bar height is its share of the official count of the project (12, 35 and 9). ONCHAINID is the mean of three runs, GTE and Promis rest on one run per approach, and Low findings and Notes are left out because the Plain model was told not to report them.</figcaption></figure>
+
+<ul>
+<li>On the two larger projects, Hypatia with code map finds the most official Critical, High and Medium findings.</li>
+<li>On the smallest project, both Hypatia approaches find more than the plain model, and the code map adds nothing.</li>
+<li>Asked to continue an audit, in one run on GTE, Hypatia with code map produced 13 new findings, two of them official and four rated doubtful. The other two approaches produced 2 each.</li>
+</ul>
+<p>The full results are in <a href="#sec-6">section 6</a>. The limits of the study are in <a href="#sec-7">section 7</a>. No human auditor has reviewed the scores.</p>
+<p><a id="sec-2"></a></p>
+<h2 id="2-context">2. Context</h2>
+<p><a id="sec-2-1"></a></p>
+<h3 id="21-the-question">2.1 The question</h3>
+<p>AI models can now find and exploit real vulnerabilities in smart contracts.</p>
+<p>Several published evaluations run independent attempts on each task and count success if any attempt works. Examples are the best of 8 attempts in Anthropic’s smart-contract evaluation and success in any of k attempts in Project Naptime.</p>
+<p>This report takes as its working assumption that a manual audit proceeds differently:</p>
+<ul>
+<li>it builds a model of the system</li>
+<li>it lists what could go wrong</li>
+<li>it tests each hypothesis</li>
+<li>it records what was covered and what was not</li>
+</ul>
+<p>No source is cited for this description. It is an assumption of the report, not a documented account of how professional audits work.</p>
+<p>The question of this report is whether structuring a model’s audit in this way changes the result, and which part of the structure makes the difference.</p>
+<p><a id="sec-2-2"></a></p>
+<h3 id="22-why-three-approaches">2.2 Why three approaches</h3>
+<p>Each comparison between two approaches answers one question.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Comparison</th>
+<th>What differs</th>
+<th>What it shows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C against B</td>
+<td>The code map, and nothing else</td>
+<td>What the code map adds to Hypatia</td>
+</tr>
+<tr>
+<td>B against A</td>
+<td>Hypatia, and the instructions each one receives</td>
+<td>What Hypatia adds to the plain model</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>C against B is a direct comparison.</strong> Both are started with the same command and the same tools. One setting turns the code map on or off.</p>
+<p><strong>B against A needs one precaution.</strong> A was asked to report findings of Medium severity or higher, and B was not. To compare them fairly, this report counts Critical, High and Medium findings only.</p>
+<p><a id="sec-2-3"></a></p>
+<h3 id="23-what-counts-as-a-result">2.3 What counts as a result</h3>
+<p>A reported finding is confirmed in two steps:</p>
+<ol type="1">
+<li>The approach writes a test that shows the problem on the audited code.</li>
+<li>The same test fails once the official fix is applied.</li>
+</ol>
+<p>This follows the criterion of Anthropic’s smart-contract evaluation, where success is shown by execution and not by opinion.</p>
+<p>When the test cannot be run against the fixed code or against a single official fix, the finding is compared with the official report by reading. Each experiment states how many of its matches were made by reading.</p>
+<p><a id="sec-3"></a></p>
+<h2 id="3-what-was-tested">3. What was tested</h2>
+<p><a id="sec-3-1"></a></p>
+<h3 id="31-model-and-common-settings">3.1 Model and common settings</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model</td>
+<td>Claude Opus 5.5</td>
+</tr>
+<tr>
+<td>Reasoning effort</td>
+<td>Medium</td>
+</tr>
+<tr>
+<td>Session</td>
+<td>Non-interactive. No human took part during a session</td>
+</tr>
+<tr>
+<td>Operator steps</td>
+<td>An operator prepared and launched each run, prepared the second-round profile for the Hypatia approaches and resumed two interrupted runs</td>
+</tr>
+<tr>
+<td>Limits stated to the model</td>
+<td>A: told there is no time limit and no spending limit. B and C: an iteration limit in the launch command, nothing about time or spending</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>Blocked for shell commands. Web tools disabled</td>
+</tr>
+<tr>
+<td>Billing</td>
+<td>Flat-rate subscription. Usage is reported as time and tokens</td>
+</tr>
+</tbody>
+</table></div>
+<p>The operator’s environment record gives June 2026 as the model’s knowledge cutoff. No vendor statement of that date is stored with the benchmark. This date decides which reports the model could have seen during training.</p>
+<p><a id="sec-3-2"></a></p>
+<h3 id="32-the-three-approaches">3.2 The three approaches</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Approach</th>
+<th>How the audit is started</th>
+<th>Code map</th>
+<th>Severity asked for</th>
+<th>Stops when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>Plain model</td>
+<td>One prompt, adapted from the prompt of Anthropic’s smart-contract evaluation</td>
+<td>No</td>
+<td>Medium or higher, as its prompt asks</td>
+<td>The model decides it has finished</td>
+</tr>
+<tr>
+<td>B</td>
+<td>Hypatia</td>
+<td>Hypatia’s audit command</td>
+<td>No</td>
+<td>All severities, Hypatia’s default</td>
+<td>Hypatia’s checks pass, or the iteration limit is reached</td>
+</tr>
+<tr>
+<td>C</td>
+<td>Hypatia with code map</td>
+<td>The same command with the code map enabled</td>
+<td>Yes</td>
+<td>All severities, Hypatia’s default</td>
+<td>Hypatia’s checks pass, or the iteration limit is reached</td>
+</tr>
+</tbody>
+</table></div>
+<p>Notes on the table:</p>
+<ul>
+<li><strong>Severity.</strong> The difference in the severity asked for is the reason the headline comparison uses Critical, High and Medium findings.</li>
+<li><strong>Tools.</strong> All three have the same tool list: a shell, file tools, text search, sub-agents, and the project’s build and test tools. A static analyser is installed for all three, and A’s prompt is the one that mentions it. A code-search tool (CodeGraph) is installed on the machine for all three. For B and C it is also connected as a tool. A never used it, B used it once in seven runs and C 28 times. It is not the code map of this report, which is ilold.</li>
+<li><strong>Integrations switched off.</strong> In B and C, Hypatia’s optional use of external findings databases and of earlier audits of the same project was disabled.</li>
+<li><strong>Iteration limit.</strong> It was 100 in the runs with the first version of Hypatia and 40 in the runs with the corrected version (sections 5.6 and 9).</li>
+<li><strong>Stopping.</strong> No B run reached its iteration limit. C reached it in the corrected GTE round and on Promis.</li>
+</ul>
+<p><a id="sec-3-3"></a></p>
+<h3 id="33-the-projects-audited">3.3 The projects audited</h3>
+<p>Each project has a public audit report and a known audited version of the code. The test each project is used for is in the <a href="#study-design">study design</a>.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Audited by</th>
+<th>Size</th>
+<th>Report published</th>
+<th>Against the model’s knowledge cutoff</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ONCHAINID</td>
+<td>OpenZeppelin, audit firm</td>
+<td>2,058 lines</td>
+<td>September 2026</td>
+<td>After</td>
+</tr>
+<tr>
+<td>GTE Perps and Launchpad</td>
+<td>Code4rena, public audit contest</td>
+<td>5,260 lines</td>
+<td>February 2026</td>
+<td>Before</td>
+</tr>
+<tr>
+<td>Promis</td>
+<td>yAudit, audit firm</td>
+<td>3,921 lines</td>
+<td>July 2026</td>
+<td>After</td>
+</tr>
+</tbody>
+</table></div>
+<p>Official findings, and which of them are compared:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Project</th>
+<th class="num">Official findings</th>
+<th>Comparable basis</th>
+<th>Reported separately</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ONCHAINID</td>
+<td class="num">39</td>
+<td>12: 1 Critical, 2 High, 9 Medium</td>
+<td>27: 20 Low, 7 Notes</td>
+</tr>
+<tr>
+<td>GTE</td>
+<td class="num">35</td>
+<td>35: 10 High, 25 Medium</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Promis</td>
+<td class="num">34</td>
+<td>9: 5 High, 4 Medium</td>
+<td>14 Low</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>GTE.</strong> Its report was public before the cutoff, so a test for memorised answers is in section 5.3. The contest’s lower-severity reports are not in the reference. GTE was also the project used to correct Hypatia, so its results after the correction are not independent evidence.</li>
+<li><strong>Promis.</strong> Not used: one Medium (M-04) outside the audited files, 1 Gas and 9 Informational findings, which no approach matched. M-05 is partly outside the audited files and is counted among the four Mediums.</li>
+<li><strong>Size.</strong> Lines exclude comments and blank lines. GTE’s figure is the contest’s own count. The count used for the other two projects gives 6,290 lines for GTE.</li>
+</ul>
+<p>Terms used for the runs:</p>
+<ul>
+<li><strong>Run.</strong> One audit by one approach.</li>
+<li><strong>Repetition.</strong> An independent rerun of the same audit from scratch.</li>
+<li><strong>Round.</strong> A first audit, or a second audit that continues it in the same workspace.</li>
+</ul>
+<p><a id="sec-3-4"></a></p>
+<h3 id="34-how-hypatia-runs-an-audit">3.4 How Hypatia runs an audit</h3>
+<p>Hypatia takes the model through the same steps in every audit. Each step ends with a check, and the audit moves on only when the check passes.</p>
+<figure><a href="../images/hypatia-benchmark/hypatia-flow-radial.png"><img src="../images/hypatia-benchmark/hypatia-flow-radial.png?v=1795089841" alt="The nine steps of a Hypatia audit and the detail of three of them" width="1920" height="1280"></a><figcaption><b>Figure 2.</b> The nine steps of a Hypatia audit, read clockwise from step 1, with steps 2 and 4 only when the code map is used. The lists give what step 4 builds the question list from, the outcome step 5 gives each question and the result of the test in step 6. Steps 5 to 7 repeat until no question is open or the iteration limit is reached, and a later audit starts from the open questions, which only the corrected version passes on (<a href="#sec-3-5">section 3.5</a>).</figcaption></figure>
+
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Step</th>
+<th>What Hypatia does</th>
+<th>Check before moving on</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Scope</td>
+<td>Fixes the files to audit</td>
+<td>The scope is accepted</td>
+</tr>
+<tr>
+<td>2. Map</td>
+<td>ilold lists the functions, the calls between them, the data they read and write, and the checks that can stop a call. Approach C only</td>
+<td>The map covers the scope</td>
+</tr>
+<tr>
+<td>3. Understand</td>
+<td>The model describes each function, then the flows, phases and actors of the system</td>
+<td>Every function in scope is described</td>
+</tr>
+<tr>
+<td>4. Ask</td>
+<td>A question list is derived from the map: questions about one function and about pairs of calls. Approach C only</td>
+<td>Every candidate has a question</td>
+</tr>
+<tr>
+<td>5. Decide</td>
+<td>Each question gets one outcome: impossible, argued, expanded into further questions, or candidate finding</td>
+<td>An impossible outcome cites the check that stops it</td>
+</tr>
+<tr>
+<td>6. Prove</td>
+<td>A test is written and run for each candidate. The candidate is proven, rejected or left undecided</td>
+<td>The test ran, and holds when run again</td>
+</tr>
+<tr>
+<td>7. Report</td>
+<td>Each proven finding gets a report. Its severity follows from impact and likelihood</td>
+<td>The report is complete</td>
+</tr>
+<tr>
+<td>8. Close</td>
+<td>The run is frozen and final checks are run</td>
+<td>The final checks pass, or the iteration limit is reached</td>
+</tr>
+<tr>
+<td>9. Next round</td>
+<td>A summary records what was confirmed, what was rejected and what stayed open. A later audit starts from it</td>
+<td>The summary is reviewed</td>
+</tr>
+</tbody>
+</table></div>
+<p>Without the code map, steps 2 and 4 do not exist. The model writes a general description of the system in step 3 and works by area in step 5.</p>
+<p>Hypatia was corrected during the study. The corrections are listed in section 5.6 and the version of each run in section 9.</p>
+<p><a id="sec-3-5"></a></p>
+<h3 id="35-what-the-code-map-adds">3.5 What the code map adds</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>B, without the code map</th>
+<th>C, with the code map</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Writes a test for each finding</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Has a question list to work through</td>
+<td>No. It works through a list of 5 to 10 areas</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>Records what it left undecided</td>
+<td>By area. It marked all its areas explored in each run</td>
+<td>By question</td>
+</tr>
+<tr>
+<td>Can continue from open questions</td>
+<td>No</td>
+<td>Yes, in the corrected version</td>
+</tr>
+</tbody>
+</table></div>
+<p>The code map tool is <a href="https://github.com/scab24/ilold-evm">ilold</a>, an open-source path analyser for Solidity code. Hypatia and ilold are written by the author of this report. ilold is public and Hypatia is not. Hypatia accepts projects in other languages, but the question list exists only where a code map is available, and this study tests Solidity only.</p>
+<p><a id="sec-4"></a></p>
+<h2 id="4-methodology">4. Methodology</h2>
+<p><a id="sec-4-1"></a></p>
+<h3 id="41-how-a-run-is-executed">4.1 How a run is executed</h3>
+<p>Each run follows the same steps:</p>
+<ol type="1">
+<li>A fresh copy of the audited version of the project is created, with its dependencies installed.</li>
+<li>One approach audits it in one session. Two runs were interrupted and resumed in a second session (section 7).</li>
+<li>The session, its prompt and everything it produced are stored.</li>
+<li>The findings are scored afterwards (sections 4.2 and 4.3).</li>
+</ol>
+<p>A second round continues in the workspace of its first round. The repeated second round started from a restored copy of the first-round state. The other runs start from scratch.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Measure</th>
+<th>What was enforced</th>
+<th>What was observed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Separate workspace for each run</td>
+<td>Each run has its own folder. Reads of other folders on the same disk were not blocked</td>
+<td>No tool call referred to another run</td>
+</tr>
+<tr>
+<td>Network</td>
+<td>Blocked for shell commands by a sandbox</td>
+<td>No network attempt in the 18 sessions checked for it</td>
+</tr>
+<tr>
+<td>Web tools</td>
+<td>Disabled</td>
+<td>They are absent from the tool list of each session</td>
+</tr>
+<tr>
+<td>Operator’s own instruction files</td>
+<td>Excluded by the launcher</td>
+<td>No leak in the 18 sessions checked for it</td>
+</tr>
+<tr>
+<td>Official reports and fixed versions</td>
+<td>Stored on the same machine and not blocked</td>
+<td>No tool call referred to them</td>
+</tr>
+</tbody>
+</table></div>
+<p>The verification of this report scanned the tool inputs of all 22 counted sessions, 6,761 tool calls including 4,123 from sub-agents. No call referred to the reference findings, the scoring, a fixed version, another run or this report.</p>
+<p>This is a scan of the commands the sessions issued. It is not a file-system trace.</p>
+<p><a id="sec-4-2"></a></p>
+<h3 id="42-how-a-finding-is-judged">4.2 How a finding is judged</h3>
+<p>A reported finding is scored in two stages. First the judge runs the test of the finding against the audited code and the fixed code. Then readers match what the tests cannot decide (section 4.3).</p>
+<figure><a href="../images/hypatia-benchmark/judge-flow.png"><img src="../images/hypatia-benchmark/judge-flow.png?v=1795089841" alt="The two stages of scoring: a test-based judge and matching by reading" width="1920" height="1280"></a><figcaption><b>Figure 3.</b> The two stages of scoring. The judge classified the 97 tests written by the approaches: 50 confirmed, 3 shown not to be official findings and 44 it could not decide. Those 44 and every GTE finding were matched by reading, with a second reading of uncertain and lenient matches in most runs. Findings with no match were then rated for validity (<a href="#sec-5-8">section 5.8</a>). A test that cannot compile against the fixed code is run with each official fix applied alone, which is how all 7 Promis confirmations were made.</figcaption></figure>
+
+<p>The judge runs the approach’s test on a fresh copy of the audited code and on a fresh copy of the fixed code. Each official fix is also applied on its own, to link a test to one official finding. When a fix does not apply cleanly on its own, the test is run just before and at the commit of that fix.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>On the audited code</th>
+<th>On the fixed code</th>
+<th>With each official fix applied alone</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Test passes</td>
+<td>Test fails</td>
+<td>Used to name the official finding</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>Test passes</td>
+<td>Test passes</td>
+<td>Not needed</td>
+<td>Not one of the official findings, or the test proves nothing</td>
+</tr>
+<tr>
+<td>Test passes</td>
+<td>Test cannot compile or set up</td>
+<td>One fix makes the test fail</td>
+<td>Confirmed</td>
+</tr>
+<tr>
+<td>Test passes</td>
+<td>Test cannot compile or set up</td>
+<td>No single fix makes the test fail</td>
+<td>Needs reading</td>
+</tr>
+<tr>
+<td>Test does not pass</td>
+<td>Not run</td>
+<td>Not run</td>
+<td>Not demonstrated</td>
+</tr>
+</tbody>
+</table></div>
+<p>All 97 judged tests pass on the audited code.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Reports judged</th>
+<th>Confirmed</th>
+<th class="num">Shown not to be official</th>
+<th>Left to reading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ONCHAINID</td>
+<td>77</td>
+<td>43: 31 against the fixed version, 12 by one official fix (7 with the fix applied alone and 5 at the commit of the fix)</td>
+<td class="num">3</td>
+<td>31</td>
+</tr>
+<tr>
+<td>Promis</td>
+<td>20</td>
+<td>7, all by one fix applied alone</td>
+<td class="num">0</td>
+<td>13</td>
+</tr>
+<tr>
+<td>GTE</td>
+<td>None. No fixed version is public</td>
+<td>0</td>
+<td class="num">0</td>
+<td>All</td>
+</tr>
+</tbody>
+</table></div>
+<p>In the 44 cases left to reading, the test did not compile against the fixed code. On Promis no test compiled against the final fixed version.</p>
+<p>Two ONCHAINID Highs share one fix, so the judge cannot tell them apart. They were split by reading.</p>
+<p><a id="sec-4-3"></a></p>
+<h3 id="43-matching-by-reading">4.3 Matching by reading</h3>
+<p>When the judge cannot decide, a reader compares the reported finding with the official report. In this study every reader is a model, not a person.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Match</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Strict</td>
+<td>The official root cause is the subject of the finding, and its test demonstrates it</td>
+</tr>
+<tr>
+<td>Lenient</td>
+<td>The root cause is mentioned in passing, or the scenario is reproduced under a different cause</td>
+</tr>
+<tr>
+<td>None</td>
+<td>Same area, different root cause</td>
+</tr>
+</tbody>
+</table></div>
+<p>The numbers in this report are strict matches unless stated otherwise.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Runs</th>
+<th>First reading</th>
+<th>Second reading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ONCHAINID, run 1</td>
+<td>By title, recorded as “by hand”</td>
+<td>Reader</td>
+</tr>
+<tr>
+<td>ONCHAINID, runs 2 and 3</td>
+<td>Reader</td>
+<td>Reader</td>
+</tr>
+<tr>
+<td>GTE, first round</td>
+<td>Reader per approach, differences then settled “by hand”</td>
+<td>Reader</td>
+</tr>
+<tr>
+<td>GTE, second round</td>
+<td>Reader</td>
+<td>Reader</td>
+</tr>
+<tr>
+<td>GTE, second round repeated</td>
+<td>Reader</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Promis</td>
+<td>Reader</td>
+<td>None</td>
+</tr>
+</tbody>
+</table></div>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Second reading</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>What it re-decided</td>
+<td>Uncertain matches, lenient matches and a sample of 21 confident ones</td>
+</tr>
+<tr>
+<td>Verdicts changed</td>
+<td>14</td>
+</tr>
+<tr>
+<td>Strict matches added</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Strict matches removed</td>
+<td>0</td>
+</tr>
+</tbody>
+</table></div>
+<p>The files do not record whether the readings marked “by hand” were made by a person or by a model.</p>
+<p><a id="sec-4-4"></a></p>
+<h3 id="44-what-is-measured">4.4 What is measured</h3>
+<p>The metrics follow those of Anthropic’s security evaluations where an equivalent exists.</p>
+<p><strong>Results</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Definition</th>
+<th>Follows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Official findings found</td>
+<td>Reported findings that match an official one, by severity</td>
+<td>“Targets exploited”, Anthropic smart-contract evaluation</td>
+</tr>
+<tr>
+<td>Found in k of 3 runs</td>
+<td>How many of the three ONCHAINID runs find each official finding</td>
+<td>Best of N runs, same source</td>
+</tr>
+<tr>
+<td>Findings outside the report</td>
+<td>Reported findings with no official match that a reader rated valid</td>
+<td>Previously unknown vulnerabilities, same source</td>
+</tr>
+<tr>
+<td>Questions decided and open</td>
+<td>Questions closed by a test, closed by a written argument, and left open. Approach C</td>
+<td>Own metric</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Quality</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Definition</th>
+<th>Follows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Precision</td>
+<td>Distinct valid findings divided by distinct reported findings</td>
+<td>Heimdallr, AIxCC scoring</td>
+</tr>
+<tr>
+<td>Severity agreement</td>
+<td>Reported severity compared with the official one</td>
+<td>Anthropic’s Mythos Preview assessment</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Effort</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Definition</th>
+<th>Follows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Minutes per run</td>
+<td>Wall-clock time of the session. Main effort measure</td>
+<td>A1, Heimdallr</td>
+</tr>
+<tr>
+<td>Minutes per valid finding</td>
+<td>Minutes divided by distinct valid findings</td>
+<td>Own metric</td>
+</tr>
+<tr>
+<td>Output tokens per valid finding</td>
+<td>Tokens written by the model, sub-agents included, divided by distinct valid findings</td>
+<td>Tokens per successful exploit, Anthropic smart-contract evaluation</td>
+</tr>
+<tr>
+<td>Output tokens of a run</td>
+<td>Tokens written by the main session and its sub-agents</td>
+<td>Same source</td>
+</tr>
+</tbody>
+</table></div>
+<p><a id="sec-4-5"></a></p>
+<h3 id="45-counting-rules">4.5 Counting rules</h3>
+<ul>
+<li><strong>Comparable basis.</strong> Official Critical, High and Medium findings. Counts that include Low findings or Notes are shown separately and are not comparable with approach A.</li>
+<li><strong>Reported.</strong> The number of findings an approach reports.</li>
+<li><strong>Distinct.</strong> A finding that repeats a root cause the same approach already reported is counted once.</li>
+<li><strong>Valid.</strong> A finding that matches an official one, strictly or leniently, or that a reader rated valid (section 5.8).</li>
+<li><strong>Doubtful.</strong> A reported finding that a reader could not rate valid or invalid.</li>
+<li><strong>Time.</strong> For a run that was interrupted and resumed, the minutes of both sessions are added.</li>
+</ul>
+<p><a id="sec-5"></a></p>
+<h2 id="5-experiments">5. Experiments</h2>
+<p>Each experiment is reported in the same order: the question it answers, the method, the results, a reading of them and a one-line conclusion.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Experiment</th>
+<th>What it measures</th>
+<th>Project</th>
+<th>Test of the study design</th>
+<th>Question</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#sec-5-1">1</a></td>
+<td>Findings found across three independent runs</td>
+<td>ONCHAINID</td>
+<td>1</td>
+<td>Is the difference between approaches stable from run to run?</td>
+</tr>
+<tr>
+<td><a href="#sec-5-2">2</a></td>
+<td>Findings found on a larger project</td>
+<td>GTE</td>
+<td>2, first round</td>
+<td>Do the differences hold on a larger project?</td>
+</tr>
+<tr>
+<td><a href="#sec-5-3">3</a></td>
+<td>What the model recalls of a public report</td>
+<td>GTE</td>
+<td>2, control</td>
+<td>Does the model remember the findings of a report it may have seen?</td>
+</tr>
+<tr>
+<td><a href="#sec-5-4">4</a></td>
+<td>The step where Hypatia lost each official finding it missed</td>
+<td>GTE</td>
+<td>2, first round</td>
+<td>Why did Hypatia with code map miss 20 official findings?</td>
+</tr>
+<tr>
+<td><a href="#sec-5-5">5</a></td>
+<td>New findings when an audit is continued</td>
+<td>GTE</td>
+<td>2, second round</td>
+<td>What does each approach find when asked to continue?</td>
+</tr>
+<tr>
+<td><a href="#sec-5-6">6</a></td>
+<td>The second round after correcting Hypatia</td>
+<td>GTE</td>
+<td>2, second round repeated</td>
+<td>Does the second round improve once the losses are corrected?</td>
+</tr>
+<tr>
+<td><a href="#sec-5-7">7</a></td>
+<td>Findings found on a project the model had not seen</td>
+<td>Promis</td>
+<td>3</td>
+<td>Do the differences hold on a project the model had not seen?</td>
+</tr>
+<tr>
+<td><a href="#sec-5-8">8</a></td>
+<td>Validity of findings outside the official reports</td>
+<td>All three</td>
+<td>1, 2 and 3</td>
+<td>Are the reported findings with no official match valid?</td>
+</tr>
+<tr>
+<td><a href="#sec-5-9">9</a></td>
+<td>Time and tokens per valid finding</td>
+<td>All three</td>
+<td>1, 2 and 3</td>
+<td>How much time and how many tokens does a finding take?</td>
+</tr>
+</tbody>
+</table></div>
+<p><a id="sec-5-1"></a></p>
+<h3 id="51-experiment-1-findings-found-across-three-independent-runs">5.1 Experiment 1: findings found across three independent runs</h3>
+<p class="q"><strong>Question.</strong> Is the difference between approaches stable, or does it depend on the run?</p>
+<p class="part"><strong>Method.</strong> Three independent repetitions of the three approaches on ONCHAINID, with the first version of Hypatia. Each starts from a fresh workspace, and no session referred to another run.</p>
+<p>Of the 77 reports, 43 were confirmed by the judge, 3 were shown not to be official findings and 31 were matched by reading.</p>
+<p class="part"><strong>Results.</strong> Main result, on the comparable basis of 12 official Critical, High and Medium findings:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Critical, High, Medium per run</th>
+<th class="num">Mean</th>
+<th class="num">Distinct over 3 runs</th>
+<th class="num">In 3 of 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>3, 3, 4</td>
+<td class="num">3.3</td>
+<td class="num">4</td>
+<td class="num">3</td>
+</tr>
+<tr>
+<td>B</td>
+<td>4, 6, 5</td>
+<td class="num">5.0</td>
+<td class="num">6</td>
+<td class="num">3</td>
+</tr>
+<tr>
+<td>C</td>
+<td>5, 4, 6</td>
+<td class="num">5.0</td>
+<td class="num">6</td>
+<td class="num">4</td>
+</tr>
+</tbody>
+</table></div>
+<p>All severities, out of 39. Row A is not comparable with B and C (section 4.5).</p>
+<div class="table-wrap wide"><table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>All severities per run</th>
+<th class="num">Mean</th>
+<th class="num">Distinct over 3 runs</th>
+<th class="num">In 3 of 3</th>
+<th>Reported per run</th>
+<th>Minutes per run</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>4, 4, 5</td>
+<td class="num">4.3</td>
+<td class="num">6</td>
+<td class="num">3</td>
+<td>4, 5, 6</td>
+<td>10.8, 13.8, 9.9</td>
+</tr>
+<tr>
+<td>B</td>
+<td>7, 9, 8</td>
+<td class="num">8.0</td>
+<td class="num">11</td>
+<td class="num">4</td>
+<td>8, 10, 9</td>
+<td>22.8, 31.4, 22.1</td>
+</tr>
+<tr>
+<td>C</td>
+<td>13, 8, 11</td>
+<td class="num">10.7</td>
+<td class="num">15</td>
+<td class="num">7</td>
+<td>15, 8, 12</td>
+<td>47.5, 35.4, 54.2</td>
+</tr>
+</tbody>
+</table></div>
+<figure><a href="../images/hypatia-benchmark/onchainid-runs.png"><img src="../images/hypatia-benchmark/onchainid-runs.png?v=1795089838" alt="Official findings per run on ONCHAINID, three runs per approach" width="1920" height="1080"></a><figcaption><b>Figure 4.</b> Official findings found by each approach on ONCHAINID, with the bar at the mean of three independent runs and one dot per run. The pale bar of the Plain model in the right group is not comparable.</figcaption></figure>
+
+<p class="part"><strong>Reading.</strong> The code map shows no gain on the comparable basis: B and C have the same mean and find the same six distinct findings.</p>
+<p>Between B and C, the code map approach matches more Low findings and Notes (mean 5.7 against 3.0). The four distinct findings C has and B lacks are three Lows and one Note. Three runs are too few to call this difference stable.</p>
+<p>The order of B and C changed between runs: C was ahead in run 1 and behind in run 2, on both bases.</p>
+<p>The Critical finding and five of the nine Mediums are found by no approach in any run. Both Highs are found by each approach in each run.</p>
+<p class="concl"><strong>Conclusion.</strong> On ONCHAINID both Hypatia approaches find more Critical, High and Medium findings than the Plain model in three runs out of three, and the code map adds none on that basis.</p>
+<p><a id="sec-5-2"></a></p>
+<h3 id="52-experiment-2-findings-found-on-a-larger-project">5.2 Experiment 2: findings found on a larger project</h3>
+<p class="q"><strong>Question.</strong> Do the differences hold on a larger project with more High and Medium findings?</p>
+<p class="part"><strong>Method.</strong> One run of the three approaches on GTE, with the first version of Hypatia. No fixed version exists, so all matches were made by reading.</p>
+<p class="part"><strong>Results.</strong></p>
+<div class="table-wrap wide"><table>
+<thead>
+<tr>
+<th>Approach</th>
+<th class="num">High of 10</th>
+<th class="num">Medium of 25</th>
+<th class="num">Strict total</th>
+<th class="num">Lenient total</th>
+<th class="num">Reported</th>
+<th class="num">Distinct reported</th>
+<th class="num">Distinct valid</th>
+<th class="num">Precision</th>
+<th class="num">Minutes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td class="num">6</td>
+<td class="num">2</td>
+<td class="num">8</td>
+<td class="num">10</td>
+<td class="num">16</td>
+<td class="num">16</td>
+<td class="num">14</td>
+<td class="num">0.88</td>
+<td class="num">84.6</td>
+</tr>
+<tr>
+<td>B</td>
+<td class="num">5</td>
+<td class="num">5</td>
+<td class="num">10</td>
+<td class="num">14</td>
+<td class="num">19</td>
+<td class="num">19</td>
+<td class="num">18</td>
+<td class="num">0.95</td>
+<td class="num">48.1</td>
+</tr>
+<tr>
+<td>C</td>
+<td class="num">7</td>
+<td class="num">8</td>
+<td class="num">15</td>
+<td class="num">19</td>
+<td class="num">35</td>
+<td class="num">34</td>
+<td class="num">30</td>
+<td class="num">0.88</td>
+<td class="num">76.3</td>
+</tr>
+</tbody>
+</table></div>
+<p>Across the three approaches: 8 of 10 Highs and 8 of 25 Mediums.</p>
+<p>A reader rated the reports not counted as valid as doubtful, and none as invalid.</p>
+<figure><a href="../images/hypatia-benchmark/gte-round1.png"><img src="../images/hypatia-benchmark/gte-round1.png?v=1795089838" alt="High and Medium findings on GTE, first round" width="1920" height="1080"></a><figcaption><b>Figure 5.</b> High and Medium official findings matched strictly by each approach in the first round on GTE, by severity and in total. One run per approach.</figcaption></figure>
+
+<p class="part"><strong>Reading.</strong> Highs are close across approaches, and the difference is in Mediums.</p>
+<p>Reported and valid counts include Low findings and are not comparable with A. Approach C’s valid findings include seven Lows outside the report that were not re-checked (section 5.8).</p>
+<p>All three approaches often give a severity different from the official one. Several official Highs are reported as Medium, and several Mediums as Low or High.</p>
+<p class="concl"><strong>Conclusion.</strong> On GTE the code map approach matched 15 official findings against 10 and 8, in one run on a project whose report the model may have seen.</p>
+<p><a id="sec-5-3"></a></p>
+<h3 id="53-experiment-3-what-the-model-recalls-of-a-public-report">5.3 Experiment 3: what the model recalls of a public report</h3>
+<p class="q"><strong>Question.</strong> Does the model remember the findings of GTE’s report, which was public before its knowledge cutoff?</p>
+<p class="part"><strong>Method.</strong> The model was asked three times to list the report’s High and Medium findings from memory and told not to guess. The prompt states that it has no tools and no code.</p>
+<p>The scoring record states the same model and effort with no tools, and the stored answers show one turn each. The command line was not stored, so effort and the absence of tools cannot be checked.</p>
+<p>No probe was run for ONCHAINID or Promis.</p>
+<p class="part"><strong>Results.</strong> Each of the three attempts recalled 0 of 35 findings. The model recalled only the general design of the protocol.</p>
+<p class="part"><strong>Reading.</strong> The model did not recite the report. The probe does not rule out weaker familiarity.</p>
+<p>Having seen the code or the write-ups during training may still help the model recognise a bug once it reads the code.</p>
+<p class="concl"><strong>Conclusion.</strong> No recall was found, and GTE is still treated as a project the model may have seen.</p>
+<p><a id="sec-5-4"></a></p>
+<h3 id="54-experiment-4-the-step-where-hypatia-lost-each-official-finding-it-missed">5.4 Experiment 4: the step where Hypatia lost each official finding it missed</h3>
+<p class="q"><strong>Question.</strong> Hypatia with code map found 15 of the 35 official findings of GTE. Why did it miss the other 20?</p>
+<p class="part"><strong>Method.</strong> The 20 missed findings are real vulnerabilities of the official report. Each was traced through the first round’s records: the function records, the question list, the rejections and the reports. The tracing was done by a reader.</p>
+<p>Each finding is assigned to the step of the audit where it was lost. “Wrongly rejected” means that Hypatia asked a question that covered the finding and closed it as not a vulnerability.</p>
+<p class="part"><strong>Results.</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Lost at</th>
+<th class="num">Findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The affected function was not in the code map</td>
+<td class="num">0</td>
+</tr>
+<tr>
+<td>A question was asked and wrongly rejected</td>
+<td class="num">8</td>
+</tr>
+<tr>
+<td>No question on the mechanism</td>
+<td class="num">7</td>
+</tr>
+<tr>
+<td>Seen, but folded into another finding or downgraded</td>
+<td class="num">4</td>
+</tr>
+<tr>
+<td>The question was left open</td>
+<td class="num">1</td>
+</tr>
+</tbody>
+</table></div>
+<figure><a href="../images/hypatia-benchmark/loss-analysis.png"><img src="../images/hypatia-benchmark/loss-analysis.png?v=1795089839" alt="Where the 20 missed findings were lost" width="1920" height="1080"></a><figcaption><b>Figure 6.</b> The 20 official findings Hypatia with code map missed in the first round on GTE, by the step of Figure 2 where each was lost, in the order of the audit. One run, traced by a reader.</figcaption></figure>
+
+<p class="part"><strong>Reading.</strong> The first-round question list had 451 questions, 246 of them rejected. The rejections had been closed in 13 batches of up to 42 questions, with one line of reasoning per question and one internal reviewer of Hypatia per batch. One rejected question described an official finding exactly and was dismissed with “only its length is used”.</p>
+<p>The seven with no question needed lifecycle changes, call sequences or extreme values. The question list had call-pair questions for the launchpad contracts and one vault, not for the perpetuals contracts. The cause was technical: a class of state writes was not turned into call-pair questions.</p>
+<p class="concl"><strong>Conclusion.</strong> In the first round on GTE the largest loss was wrong rejection (8 of 20), followed by missing questions (7 of 20).</p>
+<p><a id="sec-5-5"></a></p>
+<h3 id="55-experiment-5-new-findings-when-an-audit-is-continued">5.5 Experiment 5: new findings when an audit is continued</h3>
+<p class="q"><strong>Question.</strong> When each approach is asked to continue its own audit, what does it find?</p>
+<p class="part"><strong>Method.</strong> A second round on GTE in the same workspace as the first, with the first version of Hypatia. All three approaches receive the same sentence about not repeating known findings.</p>
+<ul>
+<li><strong>B and C</strong> use Hypatia’s documented follow-up procedure. It includes an operator step: the draft profile of the next round is reviewed and approved before launch.</li>
+<li><strong>A</strong> gets its original prompt plus a section pointing at its own first-round output. It has no operator step.</li>
+</ul>
+<p>All matches were made by reading.</p>
+<p class="part"><strong>Results.</strong></p>
+<div class="table-wrap wide"><table>
+<thead>
+<tr>
+<th>Approach</th>
+<th class="num">Reported</th>
+<th class="num">Distinct new findings</th>
+<th class="num">New official, strict</th>
+<th class="num">Other new, rated valid</th>
+<th class="num">Doubtful</th>
+<th class="num">Minutes</th>
+<th>After two rounds, strict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td class="num">2</td>
+<td class="num">2</td>
+<td class="num">0</td>
+<td class="num">2</td>
+<td class="num">0</td>
+<td class="num">21.3</td>
+<td>High 6, Medium 2</td>
+</tr>
+<tr>
+<td>B</td>
+<td class="num">2</td>
+<td class="num">2</td>
+<td class="num">0</td>
+<td class="num">2</td>
+<td class="num">0</td>
+<td class="num">19.0</td>
+<td>High 5, Medium 5</td>
+</tr>
+<tr>
+<td>C</td>
+<td class="num">15</td>
+<td class="num">13</td>
+<td class="num">2</td>
+<td class="num">7</td>
+<td class="num">4</td>
+<td class="num">79.1</td>
+<td>High 8, Medium 9</td>
+</tr>
+</tbody>
+</table></div>
+<p>Of approach C’s 15 reports, one repeats another of the same round and one repeats a root cause of its first round.</p>
+<figure><a href="../images/hypatia-benchmark/gte-round2.png"><img src="../images/hypatia-benchmark/gte-round2.png?v=1795089838" alt="New findings in the second round on GTE" width="1920" height="1080"></a><figcaption><b>Figure 7.</b> Distinct new findings of each approach in the second round on GTE, by how each was rated: matched strictly to the official report, rated valid by a reader, or doubtful. The last group is the total, with the minutes of each run. One run per approach.</figcaption></figure>
+
+<p class="part"><strong>Reading.</strong> A reader rated the two new findings of A as Medium, and those of B as one High and one Low. The two of B had already been found by C in the first round.</p>
+<p>Approach C rebuilt its question list: 253 questions, 194 of them derived from the code map. Its two new official findings are cases the loss analysis had classed as “no question on the mechanism”.</p>
+<p>While preparing this round, a gap was found in Hypatia. This round received the list of known findings but not the question list. It rebuilt its questions without knowing which had been answered, and the 82 questions left undecided in the first round were not passed on.</p>
+<p>Approach C wrote 1.34 million output tokens against 0.12 and 0.10 million. Another job was running on the machine during this round, so its wall time is not comparable with other rounds.</p>
+<p class="concl"><strong>Conclusion.</strong> In the one second round run, on GTE, Hypatia with code map produced 13 distinct new findings, two of them official, and the other two approaches produced 2 each, none official.</p>
+<p><a id="sec-5-6"></a></p>
+<h3 id="56-experiment-6-the-second-round-after-correcting-hypatia">5.6 Experiment 6: the second round after correcting Hypatia</h3>
+<p class="q"><strong>Question.</strong> If the losses of section 5.4 are corrected, does the second round improve?</p>
+<p class="part"><strong>Method.</strong> Four corrections were made as one group, each tied to a measured loss.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Correction</th>
+<th>Loss it answers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A rejection needs its own passing test per question. “Intended”, “harmless” and “not profitable” need an internal reviewer of Hypatia on that question</td>
+<td>8 wrongly rejected</td>
+</tr>
+<tr>
+<td>Call-pair questions also cover the class of state writes that had been skipped. One question added about state that existed before the first call of a pair</td>
+<td>7 with no question</td>
+</tr>
+<tr>
+<td>A report lists other root causes it mentions, and each is decided on its own</td>
+<td>4 folded into other findings</td>
+</tr>
+<tr>
+<td>No closing with undecided questions while iterations remain. The next round inherits the question list</td>
+<td>1 left open, 82 undecided</td>
+</tr>
+</tbody>
+</table></div>
+<p>The same version also closes an audit by itself at the iteration limit. Three of the four corrections act on the question list, which exists with the code map. The third correction, on reports, applies to B as well.</p>
+<p>No new rules were added for extreme-value and lifecycle questions. They existed but were not asked on the perpetuals contracts, which had no call pairs (section 5.4). The correction raised the call pairs from 127 to 676.</p>
+<p>An independent check of the first changes found that an undecided question could be closed without an internal reviewer through another status. This applied to 671 of 676 call pairs and was fixed before the run.</p>
+<p>The second round was then repeated for B and C from the saved first-round state, with an iteration limit of 40. The C run was interrupted by a network failure at iteration 33 and resumed. The Plain model was not repeated, since it does not use Hypatia.</p>
+<p>All matches of the repeated round were made by one reader in one pass.</p>
+<p class="part"><strong>Results.</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Approach C, second round</th>
+<th>Uncorrected</th>
+<th>Corrected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>New findings</td>
+<td>15 reported, 13 distinct</td>
+<td>17 reported, 16 distinct</td>
+</tr>
+<tr>
+<td>New official, strict</td>
+<td>H-02, M-13</td>
+<td>M-09, M-13, M-25</td>
+</tr>
+<tr>
+<td>New official, lenient</td>
+<td>none</td>
+<td>H-10</td>
+</tr>
+<tr>
+<td>Other new, rated valid</td>
+<td>7</td>
+<td>8</td>
+</tr>
+<tr>
+<td>Doubtful</td>
+<td>4</td>
+<td>4</td>
+</tr>
+<tr>
+<td>Questions rejected</td>
+<td>53, no test per question</td>
+<td>80, each naming its own test</td>
+</tr>
+<tr>
+<td>Iterations used</td>
+<td>19 of 100, closed by itself (one record counts 20)</td>
+<td>40 of 40, closed at the iteration limit</td>
+</tr>
+<tr>
+<td>Minutes</td>
+<td>79.1</td>
+<td>105.2</td>
+</tr>
+<tr>
+<td>After two rounds, strict</td>
+<td>High 8, Medium 9, total 17</td>
+<td>High 7, Medium 11, total 18</td>
+</tr>
+<tr>
+<td>After two rounds, lenient</td>
+<td>21</td>
+<td>23</td>
+</tr>
+</tbody>
+</table></div>
+<p>The report of the corrected round that is not counted as distinct repeats an official Medium that approach C had found in its first round. The lenient match to H-10 has medium to low confidence, and without it the lenient total is 22.</p>
+<p>Approach B gave the same two findings in both versions.</p>
+<figure><a href="../images/hypatia-benchmark/gte-two-rounds.png"><img src="../images/hypatia-benchmark/gte-two-rounds.png?v=1795089838" alt="Official findings on GTE after one and two rounds" width="1920" height="1080"></a><figcaption><b>Figure 8.</b> Official findings of GTE matched strictly after the first round and after the second, out of 35, for each approach and for the corrected version of Hypatia with code map. One run per approach and version, on the project Hypatia was corrected on, and the corrected run also used twice as many iterations.</figcaption></figure>
+
+<p>What happened in the corrected round to the 20 findings missed in the first round:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Outcome in the corrected round</th>
+<th>Findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Found</td>
+<td>4: M-09, M-13 and M-25 strictly, H-10 leniently</td>
+</tr>
+<tr>
+<td>A question was asked and rejected</td>
+<td>8, six of which had also been rejected in the first round</td>
+</tr>
+<tr>
+<td>Closed by a written argument or left unanswered</td>
+<td>3</td>
+</tr>
+<tr>
+<td>No question on the mechanism</td>
+<td>3</td>
+</tr>
+<tr>
+<td>Unchanged, kept inside another finding</td>
+<td>2</td>
+</tr>
+</tbody>
+</table></div>
+<p>Question list of the corrected round, 804 questions:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Status</th>
+<th class="num">Questions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Inherited from the first round as decided</td>
+<td class="num">63</td>
+</tr>
+<tr>
+<td>Decided by a test in this round</td>
+<td class="num">86</td>
+</tr>
+<tr>
+<td>Closed by a written argument, marked “not refuted”</td>
+<td class="num">649</td>
+</tr>
+<tr>
+<td>Pending review</td>
+<td class="num">6</td>
+</tr>
+</tbody>
+</table></div>
+<p>Of the 17 reports of the corrected round, 11 did not come from a question of the list. They came from additional search passes and from Hypatia’s internal reviewers.</p>
+<figure><a href="../images/hypatia-benchmark/gte-before-after.png"><img src="../images/hypatia-benchmark/gte-before-after.png?v=1795089839" alt="What became, after correcting Hypatia, of the 20 findings missed in the first round" width="1920" height="1080"></a><figcaption><b>Figure 9.</b> Outcome, in the corrected second round, of the 20 official findings Hypatia with code map missed in the first round on GTE. Of the four found, three are strict matches and one is lenient. One run per version.</figcaption></figure>
+
+<p class="part"><strong>Reading.</strong> M-09 had been rejected in the first round because the attack loses money, and is now found. Most of the 80 tests named by rejections are first-round tests run again.</p>
+<p>Wrong rejection was not removed. Of the eight findings rejected, four had a new test per question and four cited a first-round test. In one case the rejection states the defect and then accepts it. A reader of the run concluded that those tests checked the mechanism and not the harm.</p>
+<p>The 649 questions marked “not refuted” share 488 distinct conclusions. Their reasoning combines a sentence specific to the question with repeated templates.</p>
+<p class="concl"><strong>Conclusion.</strong> The corrected round moved the result from 17 to 18 official findings, lost H-02 and did not remove wrong rejection, and one run per version cannot separate the corrections from running twice as many iterations.</p>
+<p><a id="sec-5-7"></a></p>
+<h3 id="57-experiment-7-findings-found-on-a-project-the-model-had-not-seen">5.7 Experiment 7: findings found on a project the model had not seen</h3>
+<p class="q"><strong>Question.</strong> Do the differences hold on a project whose report the model could not have seen and on which Hypatia was not corrected?</p>
+<p class="part"><strong>Method.</strong> One run of the three approaches on Promis, with the corrected version of Hypatia and an iteration limit of 40. The reference is the 9 official High and Medium findings inside the audited files. The judge confirmed 7 of the 20 reports, all matches to one Medium and two Lows. One reader matched the other 13 in one reading, and every High match is among them. The C run stalled in its first iteration because of a defect of Hypatia and was resumed.</p>
+<p class="part"><strong>Results.</strong></p>
+<figure><a href="../images/hypatia-benchmark/promis.png"><img src="../images/hypatia-benchmark/promis.png?v=1795089838" alt="Official High and Medium findings found on Promis" width="1920" height="1080"></a><figcaption><b>Figure 10.</b> Official High and Medium findings of Promis found by each approach, by severity and in total. One run per approach, and the Mediums are the four inside the audited files.</figcaption></figure>
+
+<p>Finding by finding, with the step where approach C lost each one it missed:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Finding</th>
+<th>A</th>
+<th>B</th>
+<th>C</th>
+<th>Where approach C lost it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>H-01</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td>No question on the mechanism</td>
+</tr>
+<tr>
+<td>H-02</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td>Found</td>
+<td></td>
+</tr>
+<tr>
+<td>H-03</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td>A question existed and was not reached before the iteration limit</td>
+</tr>
+<tr>
+<td>H-04</td>
+<td class="dash">–</td>
+<td>Found</td>
+<td>Found</td>
+<td></td>
+</tr>
+<tr>
+<td>H-05</td>
+<td>Found</td>
+<td>Found</td>
+<td>Found</td>
+<td></td>
+</tr>
+<tr>
+<td>M-01</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td>No question was generated, although the function records stated the mechanism</td>
+</tr>
+<tr>
+<td>M-02</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td>No question on the mechanism</td>
+</tr>
+<tr>
+<td>M-03</td>
+<td>Found</td>
+<td class="dash">–</td>
+<td>Found</td>
+<td></td>
+</tr>
+<tr>
+<td>M-05</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td class="dash">–</td>
+<td>Partly outside the audited files. No question on the part inside them</td>
+</tr>
+<tr>
+<td><strong>Found of 9</strong></td>
+<td><strong>2</strong></td>
+<td><strong>2</strong></td>
+<td><strong>4</strong></td>
+<td></td>
+</tr>
+<tr>
+<td>Minutes</td>
+<td>11.1</td>
+<td>23.6</td>
+<td>88.8</td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<p>Other counts, which include Low findings and are not comparable with A (section 4.5):</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Distinct reports</th>
+<th class="num">Low of 14</th>
+<th class="num">Rated valid, outside the report</th>
+<th class="num">Precision</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>3</td>
+<td class="num">1</td>
+<td class="num">0</td>
+<td class="num">3 of 3</td>
+</tr>
+<tr>
+<td>B</td>
+<td>5</td>
+<td class="num">1</td>
+<td class="num">2</td>
+<td class="num">5 of 5</td>
+</tr>
+<tr>
+<td>C</td>
+<td>10, in 12 reports</td>
+<td class="num">3</td>
+<td class="num">3</td>
+<td class="num">10 of 10</td>
+</tr>
+</tbody>
+</table></div>
+<p class="part"><strong>Reading.</strong></p>
+<ul>
+<li><strong>Detection.</strong> The code map approach covers the High and Medium findings the other two found and adds one High. Five of the nine are found by no approach.</li>
+<li><strong>Misses.</strong> None of approach C’s misses was a rejection. Its question list had 463 questions and 17 were decided before the iteration limit, 3.7 percent. Five of its 12 reports came from outside the list.</li>
+<li><strong>Severity.</strong> The reported severity agrees with the official one in 2 of 3 matched reports for A, 0 of 3 for B and 2 of 9 for C.</li>
+<li><strong>Judgement calls.</strong> The match to H-05 would be lenient for all three approaches under a stricter reading, which gives 1, 1 and 3 of 9. One finding of B outside the report was rejected by C as intended behaviour, and if it is doubtful B has 4 valid of 5.</li>
+<li><strong>One run.</strong> It cannot show whether approach C’s result comes from the code map or from the longer run.</li>
+</ul>
+<p class="concl"><strong>Conclusion.</strong> On Promis, in one run, Hypatia with code map found 4 of 9 High and Medium findings against 2 for each of the other approaches, and ran 3.8 to 8.0 times as long.</p>
+<p><a id="sec-5-8"></a></p>
+<h3 id="58-experiment-8-validity-of-findings-outside-the-official-reports">5.8 Experiment 8: validity of findings outside the official reports</h3>
+<p class="q"><strong>Question.</strong> Do the approaches find valid vulnerabilities that the official reports do not contain?</p>
+<p class="part"><strong>Method.</strong> Validity was rated by readers. No auditor has confirmed any of these findings. Findings claimed High or Medium in the first and second round on GTE and the three ONCHAINID findings still present in the fixed version were checked by a second reader against the code. The others were rated once. Findings that are not in a public report are described by class.</p>
+<p class="part"><strong>Results.</strong></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Rated valid, outside the report</th>
+<th>Highest rating</th>
+<th>Reported by</th>
+<th>Still in the fixed version</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ONCHAINID</td>
+<td>4</td>
+<td>Medium</td>
+<td>A, B, C</td>
+<td>3 yes. 1 fixed later by the project</td>
+</tr>
+<tr>
+<td>GTE, first and second round</td>
+<td>11 checked twice: 1 High, 6 Medium, 2 Low to Medium, 2 Low</td>
+<td>High</td>
+<td>A, B, C</td>
+<td>No fixed version</td>
+</tr>
+<tr>
+<td>GTE, second round repeated</td>
+<td>8, and 4 doubtful</td>
+<td>Rated once</td>
+<td>C</td>
+<td>No fixed version</td>
+</tr>
+<tr>
+<td>Promis</td>
+<td>4, in five reports</td>
+<td>Low or Informational</td>
+<td>B, C</td>
+<td>Yes</td>
+</tr>
+</tbody>
+</table></div>
+<p>The rows overlap: several findings of the repeated round are the same issues as earlier rows. Also on GTE: 15 further findings claimed Low by B and C were counted valid on one rating, and two findings on how liquidation is priced could not be told apart from intended behaviour.</p>
+<p class="part"><strong>Reading.</strong></p>
+<ul>
+<li><strong>One finding has support beyond a rating.</strong> On ONCHAINID, the scoring file records a later commit by the project whose message describes the same defect. The match was made by reading, and whether that commit is public and merged is not recorded.</li>
+<li><strong>Agreement between approaches is weak support.</strong> Several findings are reported by more than one approach, and the approaches share one model.</li>
+<li><strong>GTE findings are not shown to be new.</strong> The contest’s lower-severity reports are not in the reference (section 3.3).</li>
+<li><strong>Disclosure.</strong> According to the owner, none of these findings has been disclosed to any project. No file records the disclosure status. Disclosure is a decision for the owner and must come before any publication of details.</li>
+</ul>
+<p class="concl"><strong>Conclusion.</strong> All three approaches report findings beyond the official reports that readers rated valid, and their validity needs an auditor’s confirmation.</p>
+<p><a id="sec-5-9"></a></p>
+<h3 id="59-experiment-9-time-and-tokens-per-valid-finding">5.9 Experiment 9: time and tokens per valid finding</h3>
+<p class="q"><strong>Question.</strong> How much time and how many tokens does a run and a valid finding take in each approach?</p>
+<p class="part"><strong>Method.</strong> The runs use a flat-rate subscription and one model for the audit work, so effort is reported as time and tokens and not as price. Minutes, tokens and valid findings follow sections 4.4 and 4.5. Tokens are read from the cumulative usage in the final result record of each session transcript.</p>
+<p>Valid findings include Low findings and findings outside the reports.</p>
+<p>The column of official Critical, High and Medium findings gives the comparable basis. In second rounds it counts new ones.</p>
+<p class="part"><strong>Results.</strong></p>
+<div class="table-wrap wide"><table>
+<thead>
+<tr>
+<th>Project, run</th>
+<th>Approach</th>
+<th class="num">Run time, minutes</th>
+<th class="num">Output tokens of the run</th>
+<th class="num">Distinct valid findings</th>
+<th class="num">Of them, official Critical, High, Medium</th>
+<th class="num">Minutes per valid finding</th>
+<th class="num">Output tokens per valid finding</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ONCHAINID, run 1</td>
+<td>A</td>
+<td class="num">10.8</td>
+<td class="num">62,870</td>
+<td class="num">4</td>
+<td class="num">3</td>
+<td class="num">2.7</td>
+<td class="num">15,718</td>
+</tr>
+<tr>
+<td>ONCHAINID, run 1</td>
+<td>B</td>
+<td class="num">22.8</td>
+<td class="num">119,424</td>
+<td class="num">8</td>
+<td class="num">4</td>
+<td class="num">2.9</td>
+<td class="num">14,928</td>
+</tr>
+<tr>
+<td>ONCHAINID, run 1</td>
+<td>C</td>
+<td class="num">47.5</td>
+<td class="num">530,501</td>
+<td class="num">15</td>
+<td class="num">5</td>
+<td class="num">3.2</td>
+<td class="num">35,367</td>
+</tr>
+<tr>
+<td>ONCHAINID, run 2</td>
+<td>A</td>
+<td class="num">13.8</td>
+<td class="num">78,046</td>
+<td class="num">5</td>
+<td class="num">3</td>
+<td class="num">2.8</td>
+<td class="num">15,609</td>
+</tr>
+<tr>
+<td>ONCHAINID, run 2</td>
+<td>B</td>
+<td class="num">31.4</td>
+<td class="num">161,413</td>
+<td class="num">10</td>
+<td class="num">6</td>
+<td class="num">3.1</td>
+<td class="num">16,141</td>
+</tr>
+<tr>
+<td>ONCHAINID, run 2</td>
+<td>C</td>
+<td class="num">35.4</td>
+<td class="num">181,912</td>
+<td class="num">8</td>
+<td class="num">4</td>
+<td class="num">4.4</td>
+<td class="num">22,739</td>
+</tr>
+<tr>
+<td>ONCHAINID, run 3</td>
+<td>A</td>
+<td class="num">9.9</td>
+<td class="num">54,435</td>
+<td class="num">6</td>
+<td class="num">4</td>
+<td class="num">1.7</td>
+<td class="num">9,072</td>
+</tr>
+<tr>
+<td>ONCHAINID, run 3</td>
+<td>B</td>
+<td class="num">22.1</td>
+<td class="num">118,433</td>
+<td class="num">9</td>
+<td class="num">5</td>
+<td class="num">2.5</td>
+<td class="num">13,159</td>
+</tr>
+<tr>
+<td>ONCHAINID, run 3</td>
+<td>C</td>
+<td class="num">54.2</td>
+<td class="num">554,818</td>
+<td class="num">12</td>
+<td class="num">6</td>
+<td class="num">4.5</td>
+<td class="num">46,235</td>
+</tr>
+<tr>
+<td>GTE, round 1</td>
+<td>A</td>
+<td class="num">84.6</td>
+<td class="num">469,663</td>
+<td class="num">14</td>
+<td class="num">8</td>
+<td class="num">6.0</td>
+<td class="num">33,547</td>
+</tr>
+<tr>
+<td>GTE, round 1</td>
+<td>B</td>
+<td class="num">48.1</td>
+<td class="num">522,121</td>
+<td class="num">18</td>
+<td class="num">10</td>
+<td class="num">2.7</td>
+<td class="num">29,007</td>
+</tr>
+<tr>
+<td>GTE, round 1</td>
+<td>C</td>
+<td class="num">76.3</td>
+<td class="num">1,897,842</td>
+<td class="num">30</td>
+<td class="num">15</td>
+<td class="num">2.5</td>
+<td class="num">63,261</td>
+</tr>
+<tr>
+<td>GTE, round 2</td>
+<td>A</td>
+<td class="num">21.3</td>
+<td class="num">120,715</td>
+<td class="num">2</td>
+<td class="num">0</td>
+<td class="num">10.7</td>
+<td class="num">60,358</td>
+</tr>
+<tr>
+<td>GTE, round 2</td>
+<td>B</td>
+<td class="num">19.0</td>
+<td class="num">101,893</td>
+<td class="num">2</td>
+<td class="num">0</td>
+<td class="num">9.5</td>
+<td class="num">50,946</td>
+</tr>
+<tr>
+<td>GTE, round 2</td>
+<td>C</td>
+<td class="num">79.1</td>
+<td class="num">1,343,094</td>
+<td class="num">9</td>
+<td class="num">2</td>
+<td class="num">8.8</td>
+<td class="num">149,233</td>
+</tr>
+<tr>
+<td>GTE, round 2 corrected</td>
+<td>B</td>
+<td class="num">22.8</td>
+<td class="num">117,806</td>
+<td class="num">2</td>
+<td class="num">0</td>
+<td class="num">11.4</td>
+<td class="num">58,903</td>
+</tr>
+<tr>
+<td>GTE, round 2 corrected</td>
+<td>C</td>
+<td class="num">105.2</td>
+<td class="num">1,347,292</td>
+<td class="num">12</td>
+<td class="num">3</td>
+<td class="num">8.8</td>
+<td class="num">112,274</td>
+</tr>
+<tr>
+<td>Promis</td>
+<td>A</td>
+<td class="num">11.1</td>
+<td class="num">65,349</td>
+<td class="num">3</td>
+<td class="num">2</td>
+<td class="num">3.7</td>
+<td class="num">21,783</td>
+</tr>
+<tr>
+<td>Promis</td>
+<td>B</td>
+<td class="num">23.6</td>
+<td class="num">120,715</td>
+<td class="num">5</td>
+<td class="num">2</td>
+<td class="num">4.7</td>
+<td class="num">24,143</td>
+</tr>
+<tr>
+<td>Promis</td>
+<td>C</td>
+<td class="num">88.8</td>
+<td class="num">626,898</td>
+<td class="num">10</td>
+<td class="num">4</td>
+<td class="num">8.9</td>
+<td class="num">62,690</td>
+</tr>
+</tbody>
+</table></div>
+<figure><a href="../images/hypatia-benchmark/minutes-per-finding.png"><img src="../images/hypatia-benchmark/minutes-per-finding.png?v=1795089839" alt="Minutes per distinct valid finding in the five first audits" width="1920" height="1080"></a><figcaption><b>Figure 11.</b> Wall-clock minutes per distinct valid finding in the five first audits, the three ONCHAINID runs, the first round on GTE and the Promis run. Second rounds are in the table above.</figcaption></figure>
+
+<p>The first two numeric columns describe the whole run and the last two divide it by the valid findings. Tokens count the main session and every sub-agent it launched. Input tokens are not counted. Time and tokens do not always move together: in GTE round 1 approach A ran longer than C and wrote about a quarter of its output tokens.</p>
+<p class="part"><strong>Reading.</strong></p>
+<ul>
+<li><strong>Whole audit.</strong> In first audits approach C took 0.9 to 8.0 times the minutes of approach A and 2.3 to 10.2 times its output tokens. Approach B took 0.6 to 2.3 times the minutes and 1.1 to 2.2 times the output tokens.</li>
+<li><strong>Per valid finding.</strong> Approach C takes more minutes than A in four of five first audits, and B takes up to 1.0 minute more than A in those four. GTE round 1 is the exception: approach A’s 84.6 minutes include 58 in which its main session waited for five sub-agents it had launched, whose tokens are counted.</li>
+<li><strong>Per official Critical, High and Medium finding.</strong> The ordering between A and C is the same, with GTE again the exception. On ONCHAINID run 1, C takes 9.5 minutes per such finding against 3.6 for A. On GTE it takes 5.1 against 10.6.</li>
+<li><strong>Second rounds.</strong> Approach C takes the fewest minutes per valid finding. Each approach takes more minutes per finding in its second round than in its first.</li>
+<li><strong>Tokens.</strong> Approach C uses the most output tokens per valid finding in each of the seven groups of the table.</li>
+<li><strong>Caveats.</strong> Of approach C’s 88.8 minutes on Promis, the first 26.5, 30 percent of the total, ended with no finding and include the stall caused by a defect of Hypatia. Some runs shared the machine with other jobs, which affects minutes and not tokens.</li>
+</ul>
+<p class="concl"><strong>Conclusion.</strong> Hypatia with code map uses 2.3 to 10.2 times the output tokens of the Plain model per first audit, takes more minutes per valid finding in four of five first audits and uses the most output tokens per valid finding in each group.</p>
+<p><a id="sec-6"></a></p>
+<h2 id="6-synthesis">6. Synthesis</h2>
+<p>The experiments give six results. Each is developed in the section named in brackets.</p>
+<ol type="1">
+<li><strong>Detection.</strong> Hypatia with code map finds at least as many official Critical, High and Medium findings as the other two approaches on each project, on ONCHAINID in the mean of three runs, and more on GTE and Promis (5.2, 5.7).</li>
+<li><strong>Small project.</strong> On ONCHAINID, Hypatia finds the same six Critical, High and Medium findings with and without the code map (5.1).</li>
+<li><strong>Continuation.</strong> Asked to continue on GTE, Hypatia with code map produced 13 new findings against 2 for each of the others (5.5).</li>
+<li><strong>Rejection.</strong> On GTE, 8 of the 20 official findings Hypatia with code map missed had been asked about and rejected. Four corrections recovered one strictly and one leniently (5.4, 5.6).</li>
+<li><strong>Questions decided.</strong> A test decided 86 of 804 questions on GTE and 17 of 463 on Promis (5.6, 5.7).</li>
+<li><strong>Effort.</strong> A first audit with the code map took 0.9 to 8.0 times the time of the Plain model and more tokens per valid finding in every case (5.9).</li>
+</ol>
+<p><a id="sec-6-1"></a></p>
+<h3 id="61-results-by-approach">6.1 Results by approach</h3>
+<p>Findings are official Critical, High and Medium findings, the basis on which the three approaches are comparable. Low findings and Notes are in sections 5.1 and 5.7.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Measure</th>
+<th>A, Plain model</th>
+<th>B, Hypatia</th>
+<th>C, Hypatia with code map</th>
+<th>Section</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ONCHAINID, found of 12, mean of three runs</td>
+<td>3.3</td>
+<td>5.0</td>
+<td>5.0</td>
+<td>5.1</td>
+</tr>
+<tr>
+<td>GTE, found of 35, one run</td>
+<td>8</td>
+<td>10</td>
+<td>15</td>
+<td>5.2</td>
+</tr>
+<tr>
+<td>Promis, found of 9 inside the audited files, one run</td>
+<td>2</td>
+<td>2</td>
+<td>4</td>
+<td>5.7</td>
+</tr>
+<tr>
+<td>GTE, new findings when asked to continue</td>
+<td>2</td>
+<td>2</td>
+<td>13</td>
+<td>5.5</td>
+</tr>
+<tr>
+<td>Of them, in the official report</td>
+<td>0</td>
+<td>0</td>
+<td>2</td>
+<td>5.5</td>
+</tr>
+<tr>
+<td>GTE, new findings with the corrected version</td>
+<td>Not run</td>
+<td>2</td>
+<td>16, of which 3 official strictly and 1 leniently</td>
+<td>5.6</td>
+</tr>
+<tr>
+<td>Precision, first rounds</td>
+<td>0.88 to 1.00</td>
+<td>0.95 to 1.00</td>
+<td>0.88 to 1.00</td>
+<td>5.1, 5.2, 5.7</td>
+</tr>
+<tr>
+<td>Precision, second rounds</td>
+<td>2 of 2</td>
+<td>2 of 2, twice</td>
+<td>0.69 and 0.75</td>
+<td>5.5, 5.6</td>
+</tr>
+<tr>
+<td>Duration of a run, minutes</td>
+<td>10 to 85</td>
+<td>19 to 48</td>
+<td>35 to 105</td>
+<td>5.9</td>
+</tr>
+<tr>
+<td>Output tokens of a run, thousands</td>
+<td>54 to 470</td>
+<td>102 to 522</td>
+<td>182 to 1,898</td>
+<td>5.9</td>
+</tr>
+<tr>
+<td>Keeps a list of questions with their status</td>
+<td>No</td>
+<td>No</td>
+<td>Yes</td>
+<td>3.4</td>
+</tr>
+</tbody>
+</table></div>
+<p><a id="sec-6-2"></a></p>
+<h3 id="62-contribution-of-hypatia-and-of-the-code-map">6.2 Contribution of Hypatia and of the code map</h3>
+<figure><a href="../images/hypatia-benchmark/layers.png"><img src="../images/hypatia-benchmark/layers.png?v=1795089839" alt="Official findings found by the Plain model, and the count added by Hypatia and by the code map" width="1920" height="1080"></a><figcaption><b>Figure 12.</b> Official Critical, High and Medium findings found by the Plain model, and the count added by Hypatia and then by the code map, as a share of the official count of each project. The segments are differences between counts, not sets of the same findings. ONCHAINID is the mean of three runs, GTE and Promis rest on one run per approach.</figcaption></figure>
+
+<ul>
+<li><strong>The Plain model.</strong> It finds both ONCHAINID Highs in each run and six of ten GTE Highs in a run of 85 minutes. It writes tests, and no report of it was rated invalid by a reader. It gives no list of what it did not examine. On Promis it listed ideas it had examined and dropped, one of them an official High.</li>
+<li><strong>Hypatia over the Plain model.</strong> The gain appears on ONCHAINID and GTE and not on Promis.</li>
+<li><strong>The code map over Hypatia.</strong> The gain appears on the two larger projects and not on ONCHAINID. On GTE most of it is in Mediums. On Promis it is one High and one Medium.</li>
+<li><strong>Continuation.</strong> Approach B has Hypatia’s phases and a code-graph search tool. In the one second round it produced two new findings, as the Plain model did. The second-round result comes from one run on GTE (section 5.5).</li>
+</ul>
+<p><a id="sec-6-3"></a></p>
+<h3 id="63-the-question-list">6.3 The question list</h3>
+<p>Hypatia with code map ends an audit with the list of its questions, in priority order, and the status of each. In the corrected version a later round starts from that list, which was exercised once.</p>
+<figure><a href="../images/hypatia-benchmark/question-status.png"><img src="../images/hypatia-benchmark/question-status.png?v=1795089839" alt="Status of the question list in the two runs where it was counted" width="1920" height="1080"></a><figcaption><b>Figure 13.</b> Status of the question list of Hypatia with code map at the end of the corrected second round on GTE and of the Promis run, one run each.</figcaption></figure>
+
+<ul>
+<li><strong>It locates part of what was missed.</strong> On GTE, 9 of the 20 findings missed in the first round sat in questions that were left open or wrongly rejected. On Promis, one of the two Highs approach C missed sat in a question that was not reached before the iteration limit.</li>
+<li><strong>Most of it stays open.</strong> On Promis 446 of 463 questions were undecided at the end, 445 open and 1 candidate. An open question is a place to look and is not evidence of a bug.</li>
+<li><strong>Part of the findings come from outside it.</strong> 5 of 12 reports on Promis and 11 of 17 in the corrected GTE round.</li>
+<li><strong>It requires a code map.</strong> The list is derived from the functions, their calls and the state they touch. The code map tool used here analyses Solidity.</li>
+</ul>
+<p><a id="sec-7"></a></p>
+<h2 id="7-limitations">7. Limitations</h2>
+<ul>
+<li><strong>Scoring was done by tests and by reading.</strong> No human auditor has reviewed the matches. The readers are models from the same vendor as the model under test, and they knew which approach they were reading. A second reader changed 14 verdicts and overturned no strict match.</li>
+<li><strong>Validity and severity are model ratings.</strong> Findings outside the official reports are unconfirmed, and all approaches often disagree with the official severity.</li>
+<li><strong>The approaches had different instructions.</strong> Approach A was told to report Medium severity or higher, so counts with Low findings are not comparable with it. B also differs from A in code-graph search and in details of the prompt, so the comparison of B with A does not isolate Hypatia.</li>
+<li><strong>Few runs.</strong> ONCHAINID has three repetitions, and there the order of B and C changed between runs. GTE and Promis have one run per approach.</li>
+<li><strong>Unequal effort.</strong> Approach C runs longest in most runs. The Plain model was not tested with the same total time spread over several independent runs.</li>
+<li><strong>GTE is the development project.</strong> Its report was public before the model’s knowledge cutoff, and the corrections of section 5.6 were designed from its official answers. The corrected run also used twice the iterations, so the two effects cannot be separated.</li>
+<li><strong>Versions and procedure differ across runs.</strong> ONCHAINID and the first two GTE rounds used the first version of Hypatia, and Promis the corrected one. In the second round an operator prepared and approved the profile for B and C, and not for A.</li>
+<li><strong>Execution.</strong> Two runs of approach C were interrupted and resumed, and their time is the sum of both sessions. Some runs shared the machine with other jobs. Isolation was checked by scanning the commands of every counted session, not by a file-system trace.</li>
+<li><strong>The code map has blind spots.</strong> It reports truncated paths, did not record a class of state writes, and failed on one candidate project.</li>
+<li><strong>Checks not done or not recorded.</strong> The planned run of the judge on a planted bug and the human reading of a sample of its verdicts. Whether the network block covers sub-agents. The command line of the memory probe. Any use of the three projects while Hypatia was developed, beyond a discarded ONCHAINID trial on 16 November.</li>
+</ul>
+<p><a id="sec-8"></a></p>
+<h2 id="8-conclusion">8. Conclusion</h2>
+<p>The study asked whether Hypatia with a code map finds more of the vulnerabilities that professional audits reported than the model alone, and whether it lets an audit continue from where it stopped. On three projects the answers are these.</p>
+<p><strong>Detection</strong></p>
+<ul>
+<li><strong>It finds more on the two larger projects.</strong> Hypatia with code map found 15 of 35 official findings on GTE against 8 for the model alone, and 4 of 9 on Promis against 2.</li>
+<li><strong>On those projects the gain appears with the code map.</strong> Hypatia without it found 10 on GTE and 2 on Promis, the same as the model alone on Promis. Hypatia’s structured phases alone do not account for the gain.</li>
+<li><strong>On the smallest project Hypatia finds more than the model alone, and the code map adds nothing.</strong> On ONCHAINID, Hypatia found 5.0 of 12 with and without the code map, against 3.3 for the model alone.</li>
+<li><strong>The gain from the code map may grow with project size.</strong> It added no finding on the project of 2,058 lines, 2 on the project of 3,921 lines and 5 on the project of 5,260 lines. Three projects, which also differ in Hypatia version and in number of runs, are too few to establish this. It is the hypothesis to test next.</li>
+<li><strong>Some official findings are found by no approach.</strong> 6 of 12 on ONCHAINID, including its Critical finding, 19 of 35 on GTE in the first round and 5 of 9 on Promis.</li>
+</ul>
+<p><strong>Repetition and continuation</strong></p>
+<ul>
+<li><strong>The advantage repeats and the findings vary.</strong> In three independent runs on ONCHAINID, both Hypatia approaches found more than the model alone every time. The two Hypatia approaches found a different subset in each run: 4 to 6 findings per run and six distinct findings over the three. Repetition was measured on the smallest project only.</li>
+<li><strong>It continues an audit, and continuing adds depth.</strong> Asked to continue on GTE, Hypatia with code map produced 13 new findings, two of them official, and went from 15 to 17 of 35. Each of the other two approaches produced 2, none official.</li>
+</ul>
+<p><strong>Limits of the tool</strong></p>
+<ul>
+<li><strong>It takes more resources.</strong> A first audit with the code map used 2.3 to 10.2 times the output tokens of the model alone and 0.9 to 8.0 times its time.</li>
+<li><strong>Its weak point is how questions are closed.</strong> On GTE it rejected 8 real findings it had asked about, and four corrections recovered one strictly and one leniently. A test decided 86 of 804 questions on GTE and 17 of 463 on Promis.</li>
+</ul>
+<p><a id="sec-9"></a></p>
+<h2 id="9-reproducibility">9. Reproducibility</h2>
+<p>The results of each run, the official findings matched, the reference lists, the prompt of approach A and the judge are published at <a href="https://github.com/scab24/hypatia-benchmark">github.com/scab24/hypatia-benchmark</a>.</p>
+<p>Software:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Component</th>
+<th>Version</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Model</td>
+<td>See section 3.1</td>
+<td>The same in the three approaches</td>
+</tr>
+<tr>
+<td>Host program</td>
+<td>2.1.325</td>
+<td>Runs each session</td>
+</tr>
+<tr>
+<td>Hypatia</td>
+<td>1.1.22, 1.1.24 and 1.1.25</td>
+<td>By the author, source not public. Guides approaches B and C. Not loaded by approach A</td>
+</tr>
+<tr>
+<td><a href="https://github.com/scab24/ilold-evm">ilold</a></td>
+<td>0.1.0</td>
+<td>Open-source path analyser for Solidity, AGPL-3.0, by the author. Builds the code map of approach C</td>
+</tr>
+<tr>
+<td>Foundry</td>
+<td>1.9.0</td>
+<td>Compiles the projects and runs the tests</td>
+</tr>
+<tr>
+<td>Slither</td>
+<td>0.11.6</td>
+<td>Static analyser installed on the machine</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.12</td>
+<td>Runs the harness and the judge</td>
+</tr>
+</tbody>
+</table></div>
+<p>Projects:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Project</th>
+<th>Audited commit</th>
+<th>Fixed commit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ONCHAINID</td>
+<td>d2096509</td>
+<td>4fda205</td>
+</tr>
+<tr>
+<td>GTE</td>
+<td>f43e1ee</td>
+<td>None</td>
+</tr>
+<tr>
+<td>Promis</td>
+<td>4cd2d43</td>
+<td>63ca735</td>
+</tr>
+</tbody>
+</table></div>
+<p>Hypatia version of each run:</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Runs</th>
+<th>What the version changed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1.22, first version</td>
+<td>ONCHAINID, three runs. GTE first and second round</td>
+<td>Fixed a defect that ended audits after the first phase</td>
+</tr>
+<tr>
+<td>1.1.24, corrected version</td>
+<td>GTE second round repeated. Promis approach B. Promis approach C before its interruption</td>
+<td>Automatic closing at the iteration limit, on top of the four corrections of section 5.6. Those were released in 1.1.23, which ran only in a discarded attempt</td>
+</tr>
+<tr>
+<td>1.1.25, corrected version</td>
+<td>Promis approach C after its resume</td>
+<td>A speed fix for projects with many dependency files</td>
+</tr>
+</tbody>
+</table></div>
+<p>Stored with the benchmark:</p>
+<ul>
+<li><strong>Each run.</strong> The prompt or launch text, the exact command and the full session transcript.</li>
+<li><strong>Scoring.</strong> The judge, its per-finding results and the matching tables per project, and the second read for ONCHAINID and the first two GTE rounds.</li>
+<li><strong>Incidents.</strong> Discarded, interrupted and resumed runs with their cause, and the launch sequence.</li>
+</ul>
+<p>Hypatia’s source code and internal architecture are not included.</p>
+<p><a id="sec-10"></a></p>
+<h2 id="10-related-work-and-references">10. Related work and references</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>Source</th>
+<th>What it supports here</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anthropic, smart-contracts research post and SCONE-bench (2025)</td>
+<td>Executable success criterion, split by knowledge cutoff, best of N runs, tokens and cost per success</td>
+</tr>
+<tr>
+<td>Anthropic, exploit evaluations (2026)</td>
+<td>Stated turn and wall-clock limits per run</td>
+</tr>
+<tr>
+<td>Anthropic, Mythos Preview cybersecurity assessment (2026)</td>
+<td>Severity agreement, ranking files and working through the whole list</td>
+</tr>
+<tr>
+<td>Anthropic, effective harnesses for long-running agents (2025)</td>
+<td>A structured list of items whose status changes with an executed outcome, against “declaring victory too early”</td>
+</tr>
+<tr>
+<td>Quarkslab, From AI Agents to RCE (2026)</td>
+<td>A deterministic core that over-produces leads, ranking as an ordered search space, dropping a path after an executed test showed the guard held</td>
+</tr>
+<tr>
+<td>Google, Project Naptime (2024)</td>
+<td>Success over several independent trajectories</td>
+</tr>
+<tr>
+<td>Heimdallr (arXiv 2601.17833)</td>
+<td>Precision and false-positive rate, time per project. A verifier that does not execute code filtered out valid findings, 8 percent of them High</td>
+</tr>
+<tr>
+<td>A1 (arXiv 2507.05558)</td>
+<td>Time and tokens per experiment, results at each iteration count</td>
+</tr>
+<tr>
+<td>CyberGym (arXiv 2506.02548)</td>
+<td>Success by step under an iteration limit</td>
+</tr>
+<tr>
+<td>DARPA AIxCC scoring</td>
+<td>An accuracy multiplier</td>
+</tr>
+</tbody>
+</table></div>
+</main>
+</div>
+</div>
+<script>
+const links = [...document.querySelectorAll('nav.toc a')];
+const map = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
+const heads = [...document.querySelectorAll('main h2[id], main h3[id]')];
+const tops = [...document.querySelectorAll('nav.toc > ul > li')];
+const bar = document.getElementById('progress');
+const CHEV = '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M3 1.5 6.5 5 3 8.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+// A section the reader opened or closed by hand keeps that state; the others follow the scroll.
+tops.forEach(li => {
+  if (!li.querySelector(':scope > ul')) return;
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'chev'; b.innerHTML = CHEV;
+  b.setAttribute('aria-label', 'Show or hide the subsections');
+  b.addEventListener('click', () => {
+    const open = !li.classList.contains('open');
+    li.classList.toggle('open', open); li.dataset.pinned = open ? 'open' : 'closed';
+    b.setAttribute('aria-expanded', open);
+  });
+  li.insertBefore(b, li.querySelector(':scope > ul'));
+});
+const allBtn = document.querySelector('[data-toc="all"]');
+allBtn.addEventListener('click', () => {
+  const expand = allBtn.textContent === 'Expand all';
+  tops.forEach(li => { if (li.querySelector(':scope > ul')) { li.classList.toggle('open', expand); li.dataset.pinned = expand ? 'open' : 'closed'; } });
+  if (!expand) { tops.forEach(li => delete li.dataset.pinned); spy(); }
+  allBtn.textContent = expand ? 'Collapse all' : 'Expand all';
+});
+const small = () => matchMedia('(max-width: 960px)').matches;
+const setToc = (hidden, save) => {
+  document.body.classList.toggle('toc-hidden', hidden);
+  if (save) { try { localStorage.setItem('report-toc', hidden ? 'hidden' : 'shown'); } catch (e) {} }
+};
+let tocSaved = null;
+try { tocSaved = localStorage.getItem('report-toc'); } catch (e) {}
+setToc(small(), false);
+addEventListener('resize', () => { if (!small()) setToc(false, false); });
+document.querySelector('[data-toc="hide"]').addEventListener('click', () => setToc(true, false));
+document.querySelector('button.toc-open').addEventListener('click', () => setToc(false, false));
+links.forEach(a => a.addEventListener('click', () => { if (small()) setToc(true, false); }));
+function spy() {
+  let cur = heads[0];
+  for (const h of heads) { if (h.getBoundingClientRect().top < 130) cur = h; }
+  links.forEach(a => a.classList.remove('active'));
+  const a = cur && map.get(cur.id);
+  if (a) {
+    a.classList.add('active');
+    const top = a.closest('nav.toc > ul > li');
+    tops.forEach(li => { if (!li.dataset.pinned) li.classList.toggle('open', li === top); });
+    const first = top && top.querySelector(':scope > a');
+    if (first && first !== a) { first.classList.add('active'); }
+  }
+  const max = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (max > 0 ? 100 * scrollY / max : 0) + '%';
+}
+document.addEventListener('scroll', spy, { passive: true });
+spy();
+const root = document.documentElement, btn = document.querySelector('button.theme');
+const apply = t => { root.dataset.theme = t; btn.textContent = t === 'dark' ? 'Light' : 'Dark'; };
+let saved = null;
+try { saved = localStorage.getItem('report-theme'); } catch (e) {}
+apply(saved || 'light');
+btn.addEventListener('click', () => {
+  const t = root.dataset.theme === 'dark' ? 'light' : 'dark';
+  apply(t);
+  try { localStorage.setItem('report-theme', t); } catch (e) {}
+});
+</script>
+<script src="../js/anchors.js" defer></script>
+<script>
+(function () {
+  var nav = document.querySelector('nav.site'), last = scrollY;
+  addEventListener('scroll', function () {
+    var y = scrollY;
+    if (y < 80 || y < last - 6) { nav.classList.remove('away'); }
+    else if (y > last + 6) { nav.classList.add('away'); }
+    last = y;
+  }, { passive: true });
+})();
+</script>
+</body>
+</html>
