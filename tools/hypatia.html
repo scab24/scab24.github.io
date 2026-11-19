@@ -234,6 +234,12 @@
       .hy-scene.on { min-height: 33.5rem; }
       .hy-scene > svg { max-height: none; width: 100%; height: auto; }
     }
+    /* Narrow phones: the bar goes under its label so it keeps a readable length. */
+    @media (max-width: 560px) {
+      .hy-bar-row { grid-template-columns: 1fr auto; row-gap: .3rem; column-gap: .6rem; margin-top: .7rem; }
+      .hy-bar-row .hy-track { grid-column: 1 / -1; grid-row: 2; }
+      .hy-bars .flex.items-baseline { flex-wrap: wrap; gap: .1rem .6rem; }
+    }
 
     </style>
 </head>
@@ -512,7 +518,7 @@
         steps.forEach(function (s, k) { s.classList.toggle('on', k === i); s.querySelector('button').setAttribute('aria-expanded', k === i); });
         var on = steps[i], list = on.parentNode, desc = document.getElementById('hy-desc');
         if (desc) { desc.innerHTML = (on.querySelector('.map') ? '<b>CODE MAP</b>' : '') + on.querySelector('.d').innerHTML; }
-        if (list.scrollWidth > list.clientWidth) { list.scrollLeft = on.offsetLeft - list.offsetLeft - 16; }
+        if (list.scrollWidth > list.clientWidth) { var lr = list.getBoundingClientRect(), cr = on.getBoundingClientRect(); list.scrollLeft += (cr.left + cr.width / 2) - (lr.left + lr.width / 2); }
         if (user && matchMedia('(hover: none)').matches) { root.classList.add('hy-paused'); }
         scenes.forEach(function (s, k) {
           s.classList.toggle('on', k === i);
@@ -524,6 +530,7 @@
       steps.forEach(function (s, k) { s.querySelector('button').addEventListener('click', function () { show(k, true); }); });
       root.addEventListener('mouseenter', function () { root.classList.add('hy-paused'); clearTimeout(timer); });
       root.addEventListener('mouseleave', function () { root.classList.remove('hy-paused'); show(cur); });
+      (function () { var d0 = document.getElementById('hy-desc'); if (d0) { d0.innerHTML = steps[0].querySelector('.d').innerHTML; } })();
       var started = false;
       new IntersectionObserver(function (e) { if (e[0].isIntersecting && !started) { started = true; show(0); } }, { threshold: 0.25 }).observe(root);
       ['hy-bars', 'hy-bars-2'].forEach(function (id) {

@@ -153,6 +153,12 @@ figcaption b { color: var(--ink); font-weight: 600; }
   /* A table or a figure wider than the screen scrolls sideways inside its own box. */
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-left: -20px;
     margin-right: -20px; padding: 0 20px; }
+  /* Edge shadows that appear only while there is more of the table to the side. */
+  .table-wrap { background:
+    linear-gradient(90deg, var(--bg) 40%, transparent) 0 0 / 34px 100% no-repeat local,
+    linear-gradient(270deg, var(--bg) 40%, transparent) 100% 0 / 34px 100% no-repeat local,
+    linear-gradient(90deg, rgba(120,120,120,.28), transparent) 0 0 / 12px 100% no-repeat scroll,
+    linear-gradient(270deg, rgba(120,120,120,.28), transparent) 100% 0 / 12px 100% no-repeat scroll; }
   .table-wrap table { min-width: calc(var(--cols, 3) * 96px); font-size: 12.5px; }
   .table-wrap.wide table { min-width: calc(var(--cols, 7) * 82px); font-size: 12px; }
   thead th, tbody td { padding-right: 12px; }
@@ -162,6 +168,8 @@ figcaption b { color: var(--ink); font-weight: 600; }
   figcaption { padding: 0 20px; font-size: 12.5px; }
   header.title { margin: 44px auto 36px; }
   header.title h1 { font-size: 27px; line-height: 1.18; }
+  header.title h1, header.title .sub { text-wrap: balance; }
+  header.title .links a { white-space: nowrap; }
   header.title .sub { font-size: 16px; }
   body { font-size: 16.5px; }
   h2 { font-size: 23px; }
@@ -192,6 +200,7 @@ body { padding-top: 56px; }
 nav.toc { top: 84px; max-height: calc(100vh - 112px); }
 main h2, main h3, main h4, main a[id] { scroll-margin-top: 76px; }
 button.toc-open { top: 66px !important; }
+@media (max-width: 960px) { button.toc-open { top: 11px !important; left: 68px; z-index: 13; padding: 5px 12px; font-size: 12.5px; transition: transform .28s ease; } body.nav-away button.toc-open { transform: translateY(-64px); } header.title { margin-top: 36px; } }
 @media (max-width: 960px) { nav.site .right a:first-child { display: none; } nav.toc { top: 0; max-height: none; } }
 @media print { nav.site { display: none; } body { padding-top: 0; } }
 button.theme { position: fixed; top: 18px; right: 20px; z-index: 10; font-family: var(--sans);
@@ -2431,8 +2440,8 @@ btn.addEventListener('click', () => {
   var nav = document.querySelector('nav.site'), last = scrollY;
   addEventListener('scroll', function () {
     var y = scrollY;
-    if (y < 80 || y < last - 6) { nav.classList.remove('away'); }
-    else if (y > last + 6) { nav.classList.add('away'); }
+    if (y < 80 || y < last - 6) { nav.classList.remove('away'); document.body.classList.remove('nav-away'); }
+    else if (y > last + 6) { nav.classList.add('away'); document.body.classList.add('nav-away'); }
     last = y;
   }, { passive: true });
 })();
