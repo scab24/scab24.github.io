@@ -81,6 +81,12 @@
             const downloadLink = document.getElementById('download-link');
             downloadLink.href = file;
 
+            // Phones and tablets cannot show a PDF inside a page: open the file itself,
+            // which the device's own PDF reader handles.
+            if (navigator.pdfViewerEnabled === false || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                window.location.replace(file);
+            }
+
             // Try object first (better PDF rendering), fallback to iframe
             container.innerHTML = `
                 <object data="${file}" type="application/pdf">
