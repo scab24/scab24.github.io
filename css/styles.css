@@ -193,3 +193,7 @@ body::before {
     /* Scroll to top: smaller on mobile */
     .scroll-top { width: 40px; height: 40px; bottom: 1.25rem; right: 1.25rem; }
 }
+
+/* narrow-phone: cards may shrink below the width of their longest row */
+.project-card { min-width: 0; }
+@media (max-width: 359px) { .project-card .flex { flex-wrap: wrap; row-gap: .35rem; } .project-card { padding: 1.1rem; } }
